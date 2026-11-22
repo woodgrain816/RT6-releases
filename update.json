@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1256",
-  "notes": "Deck side trim angles out then in, constant thickness; rear brackets flush on the deck end with shock and swingarm pivot; motor cable along the swingarm",
+  "version": "2026.1122.1258",
+  "notes": "Ruitoo plate traced from your straight side photo; deck front meets it",
   "page": "rt6.html",
-  "sha256": "1334993b9e804340d37773717326017b7df65047f17b637949473692a71af6d2",
+  "sha256": "15a010545def1e0fa340c9138da51744e71d15e3ddc94d5e0cd33160c1f9596d",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T18:56:58.670Z"
+  "published": "2026-11-22T18:58:43.802Z"
 }
