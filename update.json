@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1311",
-  "notes": "Rear fender rebuilt: mounted on the swingarm, flat-topped light box, ribbed top panel, stops before the swingarm pivot",
+  "version": "2026.1122.1314",
+  "notes": "Rear fender: ribbed panel moved to the front half like yours, light bump barely sticks out",
   "page": "rt6.html",
-  "sha256": "bb133af638985c3a905b5cc85c361c44e26c43c95e18657f08d1788f4fde9cb0",
+  "sha256": "cb309907d307c4678f053c20d05bf93d5e7b6e94872779614c31be272507aedb",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T19:11:20.086Z"
+  "published": "2026-11-22T19:14:50.681Z"
 }

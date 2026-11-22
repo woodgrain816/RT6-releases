@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1311";</script>
+<script>window.RT6_VERSION = "2026.1122.1314";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -884,27 +884,31 @@ const rfGeo = fenderGeo(0, 0, RR, RW, RA0, RA1, rIn, rTop, 140, 0.034, 0.03, 0.0
 const rFender = mesh(rfGeo, M.fender, swingG, [0, 0, 0], [0, 0, 0], 'RearFender');
 const onFender = (a, off) => { const r = RR + off; const nx = Math.cos(a) / FK, ny = Math.sin(a);   // point + outward normal angle
   return { x: RX + FK * r * Math.cos(a), y: AX + r * Math.sin(a), n: Math.atan2(ny, nx) }; };
-{ // embossed panel on top: raised outline with cross ribs inside, a screw at each end (owner's top-down photo)
-  const pm = M.fender, A0 = 56, A1 = 122, hw = 0.026, top = (d, z) => { const p = onFender(d * D2R, rTop(z, 0) + 0.0012); return V(p.x, p.y, z); };
-  const loop = []; for (let d = A0; d <= A1; d += 2) loop.push(top(d, hw)); for (let k = 1; k < 8; k++) { const t = k / 8 * PI; loop.push(top(A1 + Math.sin(t) * 3, hw * Math.cos(t))); }
-  for (let d = A1; d >= A0; d -= 2) loop.push(top(d, -hw)); for (let k = 1; k < 8; k++) { const t = k / 8 * PI; loop.push(top(A0 - Math.sin(t) * 3, -hw * Math.cos(t))); }
-  mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(loop, true), 200, 0.0016, 6, true), pm, swingG);
-  for (let d = A0 + 6; d <= A1 - 4; d += 7) mesh(new THREE.TubeGeometry(new THREE.LineCurve3(top(d, -hw + 0.005), top(d, hw - 0.005)), 1, 0.0011, 6), pm, swingG);
-  for (const d of [A0 - 4, A1 + 4]) { const p = onFender(d * D2R, 0.0055), sc = mesh(new THREE.CylinderGeometry(0.0032, 0.0032, 0.0015, 16), M.zinc, swingG, [p.x, p.y, 0]); sc.rotation.z = p.n - PI / 2; } }
+{ // ribbed panel at the FRONT of the fender top (owner's top-down photo): long rounded outline nearly the fender's width, cross ribs in its front part, a screw near its back end
+  const pm = M.fender, A0 = 47, A1 = 98, hw = 0.036, top = (d, z, h = 0.0012) => { const p = onFender(d * D2R, rTop(z, 0) + h); return V(p.x, p.y, z); };
+  const loop = []; for (let d = A0 + 6; d <= A1 - 10; d += 2) loop.push(top(d, hw));
+  for (let k = 0; k <= 12; k++) { const t = k / 12 * PI; loop.push(top(A1 - 10 + Math.sin(t) * 10, hw * Math.cos(t))); }   // round back end
+  for (let d = A1 - 10; d >= A0 + 6; d -= 2) loop.push(top(d, -hw));
+  for (let k = 0; k <= 12; k++) { const t = k / 12 * PI; loop.push(top(A0 + 6 - Math.sin(t) * 6, -hw * Math.cos(t))); }   // rounded front
+  mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(loop, true), 240, 0.0019, 8, true), pm, swingG);
+  for (let d = A0 + 4; d <= A1 - 22; d += 5.5) {   // cross ribs: rounded ridges spanning the panel
+    const w = d < A0 + 6 ? hw * 0.75 : hw - 0.005, c = new THREE.CatmullRomCurve3([top(d, -w, 0.0008), top(d, 0, 0.0018), top(d, w, 0.0008)]);
+    mesh(new THREE.TubeGeometry(c, 16, 0.0024, 8), pm, swingG); }
+  { const p = onFender((A1 - 7) * D2R, 0.0062), sc = mesh(new THREE.CylinderGeometry(0.0028, 0.0028, 0.0015, 16), M.zinc, swingG, [p.x, p.y, 0]); sc.rotation.z = p.n - PI / 2; } }
 const ovalShape = (w, h) => { const s = new THREE.Shape(), r = h / 2; s.absarc(-w / 2 + r, 0, r, PI / 2, 3 * PI / 2, false); s.absarc(w / 2 - r, 0, r, -PI / 2, PI / 2, false); s.closePath(); return s; };
 const hump = new THREE.Group(); swingG.add(hump);
 { // light box (owner photos): flat top running back past the fender, flat rear face, sides taper forward and crease into the fender
   const sp = d => { const p = onFender(d * D2R, 0.002); return new THREE.Vector2(p.x, p.y); };
-  const pf = sp(122), top = pf.y + 0.004, xr = onFender(150 * D2R, 0).x - 0.026, ybot = onFender(152 * D2R, 0).y;
+  const pf = sp(124), top = pf.y + 0.003, xr = onFender(156 * D2R, 0).x - 0.005, ybot = onFender(158 * D2R, 0).y;   // barely sticks out past the fender (owner)
   const sh = new THREE.Shape(); sh.moveTo(pf.x, top); sh.lineTo(xr + 0.004, top); sh.lineTo(xr, top - 0.004); sh.lineTo(xr, ybot + 0.004); sh.lineTo(xr + 0.006, ybot);
-  for (let d = 152; d >= 122; d -= 3) { const p = sp(d); sh.lineTo(p.x, p.y); } sh.closePath();
+  for (let d = 158; d >= 124; d -= 3) { const p = sp(d); sh.lineTo(p.x, p.y); } sh.closePath();
   const g = new THREE.ExtrudeGeometry(sh, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.003, bevelSegments: 4, curveSegments: 8 }).translate(0, 0, -0.025);
   const p = g.attributes.position; for (let i = 0; i < p.count; i++) { const k = 0.55 + 0.45 * Math.min(1, Math.max(0, (pf.x - p.getX(i)) / (pf.x - xr))); p.setZ(i, p.getZ(i) * k); }   // narrower at the front: the creases
   g.computeVertexNormals(); mesh(g, M.fender, hump);
   hump.userData.rear = new THREE.Vector3(xr - 0.004, (top + ybot) / 2, 0); }
 const tail = mesh(new THREE.ExtrudeGeometry(ovalShape(0.044, 0.022), { depth: 0.004, bevelEnabled: true, bevelThickness: 0.0015, bevelSize: 0.0015, bevelSegments: 4, curveSegments: 24 }).rotateY(-PI / 2), M.tail, hump, hump.userData.rear.toArray(), [0, 0, 0], 'TailLight');   // oval lamp on the flat rear face
 // reflector on the rear drop, below the light box
-const rp = onFender(166 * D2R, 0.0122);
+const rp = onFender(170 * D2R, 0.0122);
 const refl = new THREE.Group(); refl.position.set(rp.x, rp.y, 0); refl.rotation.z = rp.n - PI / 2; swingG.add(refl);
 mesh(new THREE.ShapeGeometry(ovalShape(0.03, 0.018), 24).rotateX(-PI / 2), M.reflector, refl, [0, 0.0006, 0]);
 for (const sz of [1, -1]) {   // fender mounts on the swingarm: tab at the front end, strut from behind the axle to the fender's inner edge
