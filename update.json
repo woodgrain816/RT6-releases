@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1211",
-  "notes": "Fixed the torn cable wrap, headlight clear of the knob, octagon stems, new QR lever, flat display corners, deck taper, signal knob, ignition plate",
+  "version": "2026.1122.1214",
+  "notes": "Deck underside to your measured 8 in clearance (deck ~2 in thick); bars confirmed 38.5 in above the deck",
   "page": "rt6.html",
-  "sha256": "d34a34dccb24ac7e94ca5a93827e457b69dfd560ae038ed201dce27ae946335d",
+  "sha256": "b82288b3e9f533ebb40661dfb65b0a93daefcade7d668cee6c5fa1907cca9952",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T18:11:29.610Z"
+  "published": "2026-11-22T18:14:13.548Z"
 }

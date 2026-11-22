@@ -4,4 +4,4 @@ Update files for the fan-made Ruitoo RT6 scooter sim (non-commercial; Ruitoo, RT
 The Android app reads `update.json` on launch and downloads `rt6.html` when it is newer (checked against its SHA-256).
 To install the app: download `RT6Sim.apk`.
 
-Current version: **2026.1122.1211** - Fixed the torn cable wrap, headlight clear of the knob, octagon stems, new QR lever, flat display corners, deck taper, signal knob, ignition plate
+Current version: **2026.1122.1214** - Deck underside to your measured 8 in clearance (deck ~2 in thick); bars confirmed 38.5 in above the deck

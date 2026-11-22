@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1211";</script>
+<script>window.RT6_VERSION = "2026.1122.1214";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -125,7 +125,7 @@ body.riding .card, body.riding .views{display:none}
     <dt>Motor</dt><dd>48 V rear hub</dd>
     <dt>Charger</dt><dd>54.6 V</dd>
     <dt>Wheelbase</dt><dd>≈ 905 mm</dd>
-    <dt>Bar height</dt><dd>39 in above the deck</dd>
+    <dt>Bar height</dt><dd>38.5 in above the deck</dd>
     <dt>Brakes</dt><dd>cable disc, F + R</dd>
   </dl>
   <p class="hint">Rear wheel is up on a stand. Turn the key, then hold the power button under the throttle to start; tap it to change mode. Drag the thumb throttle, squeeze a brake lever, or press the horn on the left pod.<br>
@@ -652,9 +652,9 @@ function deckOutline(inset = 0) {
   side.forEach(p => s.lineTo(p.x, p.y)); side.slice().reverse().forEach(p => s.lineTo(p.x, -p.y)); s.closePath(); return s;
 }
 const DECK_TOP = 0.257, DX0 = -0.302, DX1 = 0.283;
-const deckBottom = x => 0.184                                                   // flat underside in the middle
-  + 0.040 * Math.pow(Math.max(0, (-0.13 - x) / 0.17), 1.8)                     // rear underside sweeps up
-  + 0.018 * Math.pow(Math.max(0, (x - 0.19) / 0.093), 2);                      // front end-cap tapers
+const deckBottom = x => 0.208                                                   // flat underside: ~8.2 in off the ground, deck ~2 in thick (owner measured 8 in on carpet)
+  + 0.027 * Math.pow(Math.max(0, (-0.13 - x) / 0.17), 1.8)                     // rear underside sweeps up
+  + 0.012 * Math.pow(Math.max(0, (x - 0.19) / 0.093), 2);                      // front end-cap tapers
 // rounded cross-section: superellipse, sharper at the top edge, softer at the bottom
 function deckSection(x, nS = 56) {
   const w = wAt(x), yb = deckBottom(x), yt = DECK_TOP, cy = (yt + yb) / 2, hh = (yt - yb) / 2, pts = [];
@@ -693,7 +693,7 @@ mesh(gripGeo, M.deckTop, frame, [0, DECK_TOP + 0.0006, 0], [0, 0, 0], 'DeckGrip'
 const onSide = (x, y, sz, off = 0.0008) => V(x, y, sz * (wAt(x) + off));
 for (const sz of [1, -1]) {
   // recessed groove running along the lower side
-  mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([-0.16, -0.05, 0.08, 0.2].map(x => onSide(x, 0.208, sz, -0.0005))), 40, 0.0022, 8), std(0x060607, 0.9, 0), frame);
+  mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([-0.16, -0.05, 0.08, 0.2].map(x => onSide(x, deckBottom(x) + 0.33 * (DECK_TOP - deckBottom(x)), sz, -0.0005))), 40, 0.0022, 8), std(0x060607, 0.9, 0), frame);
   // moulding seams where the end caps meet the middle section
   for (const x of [-0.105, 0.2]) mesh(new THREE.TubeGeometry(new THREE.LineCurve3(onSide(x, deckBottom(x) + 0.008, sz, -0.0003), onSide(x, DECK_TOP - 0.008, sz, -0.0003)), 2, 0.0012, 6), std(0x060607, 0.9, 0), frame);
   // red wedge reflector on the rear side: tall at the back, tapering forward
