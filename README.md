@@ -4,4 +4,4 @@ Update files for the fan-made Ruitoo RT6 scooter sim (non-commercial; Ruitoo, RT
 The Android app reads `update.json` on launch and downloads `rt6.html` when it is newer (checked against its SHA-256).
 To install the app: download `RT6Sim.apk`.
 
-Current version: **2026.1122.1432** - Handlebar back in front of the stem; key on top of the stem; lower stem 2 3/4 x 2 in, upper pole 1 1/2 in square
+Current version: **2026.1122.1437** - Seat to measurements (7 in back, 2 3/4 in nose, 2 3/4 in thick); stem top + bar clamp one casting; orange ring back round the top of the stem

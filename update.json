@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1432",
-  "notes": "Handlebar back in front of the stem; key on top of the stem; lower stem 2 3/4 x 2 in, upper pole 1 1/2 in square",
+  "version": "2026.1122.1437",
+  "notes": "Seat to measurements (7 in back, 2 3/4 in nose, 2 3/4 in thick); stem top + bar clamp one casting; orange ring back round the top of the stem",
   "page": "rt6.html",
-  "sha256": "b7a902a40252da7e683699d92d5b3409afbed25d2944f17da0368d8f5c730b9e",
+  "sha256": "dbb02c897b0d40ea51d45ccdcd4f80e4baddc403da05543ccaa4ab0c179991a4",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T20:32:27.580Z"
+  "published": "2026-11-22T20:37:17.241Z"
 }
