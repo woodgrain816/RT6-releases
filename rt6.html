@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1237";</script>
+<script>window.RT6_VERSION = "2026.1122.1239";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -1288,8 +1288,7 @@ const signalKnob = new THREE.Group(); signalKnob.position.set(SLABX - 0.0006, -0
   kg.applyMatrix4(new THREE.Matrix4().set(0, -1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 1)); kg.computeVertexNormals();   // profile across the bar, rib stands out of the face
   mesh(kg, btn, signalKnob, [0.0007, 0, 0]); }   // slider knob: flat wings, raised rounded rib in the middle (owner photos)
 tag(signalKnob, 'signal');
-// horn: button inside a raised rim on the tab (owner photo)
-mesh(new RoundedBoxGeometry(0.0022, 0.0122, 0.0158, 4, 0.003), btn, podL, [SLABX - 0.0006, -0.0327, -0.005]);   // rim
+// horn: just the button sitting on the tab, no rim or second layer (owner)
 const hornG = new THREE.Group(); podL.add(hornG);
 const hornBtn = mesh(new RoundedBoxGeometry(0.0056, 0.0094, 0.0126, 5, 0.0026), btn, hornG, [SLABX - 0.0025, -0.0327, -0.005]);
 tag(hornG, 'horn');

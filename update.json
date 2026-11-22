@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1237",
-  "notes": "Ruitoo neck plates now sit behind the head tube and lean back with the steering",
+  "version": "2026.1122.1239",
+  "notes": "Horn: single button on the tab, extra layer removed",
   "page": "rt6.html",
-  "sha256": "5d84f78c3733b1d106e1bead683e259eb5a21c3c38353dbc6d9661717947f46b",
+  "sha256": "f727f982cad8f8f28e4eebb7e114d55b44f3043df4d5a8d261f53e9fd0fd8339",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T18:37:47.807Z"
+  "published": "2026-11-22T18:39:11.645Z"
 }
