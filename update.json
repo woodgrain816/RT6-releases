@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1203",
-  "notes": "Sitting down sounds different every time (rear springs louder the further back you sit), seat springs flex, flat pad on the rear fender",
+  "version": "2026.1122.1211",
+  "notes": "Fixed the torn cable wrap, headlight clear of the knob, octagon stems, new QR lever, flat display corners, deck taper, signal knob, ignition plate",
   "page": "rt6.html",
-  "sha256": "05ede648183b58332e036054fd975fe550363e8be8d241cf2c89e61b6dda3504",
+  "sha256": "d34a34dccb24ac7e94ca5a93827e457b69dfd560ae038ed201dce27ae946335d",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T18:03:38.539Z"
+  "published": "2026-11-22T18:11:29.610Z"
 }
