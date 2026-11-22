@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1555";</script>
+<script>window.RT6_VERSION = "2026.1122.1556";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -2659,7 +2659,7 @@ function trySit() { const F = RM.free; if (!F) return;
   if (F.sit) { F.pos.copy(F.sit.stand); F.sit = null; toast('Stood up'); return; }
   let best = null, bd = 2.0;
   for (const b of RM.benches || []) { const d = Math.hypot(b.x - F.pos.x, b.z - F.pos.z); if (d < bd) { bd = d; best = b; } }
-  if (best) { const yaw = best.r + PI / 2, f = V(Math.cos(yaw), 0, -Math.sin(yaw)); F.sit = { h: 0.5, fx: 0.36, stand: V(best.x, 0, best.z).add(f.multiplyScalar(0.75)) }; F.pos.set(best.x, 0, best.z); F.yaw = yaw; toast('Sitting on the bench (Z to stand)'); return; }
+  if (best) { const yaw = best.r - PI / 2, f = V(Math.cos(yaw), 0, -Math.sin(yaw)); F.sit = { h: 0.5, fx: 0.36, stand: V(best.x, 0, best.z).add(f.multiplyScalar(0.75)) }; F.pos.set(best.x, 0, best.z); F.yaw = yaw; toast('Sitting on the bench (Z to stand)'); return; }
   for (const c of RM.circles) if (c.tree) { const d = Math.hypot(c.x - F.pos.x, c.z - F.pos.z); if (d < c.r + 1.6 && d < bd + 1.6) { bd = d - 1.6; best = c; } }
   if (best) { const dir = V(F.pos.x - best.x, 0, F.pos.z - best.z).normalize(), p0 = V(best.x, 0, best.z).add(dir.clone().multiplyScalar(best.r + 0.32));
     F.sit = { h: 0.2, fx: 0.45, stand: p0.clone().add(dir.clone().multiplyScalar(0.7)) }; F.pos.copy(p0); F.yaw = Math.atan2(-dir.z, dir.x); toast('Sitting against the tree (Z to stand)'); return; }

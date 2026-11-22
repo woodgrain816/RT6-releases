@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1555",
-  "notes": "Free walking: kickstand down (J) then X leaves the scooter; walk, Shift+W run, Z sit on benches or against trees, X by the scooter picks it up; police stay on the roads; Y shows all controls",
+  "version": "2026.1122.1556",
+  "notes": "Sitting on benches: rider now faces the right way",
   "page": "rt6.html",
-  "sha256": "a839b6dc79f48cdca280fea0480d1a9607d711389850033a1cf0779a438c31ad",
+  "sha256": "eaea218828544f0315591f9c864540cd8dfee59565afa7585604d980ba15f5a7",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T21:55:39.587Z"
+  "published": "2026-11-22T21:56:15.450Z"
 }
