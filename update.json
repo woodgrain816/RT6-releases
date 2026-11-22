@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1726",
-  "notes": "Map 2.7x bigger (17x17 blocks) with more cars and police, highway moved out; Corvette flat tail; display voltage no longer flickers",
+  "version": "2026.1122.1737",
+  "notes": "Lighter on phones, 19 missions, arrow to the target, find-the-highway mission",
   "page": "rt6.html",
-  "sha256": "6156444f22d1004e4d629a18c3718679796ed13a5a8b7397d1942d4f6fb47f3f",
+  "sha256": "5f360888d5180e4bfce85865258c96950bbf4884ab574847f0f744082c735951",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T23:26:32.075Z"
+  "published": "2026-11-22T23:38:01.981Z"
 }
