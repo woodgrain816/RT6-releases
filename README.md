@@ -4,4 +4,4 @@ Update files for the fan-made Ruitoo RT6 scooter sim (non-commercial; Ruitoo, RT
 The Android app reads `update.json` on launch and downloads `rt6.html` when it is newer (checked against its SHA-256).
 To install the app: download `RT6Sim.apk`.
 
-Current version: **2026.1122.1722** - Tap the display in the corner to hide / show it
+Current version: **2026.1122.1726** - Map 2.7x bigger (17x17 blocks) with more cars and police, highway moved out; Corvette flat tail; display voltage no longer flickers

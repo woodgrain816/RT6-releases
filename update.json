@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1722",
-  "notes": "Tap the display in the corner to hide / show it",
+  "version": "2026.1122.1726",
+  "notes": "Map 2.7x bigger (17x17 blocks) with more cars and police, highway moved out; Corvette flat tail; display voltage no longer flickers",
   "page": "rt6.html",
-  "sha256": "12fa9495cb98af714fe8b8ae157687de9ee9f23cdd9e621167bfdb5d1fbddc12",
+  "sha256": "6156444f22d1004e4d629a18c3718679796ed13a5a8b7397d1942d4f6fb47f3f",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T23:22:39.103Z"
+  "published": "2026-11-22T23:26:32.075Z"
 }
