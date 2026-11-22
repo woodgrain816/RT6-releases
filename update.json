@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1404",
-  "notes": "Front wheel 10 in; rear tire gets its own street tread with V-notched shoulders",
+  "version": "2026.1122.1406",
+  "notes": "Small turn-signal triangles back on the display",
   "page": "rt6.html",
-  "sha256": "9c07543d68978c6530997c564e478dbe9623eb2e50e617a3c8e506073672df50",
+  "sha256": "55c526c433ed4d50277de08e295016312ba472329064c8b3d9aa46a17647d34b",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T20:04:17.868Z"
+  "published": "2026-11-22T20:06:12.189Z"
 }
