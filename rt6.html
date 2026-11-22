@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1437";</script>
+<script>window.RT6_VERSION = "2026.1122.1448";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -512,7 +512,7 @@ function drawLCD(g, W, H, hud) {
   g.font = '600 13px "Chakra Petch", sans-serif'; g.textAlign = 'right'; g.fillText(showOdo ? 'ODO' : 'Trip', 316, 205);
   seg7Str(g, String(Math.floor(showOdo ? sim.odo : sim.trip)).padStart(5, '0'), 321, 190, 19, 28, 4, 4);
   g.textAlign = 'left'; g.font = '600 12px "Chakra Petch", sans-serif'; g.fillText('mile', 442, 218);
-  if (Math.floor(now / 500) % 2 === 0) {   // cruise/speedometer icon below "mile": blinks whenever the display is on (owner)
+  if (now % 610 < 280) {   // cruise/speedometer icon below "mile": blinks whenever the display is on (owner)
     const cx = 462, cy = 240;
     g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, 9, PI * 0.8, PI * 2.2); g.stroke();
     g.lineWidth = 1.5; for (let k = 0; k < 5; k++) { const a = PI * (0.95 + k * 0.275); g.beginPath(); g.moveTo(cx + Math.cos(a) * 5, cy + Math.sin(a) * 5); g.lineTo(cx + Math.cos(a) * 7.2, cy + Math.sin(a) * 7.2); g.stroke(); }
@@ -1035,9 +1035,10 @@ for (const sz of [1, -1]) {
 // Side view: thick padded rear (~6 cm), slight dip mid-seat, thinner nose; flat underside; stitched seam round the upper edge.
 // Built in real metres, then divided by the post group's scale (0.76 along x, 0.8 across) so it comes out true.
 const SXK = 1 / 0.76, SZK = 1 / 0.8;
-const sadPlan = t => { const cr = t < 0.13 ? Math.sqrt(Math.max(0, 1 - (1 - t / 0.13) ** 2)) : 1, cf = t > 0.9 ? Math.sqrt(Math.max(0, 1 - ((t - 0.9) / 0.1) ** 2)) : 1;
-  return { w: (0.0889 - 0.054 * Math.min(1, Math.max(0, (t - 0.16) / 0.8)) ** 1.5) * cr * cf, c: cr * cf }; };   // 7 in back, 2 3/4 in nose (owner measured)   // convex pear taper, no waist
-const sadH = t => 0.0699;   // 2 3/4 in thick the whole way (owner)   // thick at the back, curving down toward the nose (owner)
+const sadW = t => { const u = Math.min(1, Math.max(0, (t - 0.28) / 0.67)), e = u * u * (3 - 2 * u); return 1 - 0.6 * e; };   // one S-curve: full back, sides curve in, ease into the nose (photo)
+const sadPlan = t => { const cr = t < 0.13 ? Math.sqrt(Math.max(0, 1 - (1 - t / 0.13) ** 2)) : 1, cf = t > 0.95 ? Math.sqrt(Math.max(0, 1 - ((t - 0.95) / 0.05) ** 2)) : 1;
+  return { w: 0.0889 * sadW(t) * cr * cf, c: cr * cf }; };   // 7 in back, ~2 3/4 in nose (owner measured)   // convex pear taper, no waist
+const sadH = t => 0.054;   // thinner, same thickness the whole way (owner)   // thick at the back, curving down toward the nose (owner)
 const SXR = -0.15, SXN = 0.105, SY0 = 0.458, SHB = 0.016;
 const sadPt = (t, th) => { const { w, c } = sadPlan(t), h = sadH(t), cs = Math.cos(th), sn = Math.sin(th), sc = Math.sqrt(c);
   const z = w * Math.sign(cs) * Math.abs(cs) ** (2 / 2.6);
@@ -1672,7 +1673,7 @@ const Sound = {
       const wg = c.createGain(); wg.gain.value = 0; ws.connect(hp); hp.connect(lp); lp.connect(wg); wg.connect(out); ws.start(); this.wind = { wg, lp }; }
     const hg = c.createGain(); hg.gain.value = 0; hg.connect(out);
     { const sq = c.createOscillator(), sq2 = c.createOscillator(), lfo = c.createOscillator(), lg = c.createGain(), g2 = c.createGain(), g = c.createGain();
-      sq.frequency.value = 2950; sq2.frequency.value = 4420; lfo.frequency.value = 7; lg.gain.value = 35; g2.gain.value = 0.35; g.gain.value = 0;
+      sq.frequency.value = 2950; sq2.frequency.value = 4420; lfo.frequency.value = 7; lg.gain.value = 0; g2.gain.value = 0.35; g.gain.value = 0;
       lfo.connect(lg); lg.connect(sq.frequency); sq.connect(g); sq2.connect(g2); g2.connect(g); g.connect(out); sq.start(); sq2.start(); lfo.start(); this.squeal = g; }
     let hsrc = null; const hos = [];
     if (!this.buf.hornloop) for (const f of [420, 504]) { const o = c.createOscillator(); o.type = 'square'; o.frequency.value = f; const og = c.createGain(); og.gain.value = 0.16; o.connect(og); og.connect(hg); o.start(); hos.push(o); }
@@ -1966,7 +1967,7 @@ function buildTown() {
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
     concrete.push(placed(colored(new THREE.BoxGeometry(x1 - x0, 0.025, 2.4), 0xc8c2b4), cx, 0.012, cz));
     concrete.push(placed(colored(new THREE.BoxGeometry(2.4, 0.026, z1 - z0), 0xc8c2b4), cx, 0.013, cz));
-    glass.push(placed(colored(new THREE.CylinderGeometry(7, 7, 0.03, 40), 0x3e6f8c), cx + 14, 0.016, cz + 13));
+    glass.push(placed(colored(new THREE.CylinderGeometry(7, 7, 0.03, 40), 0x3e6f8c), cx + 14, 0.016, cz + 13)); (RM.water = RM.water || []).push({ x: cx + 14, z: cz + 13, r: 7 });
     concrete.push(placed(colored(new THREE.CylinderGeometry(7.5, 7.5, 0.02, 40), 0x9c9483), cx + 14, 0.01, cz + 13));
     for (let k = 0; k < 30; k++) { const x = x0 + 3 + rnd() * (x1 - x0 - 6), z = z0 + 3 + rnd() * (z1 - z0 - 6);
       if (Math.abs(x - cx) < 3 || Math.abs(z - cz) < 3 || Math.hypot(x - cx - 14, z - cz - 13) < 9) continue; tree(x, z, 0.9 + rnd() * 0.6); }
@@ -2272,15 +2273,14 @@ function buildRider() {
   const limb = (r0, r1, m) => add(new THREE.CylinderGeometry(r1, r0, 1, 20, 1, true).translate(0, 0.5, 0), m);   // grows along +y from its base
   const ball = (r, m) => add(new THREE.SphereGeometry(r, 20, 14), m);
   const P = {};
-  P.torso = add(new THREE.LatheGeometry([[0, 0], [0.13, 0.0], [0.125, 0.08], [0.118, 0.16], [0.135, 0.27], [0.15, 0.36], [0.145, 0.42], [0.09, 0.47], [0, 0.475]].map(([r, y]) => new THREE.Vector2(r, y)), 28).scale(0.7, RIDER.torso / 0.47, 1.09), mShirt);
+  { const sy = RIDER.torso / 0.47; P.torso = add(new THREE.LatheGeometry([[0, -0.045 / sy], [0.148, -0.045 / sy], [0.158, -0.03 / sy], [0.16, 0.0], [0.152, 0.06 / sy], [0.136, 0.115 / sy], [0.125, 0.16], [0.118, 0.16], [0.135, 0.27], [0.15, 0.36], [0.145, 0.42], [0.09, 0.47], [0, 0.475]].map(([r, y]) => new THREE.Vector2(r, y)), 40).scale(0.7, sy, 1.09), mShirt); }   // one shell: the hem flare is part of it
   { // front zip following the chest curve, pull at the collar
     const prof = [[0.13, 0.0], [0.125, 0.08], [0.118, 0.16], [0.135, 0.27], [0.15, 0.36], [0.145, 0.42], [0.11, 0.455]], sy = RIDER.torso / 0.47;
     const zc = new THREE.CatmullRomCurve3(prof.map(([r, y]) => V(r * 0.7 + 0.0015, y * sy, 0)));
     const zm = new THREE.Mesh(new THREE.TubeGeometry(zc, 40, 0.0028, 6), new THREE.MeshStandardMaterial({ color: 0x0b0c0e, roughness: 0.5, metalness: 0.3 })); P.torso.add(zm);
     const pull = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.022, 0.009), new THREE.MeshStandardMaterial({ color: 0x9a9da3, roughness: 0.35, metalness: 0.9 }));
     pull.position.copy(zc.getPointAt(0.93)).add(V(0.003, -0.012, 0)); P.torso.add(pull); }
-  P.hem = add(new THREE.CylinderGeometry(0.165, 0.175, 0.17, 28).scale(0.78, 1, 1.1), mShirt);
-  P.hood = add(new THREE.SphereGeometry(1, 20, 14).scale(0.075, 0.07, 0.13), mShirt);
+  P.hem = new THREE.Object3D(); P.hood = new THREE.Object3D();   // merged into the shell / removed (owner: one smooth coat)
   P.collar = add(new THREE.CylinderGeometry(0.06, 0.068, 0.07, 24, 1, true), mShirt);
   P.pelvis = add(new THREE.SphereGeometry(1, 24, 16).scale(0.115, 0.1, 0.16), mJeans);
   P.belt = add(new THREE.TorusGeometry(0.125, 0.012, 8, 28).rotateX(PI / 2).scale(0.64, 1, 1), mBelt);
@@ -2307,8 +2307,10 @@ function buildRider() {
     P['hip' + s] = ball(0.072, mJeans); P['knee' + s] = ball(0.054, mJeans); P['ankle' + s] = ball(0.036, mSkin); P['cuff' + s] = add(new THREE.TorusGeometry(0.047, 0.012, 8, 20).rotateX(PI / 2), mJeans);
     P['shoe' + s] = add(new RoundedBoxGeometry(0.22, 0.045, 0.085, 4, 0.02), mSkin); P['sole' + s] = add(new THREE.SphereGeometry(1, 16, 10).scale(0.045, 0.03, 0.04), mSkin);   // bare foot + heel
     P['toes' + s] = [0, 1, 2, 3, 4].map(t => add(new THREE.SphereGeometry(t ? 0.011 : 0.015, 10, 8), mSkin));
-    P['upper' + s] = limb(0.06, 0.054, mSleeve); P['fore' + s] = limb(0.054, 0.046, mSleeve);
-    P['shoulder' + s] = ball(0.065, mShirt); P['elbow' + s] = ball(0.055, mSleeve); P['sleeve' + s] = add(new THREE.TorusGeometry(0.044, 0.01, 8, 20), mSleeve);   // elastic wrist cuff
+    P['upper' + s] = new THREE.Object3D(); P['fore' + s] = new THREE.Object3D(); P['shoulder' + s] = new THREE.Object3D(); P['elbow' + s] = new THREE.Object3D();
+    { const NS = 40, NR = 20, g = new THREE.BufferGeometry(), idx = []; g.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array((NS + 1) * (NR + 1) * 3), 3));
+      for (let i = 0; i < NS; i++) for (let j = 0; j < NR; j++) { const a = i * (NR + 1) + j, b = a + NR + 1; idx.push(a, a + 1, b, b, a + 1, b + 1); }
+      g.setIndex(idx); const m = add(g, mSleeve); m.frustumCulled = false; m.userData.NS = NS; m.userData.NR = NR; P['coatArm' + s] = m; } P['sleeve' + s] = add(new THREE.TorusGeometry(0.044, 0.01, 8, 20), mSleeve);   // elastic wrist cuff
     P['hand' + s] = add(new THREE.SphereGeometry(1, 16, 12).scale(0.05, 0.036, 0.045), mSkin); P['thumb' + s] = add(new THREE.CapsuleGeometry(0.012, 0.03, 4, 8), mSkin);
   }
   R.userData.P = P; return R;
@@ -2357,8 +2359,14 @@ function poseRider() {
     P['toes' + s].forEach((t, i) => t.position.copy(A).add(V(0.175 - Math.abs(i - (sz < 0 ? 4 : 0)) * 0.004, -0.06, sz * (-0.032 + i * 0.016) * (sz < 0 ? -1 : 1))));
     const sh = S.clone().add(V(-0.01, -0.03, sz * 0.165)), grip = (s === 'L' ? gL : gR), wrist = grip.clone().add(V(-0.045, 0.012, 0));
     const elbow = ik(sh, wrist, RIDER.upper, RIDER.fore, V(-0.35, -1, sz * 0.7));
-    orient(P['upper' + s], sh, elbow); orient(P['fore' + s], elbow, wrist);
-    P['shoulder' + s].position.copy(sh); P['elbow' + s].position.copy(elbow);
+    { // one smooth sleeve: from inside the chest, over the shoulder, through the elbow to the cuff
+      const m = P['coatArm' + s], NS = m.userData.NS, NR = m.userData.NR, pa = m.geometry.attributes.position;
+      const inC = S.clone().add(V(-0.015, -0.06, sz * 0.09)), pts = [inC, sh.clone().add(V(0, 0.01, -sz * 0.01)), sh.clone().lerp(elbow, 0.5), elbow, elbow.clone().lerp(wrist, 0.5), wrist.clone().lerp(elbow, 0.04)];
+      const rad = [0.07, 0.066, 0.059, 0.054, 0.05, 0.046], c = new THREE.CatmullRomCurve3(pts, false, 'centripetal'), fr = c.computeFrenetFrames(NS, false);
+      for (let i = 0; i <= NS; i++) { const t = i / NS, p = c.getPointAt(t), k = t * (rad.length - 1), i0 = Math.min(rad.length - 2, Math.floor(k)), f = k - i0, e = f * f * (3 - 2 * f), r = rad[i0] + (rad[i0 + 1] - rad[i0]) * e;
+        for (let j = 0; j <= NR; j++) { const a = j / NR * TAU, nx = fr.normals[i], bx = fr.binormals[i];
+          pa.setXYZ(i * (NR + 1) + j, p.x + (nx.x * Math.cos(a) + bx.x * Math.sin(a)) * r, p.y + (nx.y * Math.cos(a) + bx.y * Math.sin(a)) * r, p.z + (nx.z * Math.cos(a) + bx.z * Math.sin(a)) * r); } }
+      pa.needsUpdate = true; m.geometry.computeVertexNormals(); }
     P['sleeve' + s].position.copy(wrist).lerp(elbow, 0.06); P['sleeve' + s].quaternion.setFromUnitVectors(V(0, 0, 1), wrist.clone().sub(elbow).normalize());
     P['hand' + s].position.copy(grip).add(V(-0.005, 0.012, 0)); P['thumb' + s].position.copy(grip).add(V(-0.03, 0.03, 0)); P['thumb' + s].rotation.set(0, 0, 1.0);
   }
@@ -2403,7 +2411,7 @@ function wheelGround(px, pz, fx, fz) {   // the tyre rolls over edges: highest g
   const r = 0.122; let h = -9;
   for (let k = -3; k <= 3; k++) { const d = k / 3 * r * 0.95, g = groundAt(px + fx * d, pz + fz * d) - (r - Math.sqrt(r * r - d * d)); if (g > h) h = g; }
   return h; }
-const SUS = { kF: 17000, kR: 24000, dF: 900, dR: 1150, tF: 0.045, tR: 0.032, m: 86, I: 7.5, xF: 0.46, xR: -0.445, hcg: 0.62 };
+const SUS = { kF: 42000, kR: 60000, dF: 2400, dR: 2900, tF: 0.045, tR: 0.032, m: 86, I: 7.5, xF: 0.46, xR: -0.445, hcg: 0.62 };
 function crash(why) { if (RM.crash || RM.walk || !RM.on) return; RM.crash = { t: 0 }; RM.jolt = 1; toast(why + '. Down you go'); }
 function toggleWalk() {
   if (RM.crash) return;
@@ -2439,7 +2447,7 @@ function suspStep(dt) {
 function rideStep(dt, omega) {
   if (RM.crash) { RM.crash.t += dt; sim.v = Math.max(0, sim.v - 9 * dt);
     if (RM.crash.t > 1.4) { RM.crash = null; RM.walk = { ph: 0 }; toast('Picked it back up. W walks it, A/D steer, F hops back on'); } }
-  else if (RM.walk) { const want = (input.throttleKey || RM.keys.arrowup || input.throttleUI > 0.15) && !(input.brakeKey || input.brakeUI) ? 1.35 : 0; sim.v += (want - sim.v) * Math.min(1, dt * 2.5); RM.walk.ph += sim.v * dt / 0.72 * PI; }
+  else if (RM.walk) { const back = input.brakeKey || RM.keys.s || RM.keys.arrowdown, want = back ? -0.8 : (input.throttleKey || RM.keys.arrowup || input.throttleUI > 0.15) && !input.brakeUI ? 1.35 : 0; sim.v += (want - sim.v) * Math.min(1, dt * 2.5); RM.walk.ph += sim.v * dt / 0.72 * PI; }   // S walks it backwards
   const k = RM.keys, steerIn = (k.a || k.arrowleft ? 1 : 0) - (k.d || k.arrowright ? 1 : 0), v = sim.v;
   const wantSit = seat.visible && !RM.stand && !RM.walk ? 1 : 0; RM.sit += (wantSit - RM.sit) * Math.min(1, dt * 3.5);
   const accNow = Math.max(-10, Math.min(6, (v - RM.lastV) / Math.max(dt, 1e-3))); RM.lastV = v; RM.acc += (accNow - RM.acc) * Math.min(1, dt * 4);
@@ -2454,10 +2462,12 @@ function rideStep(dt, omega) {
   RM.yaw += yawRate * dt;
   scooter.position.x += Math.cos(RM.yaw) * v * dt; scooter.position.z -= Math.sin(RM.yaw) * v * dt;
   // bump into houses, trees, poles, the edge of town
-  const x = scooter.position.x + Math.cos(RM.yaw) * 0.45, z = scooter.position.z - Math.sin(RM.yaw) * 0.45, lim = (NB + 0.95) * BLK;
+  const pr = v < 0 ? -0.62 : 0.45, x = scooter.position.x + Math.cos(RM.yaw) * pr, z = scooter.position.z - Math.sin(RM.yaw) * pr, lim = (NB + 0.95) * BLK;   // probe the back when reversing
   const hit = RM.boxes.some(b => x > b.x0 && x < b.x1 && z > b.z0 && z < b.z1) || RM.circles.some(c => (x - c.x) ** 2 + (z - c.z) ** 2 < (c.r + 0.3) ** 2) || Math.abs(x) > lim || Math.abs(z) > lim;
   let car = null; if (RM.cars) for (const c of RM.cars) { const rx = x - c.x, rz = z - c.z, fx = Math.cos(c.a), fz = -Math.sin(c.a); if (Math.abs(rx * fx + rz * fz) < c.len / 2 + 0.1 && Math.abs(-rx * fz + rz * fx) < c.wid / 2 + 0.1) car = c; }
   if (car && !hit) { scooter.position.x = px; scooter.position.z = pz; if ((v > 3 || car.v > 2.5) && !RM.walk) crash(car.v > 2.5 ? 'Hit by a car' : 'Ran into a car'); else if (v > 1) toast('Bonk.'); sim.v = 0; }
+  if (!hit && (RM.water || []).some(w => (x - w.x) ** 2 + (z - w.z) ** 2 < w.r * w.r)) { scooter.position.x = px; scooter.position.z = pz;   // water: no riding across it
+    if (v > 2.5 && !RM.walk) crash('Rode into the pond'); else if (Math.abs(v) > 0.3) toast('That is water.'); sim.v = 0; }
   if (hit) { scooter.position.x = px; scooter.position.z = pz; if (v > 4.5 && !RM.walk) crash('Crashed into it'); else if (v > 2) toast('Bonk.'); sim.v = 0; }
   const targetLean = RM.crash ? 1.32 : RM.walk ? 0 : -Math.atan(v * yawRate / 9.81) * 0.9;
   RM.footDown = (RM.footDown || 0) + ((sim.v < 0.6 && !input.throttleKey && !RM.crash && !RM.walk ? 1 : 0) - (RM.footDown || 0)) * Math.min(1, dt * 4);
@@ -2583,7 +2593,7 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
   }
   // riding: average rear brake (0.5) adds 1.36 m/s2 on top of drag -> 31 mph to 0 in 6.0 s, as measured; full (1.0) ~2.7 m/s2 (estimate)
   if (sim.brake > 0.05) a = sim.riding ? -(0.35 + 0.012 * sim.v * sim.v) - 2.72 * sim.brake : -7.5 * Math.min(1, sim.brake * 2);
-  sim.v = Math.max(0, sim.v + a * dt);
+  if (!(RM.on && RM.walk)) sim.v = Math.max(0, sim.v + a * dt);   // walking sets its own speed (and can go backwards)
   const omega = sim.v / R;
   rearWheel.rotation.z -= omega * dt;
   if (RM.on) rideStep(dt, omega);
@@ -2601,9 +2611,9 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
   rocker.position.y += ((sim.lights ? 0.003 : -0.003) - rocker.position.y) * Math.min(1, dt * 25);   // whole cap slides: toward the bar = ON   // slides: up = ON, down = OFF   // rocks: ON end pressed in / OFF end pressed in   // light switch slides up (ON) / down (OFF)
   signalKnob.position.z += (-0.002 + sim.signal * 0.0028 - signalKnob.position.z) * Math.min(1, dt * 25);       // signal slider: left / centre / right
   // sequential signal (from the video): LEDs fill front-to-back over ~0.5 s, all off ~0.3 s, repeat (1.25 Hz, small lights only)
-  const sp = performance.now() % 1150, sigOn = !!sim.signal && sim.power, nLit = sigOn && sp < 820 ? Math.min(6, Math.ceil(Math.max(1, sp) / 420 * 6)) : 0;   // slower: fill 0.42 s, hold, dark 0.33 s   // fill 0.12 s, hold, dark 0.09 s
+  const sp = performance.now() % 760, sigOn = !!sim.signal && sim.power, nLit = sigOn && sp < 660 ? Math.min(6, Math.ceil(Math.max(1, sp) / 107)) : 0;   // owner video 204250047   // slower: fill 0.42 s, hold, dark 0.33 s   // fill 0.12 s, hold, dark 0.09 s
   sim.blink = nLit > 0;
-  for (const sd of [1, -1]) { const on = sim.signal === sd && nLit > 0; M.sideLens[sd].emissiveIntensity = on ? 1.4 + 1.4 * nLit / 6 : 0; }
+  for (const sd of [1, -1]) { const on = sim.signal === sd && nLit > 0; M.sideLens[sd].emissiveIntensity = 0; }   // the lens itself never lights, only the dots (owner video)
   for (const sd of [1, -1]) sigLeds[sd].forEach((m, k) => { m.visible = sd === sim.signal && k < nLit; });   // bright LED dots light front-to-back (video 072337121); dark when off   // the WHOLE lens lights up   // dark until signalling   // whole lens glows red-pink while signalling (dark video PXL_20261122_050558783)
 
   { // the knob unscrews first, then the stem folds; unfolding: stem up first, then the knob screws back in
@@ -2676,7 +2686,7 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
     // seat springs: a hit through the suspension while sitting (vertical body acceleration), at most every 0.22 s
     const B = RM.body; Sound.bCool = Math.max(0, (Sound.bCool || 0) - dt);
     if (B && seated) { const acc = Sound.lastVy === undefined ? 0 : (B.vy - Sound.lastVy) / Math.max(dt, 1e-3); Sound.lastVy = B.vy; Sound.peakAcc = acc;
-      if (acc > 9 && Sound.bCool === 0) { Sound.shot('bounce' + (1 + Math.floor(Math.random() * 3)), Math.min(0.9, 0.25 + acc / 40), 0.95 + Math.random() * 0.1); Sound.bCool = 0.22;
+      if (acc > 22 && Sound.bCool === 0) { Sound.shot('bounce' + (1 + Math.floor(Math.random() * 3)), Math.min(0.9, 0.25 + acc / 40), 0.95 + Math.random() * 0.1); Sound.bCool = 0.22;
         RM.sprV = (RM.sprV || 0) + Math.min(1.2, acc / 25);
         Sound.layer('springs', { vol: Math.min(0.8, acc / 30) * (0.2 + 0.8 * (Sound.sitBack ?? 0.4)) * (0.7 + Math.random() * 0.4), rate: 0.92 + Math.random() * 0.18, offset: Math.random() * 0.5, dur: 0.12 + Math.random() * 0.15, delay: 0.01 + Math.random() * 0.04, lp: 1500 + Math.random() * 1200 }); } } else Sound.lastVy = undefined; }
   if (M.seatSprings) { const seated2 = !!(RM.on && !RM.walk && !RM.crash && !RM.stand && seat.visible), tgt = seated2 ? 0.12 + 0.1 * (Sound.sitBack ?? 0.4) : 0;
@@ -2686,7 +2696,7 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
   // UI
   $('tFill').style.width = (sim.throttle * 100).toFixed(1) + '%'; $('tVal').textContent = Math.round(sim.throttle * 100) + '%';
   tEl.setAttribute('aria-valuenow', Math.round(sim.throttle * 100));
-  lcdTimer += dt; const shown = `${sim.lights}|${Math.floor(performance.now() / 500) % 2}|${sim.blink}|${performance.now() < sim.odoUntil || Math.floor(performance.now() / 2500) % 2}|${Math.round(sim.v / 0.44704)}|${Math.floor(sim.odo)}|${Math.ceil(pctOfV(shownV()) / 10)}|${sim.brake > 0.05}|${sim.volts.toFixed(1)}`;
+  lcdTimer += dt; const shown = `${sim.lights}|${performance.now() % 610 < 280}|${sim.blink}|${performance.now() < sim.odoUntil || Math.floor(performance.now() / 2500) % 2}|${Math.round(sim.v / 0.44704)}|${Math.floor(sim.odo)}|${Math.ceil(pctOfV(shownV()) / 10)}|${sim.brake > 0.05}|${sim.volts.toFixed(1)}`;
   if (lcdTimer > 0.1 && shown !== lastShown) { refreshLCD(); lastShown = shown; lcdTimer = 0; }
   $('bBrake').classList.toggle('active', brkIn > 0); $('bHorn').classList.toggle('active', hornOn());
   if (tween) { const k = Math.min(1, (performance.now() - tween.s) / 850), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;

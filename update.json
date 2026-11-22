@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1437",
-  "notes": "Seat to measurements (7 in back, 2 3/4 in nose, 2 3/4 in thick); stem top + bar clamp one casting; orange ring back round the top of the stem",
+  "version": "2026.1122.1448",
+  "notes": "Seat thinner, curved like the photo; stiffer suspension (no bouncing, no rear hop); smooth one-piece coat; turn signal lights only the dots at the real speed; steady brake squeal; speedometer icon blinks at the real rate; hold S to walk it backwards; no riding on the pond",
   "page": "rt6.html",
-  "sha256": "dbb02c897b0d40ea51d45ccdcd4f80e4baddc403da05543ccaa4ab0c179991a4",
+  "sha256": "13923f9446990cf801ce999aa1dac30cd4a81a4aeedfaf84d3e2d3e22289c4a3",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T20:37:17.241Z"
+  "published": "2026-11-22T20:48:07.540Z"
 }
