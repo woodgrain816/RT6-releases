@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1249",
-  "notes": "Ruitoo plate: big curved inner corner, grey outline, deeper red, glossy face",
+  "version": "2026.1122.1254",
+  "notes": "Ruitoo plate reshaped like yours: full-width top, straight back edge, leg straight down to the deck, big curved cut-out at the front",
   "page": "rt6.html",
-  "sha256": "1d54d13748a58013255fdcf43ba20d5dbcc75e682672cbe9ffd518a3c3222085",
+  "sha256": "0b84c9b639f5ad44fb742b5e3b604fdbfe60452b380191593b5d917f02362d2d",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T18:49:07.334Z"
+  "published": "2026-11-22T18:54:18.806Z"
 }

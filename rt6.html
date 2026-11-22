@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1249";</script>
+<script>window.RT6_VERSION = "2026.1122.1254";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -321,13 +321,13 @@ const deckTex = canvasTex(1536, 540, (g, W, H) => {
 });
 const deckBump = canvasTex(1536, 540, (g, W, H) => { deckPattern(g, W, H, '#000', '#fff'); }, false);   // band is flush with the pill tops
 
-const PL = { x0: 0.22, x1: 0.405, y0: 0.154, y1: 0.41, outline: [[0.3905,0.405],[0.303,0.405],[0.2959,0.4038],[0.2896,0.4005],[0.2847,0.3952],[0.2817,0.3887],[0.224,0.178],[0.224,0.165],[0.231,0.158],[0.27,0.158],[0.277,0.165],[0.334,0.3],[0.3347,0.307],[0.3367,0.3138],[0.3401,0.32],[0.3445,0.3255],[0.35,0.3299],[0.3562,0.3333],[0.363,0.3353],[0.37,0.336],[0.4013,0.336]] };   // inverted L: big concave inner corner, rounded top-back (owner photos)   // plate bounds (frame metres); canvas = 4096 px per metre
+const PL = { x0: 0.22, x1: 0.405, y0: 0.16, y1: 0.41, outline: [[0.3905,0.405],[0.252,0.405],[0.232,0.385],[0.226,0.18],[0.232,0.168],[0.278,0.168],[0.285,0.176],[0.283,0.298],[0.2835,0.3043],[0.285,0.3104],[0.2874,0.3162],[0.2906,0.3215],[0.2947,0.3263],[0.2995,0.3304],[0.3048,0.3336],[0.3106,0.336],[0.3167,0.3375],[0.323,0.338],[0.4013,0.337]] };   // owner photos: a 7 - full-width top along the head tube, straight back edge with a chamfered top corner, wide leg straight down to the deck, big curved cut-out low at the front
 function plateTex(right) {   // owner's photos: black plate, big salmon-red band down the leg with darker edges, grey edge lines, red circuit traces with dots, white "Ruitoo" up the leg
   const S = 4096, W = Math.round((PL.x1 - PL.x0) * S), H = Math.round((PL.y1 - PL.y0) * S);
   return canvasTex(W, H, (g) => {
     const X = x => (right ? x - PL.x0 : PL.x1 - x) * S, Y = y => (PL.y1 - y) * S;
     g.fillStyle = '#121318'; g.fillRect(0, 0, W, H);
-    const A = [0.25, 0.16], B = [0.31, 0.372];   // leg centre line, bottom to top
+    const A = [0.255, 0.168], B = [0.262, 0.395];   // leg centre line, bottom to top
     const ax = X(A[0]), ay = Y(A[1]), bx = X(B[0]), by = Y(B[1]), ang = Math.atan2(by - ay, bx - ax), len = Math.hypot(bx - ax, by - ay);
     g.save(); g.translate(ax, ay); g.rotate(ang);   // leg frame: +x up the leg, +y across it
     const band = (c, y, h) => { g.fillStyle = c; g.fillRect(-400, y, len + 800, h); };
@@ -343,7 +343,7 @@ function plateTex(right) {   // owner's photos: black plate, big salmon-red band
     g.beginPath(); g.moveTo(-60, 60); g.lineTo(80, 60); g.lineTo(120, 130); g.lineTo(-60, 130); g.closePath(); g.fill(); g.globalAlpha = 1;
     g.fillStyle = '#2b2e37'; g.fillRect(len * 0.9, -150, 260, 52); g.fillRect(len * 0.95, 96, 240, 46);
     // "Ruitoo" up the leg, readable from this side
-    g.translate(len * 0.47, 6); if (Math.cos(ang) < 0) g.rotate(PI);
+    g.translate(len * 0.47, 6); if (Math.sin(ang) > 0) g.rotate(PI);   // always reads bottom-to-top, both sides (owner photos)
     g.font = '700 170px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; try { g.letterSpacing = '6px'; } catch {}
     g.lineWidth = 16; g.strokeStyle = '#121318'; g.strokeText('Ruitoo', 0, 0); g.fillStyle = '#e9ecf1'; g.fillText('Ruitoo', 0, 0);
     g.restore();
@@ -805,16 +805,16 @@ for (const [i, sz] of [[0, -1], [1, 1]]) {
   mesh(dg, plateMats[i], frame, [0, 0, sz * 0.0374]);   // just proud of the plate bevel (was z-fighting)
 }
 // lattice across the rear face between the plates (open windows, graphic behind), top cap, foot block
-{ const lat = new THREE.Group(); lat.position.set(0.292, 0.3, 0); lat.rotation.z = 1.31; frame.add(lat);
+{ const lat = new THREE.Group(); lat.position.set(0.255, 0.29, 0); lat.rotation.z = 1.55; frame.add(lat);
   for (const x of [0.006, -0.047]) mesh(new THREE.CylinderGeometry(0.0065, 0.0065, 0.062, 8).rotateX(PI / 2).scale(0.8, 1, 1), M.frame, lat, [x, 0, 0]);   // two faceted round bars (owner)   // flat rungs, as seen from above
 }   // windows left open; frame + plate insides are black
-mesh(new RoundedBoxGeometry(0.09, 0.008, 0.066, 4, 0.003), M.frame, frame, [0.345, 0.401, 0]);   // top cap
-mesh(new RoundedBoxGeometry(0.03, 0.05, 0.066, 4, 0.005), M.frame, frame, [0.238, 0.218, 0]);
+mesh(new RoundedBoxGeometry(0.13, 0.008, 0.066, 4, 0.003), M.frame, frame, [0.32, 0.401, 0]);   // top cap
+mesh(new RoundedBoxGeometry(0.05, 0.05, 0.066, 4, 0.005), M.frame, frame, [0.246, 0.205, 0]);   // deck nose block the leg bolts to
 for (const sz of [1, -1]) {
   for (const [x, y] of [[0.389, 0.358], [0.386, 0.376], [0.3833, 0.394]]) {   // three big countersunk bolts into the head tube
     mesh(new THREE.CylinderGeometry(0.0068, 0.0068, 0.0012, 28).rotateX(PI / 2), M.chrome, frame, [x, y, sz * 0.0378]);
     mesh(new THREE.CylinderGeometry(0.0024, 0.0024, 0.0006, 6).rotateX(PI / 2), std(0x050506, 0.9, 0), frame, [x, y, sz * 0.0385]); }
-  for (const [x, y] of [[0.302, 0.394], [0.392, 0.342], [0.257, 0.27], [0.25, 0.168]])   // small domed button bolts
+  for (const [x, y] of [[0.246, 0.392], [0.392, 0.343], [0.236, 0.29], [0.24, 0.18]])   // small domed button bolts
     mesh(new THREE.SphereGeometry(0.0038, 16, 8, 0, TAU, 0, PI / 2).scale(1, 0.55, 1).rotateX(sz * PI / 2), M.chrome, frame, [x, y, sz * 0.0377]); }
 // rear swingarm, shocks, kickstand
 const SWP = V(-0.28, 0.165, 0), swingG = new THREE.Group(); swingG.name = 'Swingarm'; frame.add(swingG);
