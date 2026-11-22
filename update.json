@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1519",
-  "notes": "Corvette C8 convertible (white, black top + nacelles, high wing, side scoops, Z51 70th door badge, red-stripe wheels) in traffic; Day/Night switch (N key or Day button) with stars, streetlight pools, garage light",
+  "version": "2026.1122.1532",
+  "notes": "Corvette rebuilt with a real curved body (measured from a reference model + your photos): chevron side intakes, swept headlights, 70th emblem + 70 door badge, carbon wing, quad tips, C8 rear; stem LEDs light the full letters",
   "page": "rt6.html",
-  "sha256": "fda9c5d7ccfa72e2fc9fdb72f75b89c8ace0c649612ff738d9248ad7296b1d6e",
+  "sha256": "8f8a56766c96628be87226af0f10799dd0272fe16e92e0dd6b4c4431c62525b3",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T21:19:17.526Z"
+  "published": "2026-11-22T21:32:43.592Z"
 }

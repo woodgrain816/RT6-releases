@@ -4,4 +4,4 @@ Update files for the fan-made Ruitoo RT6 scooter sim (non-commercial; Ruitoo, RT
 The Android app reads `update.json` on launch and downloads `rt6.html` when it is newer (checked against its SHA-256).
 To install the app: download `RT6Sim.apk`.
 
-Current version: **2026.1122.1519** - Corvette C8 convertible (white, black top + nacelles, high wing, side scoops, Z51 70th door badge, red-stripe wheels) in traffic; Day/Night switch (N key or Day button) with stars, streetlight pools, garage light
+Current version: **2026.1122.1532** - Corvette rebuilt with a real curved body (measured from a reference model + your photos): chevron side intakes, swept headlights, 70th emblem + 70 door badge, carbon wing, quad tips, C8 rear; stem LEDs light the full letters
