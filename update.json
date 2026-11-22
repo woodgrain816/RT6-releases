@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1558",
-  "notes": "Wheelie no longer slides the scooter backwards",
+  "version": "2026.1122.1607",
+  "notes": "Highway east of town (6 lanes, median, fast traffic incl. a Corvette), cars yield at intersections, Corvette parked outside the garage, escalating police speech with impound, rider proportions + C camera fixed in walk mode",
   "page": "rt6.html",
-  "sha256": "ec5694cbef98943a151c4c0e81963b99553ceebe3a617d73f14f2244718c0e42",
+  "sha256": "ea09ced90fcc079d64657c5734768c62d52ae87568eec1ee1e951b29da334146",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T21:58:52.827Z"
+  "published": "2026-11-22T22:07:45.747Z"
 }

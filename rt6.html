@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1558";</script>
+<script>window.RT6_VERSION = "2026.1122.1607";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -2036,6 +2036,20 @@ function buildTown() {
       lamps.push(placed(colored(new THREE.BoxGeometry(0.7, 0.12, 0.32), 0xfff2c8), px + ax * 2.25, 7.33, pz + az * 2.25, ax ? 0 : PI / 2)); (RM.lampXZ = RM.lampXZ || []).push([px + ax * 2.25, pz + az * 2.25]);
       RM.circles.push({ x: px, z: pz, r: 0.15 }); } }
   buildSignals(town);
+  { // connector + highway (east of town)
+    const hwTex = canvasTex(256, 128, (g, W, H) => { g.fillStyle = '#383a3e'; g.fillRect(0, 0, W, H); for (let i = 0; i < 2200; i++) { const v = 48 + Math.random() * 24 | 0; g.fillStyle = 'rgb(' + v + ',' + (v + 1) + ',' + (v + 3) + ')'; g.fillRect(Math.random() * W, Math.random() * H, 2, 2); }
+      const X = m => 128 + m * 8; g.fillStyle = '#e8d36a'; g.fillRect(X(-0.9) - 2, 0, 4, H); g.fillRect(X(0.9) - 2, 0, 4, H);
+      g.fillStyle = '#eeeeee'; for (const m of [-12.3, 12.3]) g.fillRect(X(m) - 2, 0, 4, H); for (const m of [-8.7, -5.1, 5.1, 8.7]) g.fillRect(X(m) - 1.5, 10, 3, 48); });
+    hwTex.wrapS = hwTex.wrapT = THREE.RepeatWrapping; hwTex.repeat.set(1, 1380 / 24);
+    const hw = new THREE.Mesh(new THREE.PlaneGeometry(32, 1380).rotateX(-PI / 2), new THREE.MeshStandardMaterial({ map: hwTex, roughness: 0.9 }), 0); hw.position.set(520, 0.006, 0); hw.receiveShadow = true; town.add(hw);
+    const cnTex = canvasTex(256, 32, (g, W, H) => { g.fillStyle = '#3a3c3f'; g.fillRect(0, 0, W, H); for (let i = 0; i < 700; i++) { const v = 50 + Math.random() * 25 | 0; g.fillStyle = 'rgb(' + v + ',' + (v + 1) + ',' + (v + 3) + ')'; g.fillRect(Math.random() * W, Math.random() * H, 2, 2); } g.fillStyle = '#e8d36a'; for (let x = 0; x < W; x += 128) g.fillRect(x, H / 2 - 1, 70, 3); });
+    cnTex.wrapS = THREE.RepeatWrapping; cnTex.repeat.set(148 / 20, 1);
+    const cn = new THREE.Mesh(new THREE.PlaneGeometry(150, 10).rotateX(-PI / 2), new THREE.MeshStandardMaterial({ map: cnTex, roughness: 0.9 })); cn.position.set(429.5, 0.006, 0); cn.receiveShadow = true; town.add(cn);
+    const med = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.85, 1380), new THREE.MeshStandardMaterial({ color: 0xa9a7a0, roughness: 0.9 })); med.position.set(520, 0.42, 0); med.castShadow = true; town.add(med);
+    RM.boxes.push({ x0: 519.6, x1: 520.4, z0: -690, z1: 690 });
+    const pm = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.1, 0.14, 9, 8).translate(0, 4.5, 0), new THREE.MeshStandardMaterial({ color: 0x5d636b, metalness: 0.4, roughness: 0.5 }), 46), hm = new THREE.InstancedMesh(new THREE.BoxGeometry(1.6, 0.14, 0.4).translate(0, 9, 0), new THREE.MeshStandardMaterial({ color: 0xfff2c8, emissive: 0xfff2c8, emissiveIntensity: 0.6 }), 46), mt = new THREE.Matrix4(); let q = 0;
+    for (let z = -660; z <= 660; z += 60) for (const x of [518.8, 521.2]) { mt.makeTranslation(x, 0, z); pm.setMatrixAt(q, mt); hm.setMatrixAt(q, mt); q++; }
+    pm.count = hm.count = q; town.add(pm, hm); RM.lampMesh2 = hm; }
   { // HOME: detailed house with an attached garage, door rolled up (the scooter's home base)
     const wc = 0xd8cdb8, trim = 0xf2efe8, roofc = 0x3f444c, B = (w, h, d, c, x, y, z, list = walls) => list.push(placed(colored(new THREE.BoxGeometry(w, h, d), c), x, y, z));
     // main house x 8..20.2, z -22.5..-12.5
@@ -2382,7 +2396,24 @@ function buildTraffic(town) {
     town.add(g);
     const c = { id: n, police: g.name === 'Police', fast: g.name === 'Corvette', g, wheels, T: tp.T, len: tp.T.L, wid: tp.T.W, i, j, dx: d[0], dz: d[1], x: sx, z: sz, a: Math.atan2(-d[1], d[0]), v: 6 + R() * 4, s: 0, segs: [] };
     c.segs.push(mkSeg(sx, sz, null, null, nx - d[0] * STOPC + rx * LANE, nz - d[1] * STOPC + rz * LANE, true));
-    RM.cars.push(c); n++; } }
+    RM.cars.push(c); n++; }
+  { const cv = buildCorvette(); cv.g.name = 'ParkedCorvette'; cv.g.position.set(24.7, 0, -9.9); cv.g.rotation.y = -PI / 2; town.add(cv.g); RM.boxes.push({ x0: 23.7, x1: 25.7, z0: -12.4, z1: -7.4 }); }   // right outside the garage (always seen)
+  RM.hw = [];   // highway: straight lanes, fast, wrapping at the ends
+  for (let k = 0; k < 16; k++) { const west = k % 2 === 0, lane = Math.floor(k / 2) % 3, isC = k === 4;
+    let g, wheels, tp; if (isC) { const cv = buildCorvette(); g = cv.g; wheels = cv.wheels; tp = { T: cv.T }; g.name = 'Corvette'; }
+    else { const type = types[Math.floor(R() * types.length)]; tp = tpl[type]; g = new THREE.Group(); const bm = new THREE.Mesh(tp.body, paints[Math.floor(R() * paints.length)]); bm.castShadow = true;
+      g.add(bm, new THREE.Mesh(tp.glass, glassM), new THREE.Mesh(tp.trim, trimM), new THREE.Mesh(tp.lamp, lampM));
+      wheels = []; for (const [wx, sd] of [[tp.T.wb / 2, 1], [tp.T.wb / 2, -1], [-tp.T.wb / 2, 1], [-tp.T.wb / 2, -1]]) { const w = new THREE.Mesh(tp.wheel, wheelM); w.position.set(wx, tp.T.r, sd * (tp.T.W / 2 - 0.16)); w.scale.z = sd; w.rotation.order = 'YXZ'; w.castShadow = true; g.add(w); wheels.push(w); } }
+    town.add(g); const off = 3.3 + 3.6 * lane, v = isC ? 40 : [31, 28, 24][lane] + R() * 3;
+    RM.hw.push({ g, wheels, T: tp.T, x: 520 + (west ? -off : off), z: -650 + R() * 1300 + k, v, dir: west ? 1 : -1, a: west ? -PI / 2 : PI / 2 }); } }
+function hwStep(dt) {
+  for (const c of RM.hw) { c.z += c.dir * c.v * dt; if (c.z > 690) c.z = -690; if (c.z < -690) c.z = 690;
+    c.g.position.set(c.x, 0, c.z); c.g.rotation.y = c.a; c.wheels.forEach(w => { w.rotation.z -= c.v * dt / c.T.r; });
+    const px = RM.free ? RM.free.pos.x : scooter.position.x, pz = RM.free ? RM.free.pos.z : scooter.position.z;
+    if (Math.abs(px - c.x) < c.T.W / 2 + 0.5 && Math.abs(pz - c.z) < c.T.L / 2 + 0.6) {
+      if (RM.free) { RM.free.pos.set(scooter.position.x, 0, scooter.position.z + 1.2); toast('A car clipped you on the highway: back to the scooter'); }
+      else if (!RM.crash) crash('Hit by a car on the highway'); } } }
+
 function mkSeg(ax, az, cx, cz, bx, bz, approach) {
   const sg = { ax, az, cx, cz, bx, bz, approach, curve: cx !== null };
   if (!sg.curve) sg.len = Math.hypot(bx - ax, bz - az);
@@ -2401,6 +2432,7 @@ function planTurn(c) {   // at the stop line: pick straight / right / left (neve
   c.i += dx; c.j += dz; c.dx = dx; c.dz = dz;
   c.segs.push(mkSeg(xx, xz, null, null, c.i * BLK - dx * STOPC + r2x * LANE, c.j * BLK - dz * STOPC + r2z * LANE, true)); }
 function trafficStep(dt) {
+  if (RM.hw) hwStep(dt);
   if (!RM.cars) return; RM.simT = (RM.simT || 0) + dt;
   for (const o of RM.sigMats) o.m.emissiveIntensity = sigState(o.g, o.axis) === o.col ? 2.6 : 0.06;
   const sp = scooter.position;
@@ -2418,6 +2450,9 @@ function trafficStep(dt) {
     { const rx = sp.x - c.x, rz = sp.z - c.z, al = rx * fx + rz * fz; if (al > 0 && al < 32 && Math.abs(-rx * fz + rz * fx) < 2.0) gap = Math.min(gap, al - c.len / 2 - 0.8); }
     if (gap < 1e9) vmax = Math.min(vmax, Math.sqrt(2 * 4.5 * Math.max(0, gap - 1.8)));
     if (c.police && RM.wanted === c && Math.hypot(sp.x - c.x, sp.z - c.z) < 14) vmax = 0;
+    for (const o of RM.cars) { if (o.id >= c.id) continue; const rx = o.x - c.x, rz = o.z - c.z, dist = Math.hypot(rx, rz); if (dist > 8) continue;   /* lower id has the right of way at conflicts */
+      const cs = Math.cos(o.a - c.a), ahead = rx * fx + rz * fz > -1.2; if (!ahead) continue;
+      if (Math.abs(cs) < 0.7 || ((sg.curve || o.segs[0].curve) && cs < 0.7)) vmax = Math.min(vmax, dist < 4.6 ? 0 : Math.sqrt(2 * 4.5 * (dist - 4.4))); }
     c.v += Math.max(-8 * dt, Math.min((hot ? 6.5 : 2.6) * dt, vmax - c.v)); c.v = Math.max(0, c.v);
     c.s += c.v * dt;
     while (c.s >= sg.len) { c.s -= sg.len; c.segs.shift(); if (!c.segs.length) planTurn(c); sg = c.segs[0]; }
@@ -2502,10 +2537,10 @@ function poseRider() {
   const P = RM.rider.userData.P, sb = RM.sit;   // sb: 1 = seated, 0 = standing (blended)
   let gL = scLocal(RM.gripL, V(0, 0.06, 0)), gR = scLocal(RM.gripR, V(0, 0.06, 0));
   if (RM.walk && RM.walkQ) { gL.applyQuaternion(RM.walkQ); gR.applyQuaternion(RM.walkQ); gR = gL.clone().lerp(gR, 0.42); }
-  if (RM.free) { gL = V(0, 0.55, -0.24); gR = V(0, 0.55, 0.24); if (RM.free.sit) { gL = V(0.28, RM.free.sit.h + 0.12, -0.2); gR = V(0.28, RM.free.sit.h + 0.12, 0.2); } }
+  if (RM.free) { gL = V(0.05, 0.7, -0.2); gR = V(0.05, 0.7, 0.2); if (RM.free.sit) { gL = V(0.28, RM.free.sit.h + 0.12, -0.2); gR = V(0.28, RM.free.sit.h + 0.12, 0.2); } }
   const gMid = gL.clone().add(gR).multiplyScalar(0.5);
   const Hsit = RM.saddleTop.clone().add(V(-0.01, 0.075, 0)), Hstand = V(-0.06, DECK_TOP + RIDER.hipStand, 0);
-  const H = RM.free ? V(0, RM.free.sit ? RM.free.sit.h : 0.9 + 0.015 * Math.abs(Math.sin(RM.walk.ph)) * RM.free.amp, 0) : RM.walk ? V(gL.x - 0.32, 0.87 + (RM.walkG || 0) + 0.015 * Math.abs(Math.sin(RM.walk.ph)), gL.z - 0.24) : Hstand.clone().lerp(Hsit, sb);
+  const H = RM.free ? V(0, RM.free.sit ? RM.free.sit.h : 0.8 + 0.012 * Math.abs(Math.sin(RM.walk.ph)) * RM.free.amp, 0) : RM.walk ? V(gL.x - 0.32, 0.87 + (RM.walkG || 0) + 0.015 * Math.abs(Math.sin(RM.walk.ph)), gL.z - 0.24) : Hstand.clone().lerp(Hsit, sb);
   const deckY = DECK_TOP + 0.075;
   const ank = { L: V(0.07, deckY, -0.08).lerp(V(0.04, deckY, -0.075), sb), R: V(-0.17, deckY, 0.08).lerp(V(-0.01, deckY, 0.075), sb) };
   ank.L.lerp(V(0.06, 0.085 + 0.05 * RM.lean, -0.24), RM.footDown || 0);   // stopped: left foot down on the ground
@@ -2599,7 +2634,9 @@ function exitRide() {
   key.position.set(1.4, 3.2, -1.6); key.target.position.set(0, 0, 0);
   document.body.classList.remove('riding'); $('bRide').setAttribute('aria-pressed', false); goView('three', true);
 }
-function groundAt(x, z) {   // world ground height: roads at 0, everything else a curb up; small joints and cracks for texture
+function inBounds(x, z) { const lim = (NB + 0.95) * BLK; return (Math.abs(x) <= lim && Math.abs(z) <= lim) || (x > lim && x < 546 && (Math.abs(z) < 7 || x > 498) && Math.abs(z) < 690); }
+function groundAt(x, z) {
+  if (x > 358) { const inHw = x > 503 && x < 537 && Math.abs(z) < 692, inCon = Math.abs(z) < 5 && x < 504; return inHw || inCon ? 0 : -0.02; }   // connector + highway are flat asphalt, the rest is grass   // world ground height: roads at 0, everything else a curb up; small joints and cracks for texture
   const R2 = ROAD / 2, dx = Math.abs(x - Math.round(x / BLK) * BLK), dz = Math.abs(z - Math.round(z / BLK) * BLK);
   let h;
   if (dx < R2 || dz < R2) { const along = dx < R2 ? z : x; h = ((along % 7 + 7) % 7) < 0.07 ? -0.007 : 0; h += 0.0012 * Math.sin(x * 3.1 + z * 1.7) * Math.sin(z * 2.3 - x * 0.9); }
@@ -2645,7 +2682,7 @@ function suspStep(dt) {
   B.cF = Math.min(SUS.tF + 0.004, Math.max(0, cF)); B.cR = Math.min(SUS.tR + 0.004, Math.max(0, cR));
   setSusp(B.cF / Math.cos(RAKE), B.cR); }
 function freeBlocked(x, z) { const lim = (NB + 0.95) * BLK;
-  return RM.boxes.some(b => x > b.x0 - 0.3 && x < b.x1 + 0.3 && z > b.z0 - 0.3 && z < b.z1 + 0.3) || RM.circles.some(c => (x - c.x) ** 2 + (z - c.z) ** 2 < (c.r + 0.35) ** 2) || Math.abs(x) > lim || Math.abs(z) > lim
+  return RM.boxes.some(b => x > b.x0 - 0.3 && x < b.x1 + 0.3 && z > b.z0 - 0.3 && z < b.z1 + 0.3) || RM.circles.some(c => (x - c.x) ** 2 + (z - c.z) ** 2 < (c.r + 0.35) ** 2) || !inBounds(x, z)
     || (RM.water || []).some(w => (x - w.x) ** 2 + (z - w.z) ** 2 < w.r * w.r) || (x - scooter.position.x) ** 2 + (z - scooter.position.z) ** 2 < 0.45 * 0.45; }
 function startFree() {
   if (RM.free || RM.crash || !RM.walk) { if (!RM.walk && !RM.crash) toast('Get off first (F), put the kickstand down (J), then X'); return; }
@@ -2682,12 +2719,18 @@ function rideStep(dt, omega) {
     if (RM.crash.t > 1.4) { RM.crash = null; RM.walk = { ph: 0 }; toast('Picked it back up. W walks it, A/D steer, F hops back on'); } }
   else if (RM.walk) { const back = input.backKey || RM.keys.arrowdown, want = back ? -0.8 : (input.throttleKey || RM.keys.arrowup || input.throttleUI > 0.15) && !input.brakeUI ? (input.brakeHard ? 3.4 : 1.35) : 0; sim.v += (want - sim.v) * Math.min(1, dt * 2.5); RM.walk.ph += sim.v * dt / 0.72 * PI; }   // S walks it backwards
   if (RM.cars && !RM.crash) {
-    const bad = (RM.wh && RM.wh.a > 0.2) || sim.v > 12.5; RM.heat = Math.max(0, Math.min(4, (RM.heat || 0) + (bad ? dt : -dt * 0.25)));
+    const wheelieNow = !!(RM.wh && RM.wh.a > 0.2), bad = wheelieNow || sim.v > 12.5; if (bad) RM.offence = wheelieNow ? 'wheelie' : 'speed'; RM.heat = Math.max(0, Math.min(4, (RM.heat || 0) + (bad ? dt : -dt * 0.25)));
     if (RM.heat > 1.2 && !RM.wanted) { let best = null, bd = 900; for (const c of RM.cars) if (c.police) { const d = Math.hypot(c.x - scooter.position.x, c.z - scooter.position.z); if (d < bd) { bd = d; best = c; } }
-      if (best) { RM.wanted = best; RM.stopT = 0; toast('Police lights behind you: pull over and stop'); } }
+      if (best) { RM.wanted = best; RM.stopT = 0; RM.yellT = 0; toast(RM.strikes ? 'Not you again... pull over RIGHT NOW' : 'Police lights behind you: pull over and stop'); } }
     if (RM.wanted) { const c = RM.wanted, d = Math.hypot(c.x - scooter.position.x, c.z - scooter.position.z);
-      if (d < 18 && sim.v < 0.6) { RM.stopT = (RM.stopT || 0) + dt; if (RM.stopT > 2) { toast('Officer: "Easy on the wheelies and the speed. That\'s a warning - ride safe."'); c.back = true; RM.wanted = null; RM.heat = 0; } }
-      else RM.stopT = 0; } }
+      if (d < 18 && sim.v < 0.6) { RM.stopT = (RM.stopT || 0) + dt; if (RM.stopT > 2) { const n = RM.strikes = (RM.strikes || 0) + 1, w = RM.offence === 'wheelie';
+          const L = w ? ['Easy on the wheelies, kid. That is a warning, ride safe.', 'I told you about the wheelies. Keep the front wheel down, understood?', 'Wheelies AGAIN? One more and I am taking that scooter.', 'That is it. Wheelies on a public road. I am impounding the scooter.']
+                      : ['Slow it down, you are way over the limit. Just a warning.', 'You again, doing double the limit. Last friendly warning.', 'Speeding AGAIN? One more time and I am taking the scooter.', 'That is it. Reckless speeding. I am impounding the scooter.'];
+          toast('Officer: "' + L[Math.min(n - 1, 3)] + '"'); c.back = true; RM.wanted = null; RM.heat = 0;
+          if (n >= 4) { RM.strikes = 0; setTimeout(() => { if (RM.on) { scooter.position.set(SPAWN.x, 0, SPAWN.z); RM.yaw = SPAWN.yaw; sim.v = 0; RM.camPos = null; RM.body = null; toast('Scooter impounded and returned to the garage. Ride nice from now on.'); } }, 3500); } } }
+      else { RM.stopT = 0; if (d < 40 && bad) { RM.yellT = (RM.yellT || 0) - dt; if (RM.yellT <= 0) { RM.yellT = 3.2;
+          const Y = RM.offence === 'wheelie' ? ['Put that front wheel DOWN!', 'Stop the wheelie, right now!', 'Wheels on the ground! Pull over!', 'Do NOT make me tell you again!'] : ['SLOW DOWN!', 'Pull over, you are speeding!', 'Ease off the throttle, now!', 'Stop that scooter!'];
+          toast('Officer (megaphone): "' + Y[Math.floor(Math.random() * Y.length)] + '"'); } } } } }
   const k = RM.keys, steerIn = (k.a || k.arrowleft ? 1 : 0) - (k.d || k.arrowright ? 1 : 0), v = sim.v;
   const wantSit = seat.visible && !RM.stand && !RM.walk ? 1 : 0; RM.sit += (wantSit - RM.sit) * Math.min(1, dt * 3.5);
   const accNow = Math.max(-10, Math.min(6, (v - RM.lastV) / Math.max(dt, 1e-3))); RM.lastV = v; RM.acc += (accNow - RM.acc) * Math.min(1, dt * 4);
@@ -2703,7 +2746,7 @@ function rideStep(dt, omega) {
   scooter.position.x += Math.cos(RM.yaw) * v * dt; scooter.position.z -= Math.sin(RM.yaw) * v * dt;
   // bump into houses, trees, poles, the edge of town
   const pr = v < 0 ? -0.62 : 0.45, x = scooter.position.x + Math.cos(RM.yaw) * pr, z = scooter.position.z - Math.sin(RM.yaw) * pr, lim = (NB + 0.95) * BLK;   // probe the back when reversing
-  const hit = RM.boxes.some(b => x > b.x0 && x < b.x1 && z > b.z0 && z < b.z1) || RM.circles.some(c => (x - c.x) ** 2 + (z - c.z) ** 2 < (c.r + 0.3) ** 2) || Math.abs(x) > lim || Math.abs(z) > lim;
+  const hit = RM.boxes.some(b => x > b.x0 && x < b.x1 && z > b.z0 && z < b.z1) || RM.circles.some(c => (x - c.x) ** 2 + (z - c.z) ** 2 < (c.r + 0.3) ** 2) || !inBounds(x, z);
   let car = null; if (RM.cars) for (const c of RM.cars) { const rx = x - c.x, rz = z - c.z, fx = Math.cos(c.a), fz = -Math.sin(c.a); if (Math.abs(rx * fx + rz * fz) < c.len / 2 + 0.1 && Math.abs(-rx * fz + rz * fx) < c.wid / 2 + 0.1) car = c; }
   if (car && !hit) { scooter.position.x = px; scooter.position.z = pz; if ((v > 3 || car.v > 2.5) && !RM.walk) crash(car.v > 2.5 ? 'Hit by a car' : 'Ran into a car'); else if (v > 1) toast('Bonk.'); sim.v = 0; }
   if (!hit && (RM.water || []).some(w => (x - w.x) ** 2 + (z - w.z) ** 2 < w.r * w.r)) { scooter.position.x = px; scooter.position.z = pz;   // water: no riding across it
@@ -2739,13 +2782,13 @@ function shakeOffset(scale) {   // smooth road buzz growing with speed + a short
 }
 function rideCamera(dt) {
   const yw = RM.free ? RM.free.yaw : RM.yaw, p = RM.free ? RM.free.pos : scooter.position, f = V(Math.cos(yw), 0, -Math.sin(yw));
-  if (RM.cam === 'fp' && !RM.free) {
+  if (RM.cam === 'fp') {
     scooter.updateMatrixWorld(true);
-    const head = scooter.localToWorld(RM.headPos.clone().add(V(0.05, 0.03, 0)));
+    const head = RM.free ? (RM.rider.updateMatrixWorld(true), RM.rider.localToWorld(RM.rider.userData.P.head.position.clone()).add(V(Math.cos(yw) * 0.1, 0.03, -Math.sin(yw) * 0.1))) : scooter.localToWorld(RM.headPos.clone().add(V(0.05, 0.03, 0)));
     { const fov = 70 + 14 * Math.min(1, sim.v / 14); if (Math.abs(camera.fov - fov) > 0.1) { camera.fov += (fov - camera.fov) * Math.min(1, dt * 3); camera.updateProjectionMatrix(); } }
     camera.position.copy(head).add(shakeOffset(1)); camera.up.set(0, 1, 0);
     { const fl = f.clone().applyAxisAngle(V(0, 1, 0), RM.oy || 0); if (!RM.orbitHeld) { RM.oy = (RM.oy || 0) * Math.max(0, 1 - dt * 1.5); RM.op = (RM.op || 0) * Math.max(0, 1 - dt * 1.5); }
-      camera.lookAt(head.clone().add(fl.multiplyScalar(4)).add(V(0, -1.35 - (RM.op || 0) * 3, 0)).add(shakeOffset(2))); }
+      camera.lookAt(head.clone().add(fl.multiplyScalar(4)).add(V(0, (RM.free ? -0.35 : -1.35) - (RM.op || 0) * 3, 0)).add(shakeOffset(2))); }
     return;
   }
   const sp = Math.min(1, sim.v / 14);   // more sense of speed: lower, closer chase and a wider view as you go faster
