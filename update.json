@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1301",
-  "notes": "Removed the extra orange lip on the stem collar",
+  "version": "2026.1122.1305",
+  "notes": "Rear end laid out like yours: straight swingarm, shock from the deck corner ear to the swingarm, rear brake cable out of the deck end over the shock",
   "page": "rt6.html",
-  "sha256": "1231d3ea39f24836f210ddf8b0ebb5ca889fb1224728149670e41ec11a4b2aff",
+  "sha256": "4e5c4f65ae56dfb120488fe6c5383d0979f07d7365459597ecf67c6614799065",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T19:01:29.139Z"
+  "published": "2026-11-22T19:05:18.531Z"
 }
