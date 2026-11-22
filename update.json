@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1426",
-  "notes": "Screen smaller, centred and flat on the frame; smaller Ruitoo badge; brake cables come out of the lever housing; battery bars only drop on a big sag; keychain tag removed (just the ring)",
+  "version": "2026.1122.1430",
+  "notes": "Stem ends in a clamp block round the handlebar (no pole above it); ignition plate on the block's rider face; old lock tower removed; bigger signal triangles; Ruitoo badge lower",
   "page": "rt6.html",
-  "sha256": "4b856efee519b58b0f0fe1e359573f6f20d929c3adc18bce861e395ba772f050",
+  "sha256": "d262aa3566109c42e531c6cc5ff256a3731a7f99e5eef4ee4f33ae1f7dfe1d4c",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T20:26:04.412Z"
+  "published": "2026-11-22T20:30:24.564Z"
 }
