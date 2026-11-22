@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1507";</script>
+<script>window.RT6_VERSION = "2026.1122.1512";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -388,7 +388,7 @@ const stemGlow = new THREE.CanvasTexture(stemGlowCv); stemGlow.colorSpace = THRE
 const LIGHTBAR = ['Off', 'Rainbow', 'Waterfall', 'Colour fade', 'Red chase', 'Green chase', 'Blue scan', 'Warm white chase', 'Cyan chase'];
 function drawStemGlow(mode, t) {   // an LED strip behind the decal: discrete LEDs, soft glow; smooth effects, nothing strobes
   const g = stemGlowCv.getContext('2d'), W = SB.W, H = SB.H; g.globalCompositeOperation = 'source-over'; g.clearRect(0, 0, W, H);
-  const hsl = (h, l = 55) => `hsl(${((h % 360) + 360) % 360},100%,${l}%)`, N = 48, pitch = H / N;
+  const hsl = (h, l = 55) => `hsl(${((h % 360) + 360) % 360},100%,${l}%)`, N = 30, pitch = H / N;
   const WF = [0, 28, 120, 185, 220, 285];   // waterfall colours, 3 rushes each
   for (let i = 0; i < N; i++) { const p = (i + 0.5) / N; let c = '#000', a = 1;
     if (mode === 1) c = hsl(p * 320 - t * 80);
@@ -399,8 +399,9 @@ function drawStemGlow(mode, t) {   // an LED strip behind the decal: discrete LE
     else { const hue = { 4: [0, 52], 5: [135, 50], 6: [218, 55], 7: [48, 70], 8: [188, 55] }[mode] || [0, 50];
       const ph = mode === 6 ? (Math.sin(t * 1.6) * 0.5 + 0.5) * 1.2 - 0.1 : ((t / 1.8) % 1) * 1.4 - 0.2, d = Math.abs(p - ph);
       a = 0.3 + 0.7 * Math.max(0, 1 - d / 0.22); c = hsl(hue[0], hue[1]); }
-    const y = i * pitch; g.globalAlpha = a * 0.35; g.fillStyle = c; g.fillRect(0, y - pitch * 0.3, W, pitch * 1.6);   // glow spill through the diffuser
-    g.globalAlpha = a; g.fillRect(0, y + pitch * 0.18, W, pitch * 0.64); }                                         // the LED itself
+    const cy = (i + 0.5) * pitch, r = pitch * 1.05, gr = g.createRadialGradient(W / 2, cy, 0, W / 2, cy, r);   // one LED behind the diffuser: white-hot core, colour halo (owner videos)
+    gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.1, c); gr.addColorStop(0.55, c); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.globalAlpha = a; g.fillStyle = gr; g.fillRect(0, cy - r, W, 2 * r); }                                         // the LED itself
   g.globalAlpha = 1; g.globalCompositeOperation = 'destination-in'; g.drawImage(stemMask, 0, 0); g.globalCompositeOperation = 'source-over';
   stemGlow.needsUpdate = true; }
 const bagTex = canvasTex(512, 512, (g, W, H) => {
@@ -1364,7 +1365,7 @@ const signalKnob = new THREE.Group(); signalKnob.position.set(SLABX - 0.0006, -0
 tag(signalKnob, 'signal');
 // horn: just the button sitting on the tab, no rim or second layer (owner)
 const hornG = new THREE.Group(); podL.add(hornG);
-const hornBtn = mesh(new RoundedBoxGeometry(0.0056, 0.0094, 0.0126, 5, 0.0026), btn, hornG, [SLABX - 0.0025, -0.0327, -0.005]);
+const hornBtn = mesh(new RoundedBoxGeometry(0.007, 0.014, 0.015, 6, 0.003), std(0x26282b, 0.35, 0), hornG, [SLABX - 0.0032, -0.0327, -0.005]);   // same button as the power button (owner)
 tag(hornG, 'horn');
 mesh(new THREE.CylinderGeometry(0.0021, 0.0021, 0.0012, 16).rotateX(PI / 2), btn, podL, [-0.020, -0.0285, -0.0141]);   // screw on the grip-side face of the horn tab
 mesh(new THREE.CylinderGeometry(0.0019, 0.0019, 0.0006, 16).rotateX(PI / 2), btn, podL, [-0.0115, -0.0285, -0.01385]);   // moulded recycling mark
@@ -2595,11 +2596,11 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
     sim.pHold = 0; sim.pWarned = false; sim.pHoldDone = false; }
   if (sim.tapAt && performance.now() - sim.tapAt >= 600) { const n = sim.taps || 1; sim.tapAt = 0; sim.taps = 0;
     if (n >= 5 && sim.power) { sim.pMenu = true; sim.pIdx = 0; sim.pAt = performance.now(); refreshLCD(); }
-    else if (n === 2) { sim.bar = (sim.bar + 1) % LIGHTBAR.length; toast('Stem lights: ' + LIGHTBAR[sim.bar]); } else if (n === 1) cycleMode(); }   // only a single tap changes the speed mode (owner)
+    else if (n === 2) { sim.bar = sim.bar ? 0 : 1; sim.barOn = performance.now(); toast(sim.bar ? 'Stem lights on' : 'Stem lights off'); } else if (n === 1) cycleMode(); }   // two taps: stem lights on / off only (effects run by themselves); only a single tap changes the speed mode (owner)
   if (sim.pMenu && (!sim.power || performance.now() - sim.pAt > 8500)) { sim.pMenu = false; if (sim.pEdit) { sim.pEdit = false; const p = PSET[sim.pIdx]; if (p[0] === 'PC ' && p[1] === 1) { sim.odo = 0; p[1] = 0; } } refreshLCD(); }   // back to the normal screen, no animation
   pwrBtn.position.x = pHeld ? -0.0148 : -0.0165;
-  { const on = sim.power && sim.bar > 0; M.stemDecal.emissiveIntensity = on ? 1.6 : 0;
-    if (on && (!sim.barT || performance.now() - sim.barT > 50)) { sim.barT = performance.now(); drawStemGlow(matchMedia('(prefers-reduced-motion: reduce)').matches && sim.bar !== 1 ? sim.bar : sim.bar, sim.barT / 1000); } }
+  { const on = sim.power && sim.bar > 0; M.stemDecal.emissiveIntensity = on ? 1.5 : 0; M.stemDecal.color.setHex(on ? 0x1a1a1a : 0xffffff);   // lit: the LED colour shows, not the white print
+    if (on && (!sim.barT || performance.now() - sim.barT > 50)) { sim.barT = performance.now(); drawStemGlow(1 + Math.floor((sim.barT - (sim.barOn || 0)) / 6000) % 8, sim.barT / 1000); } }   // cycles through all 8 effects, 6 s each
   $('bPwr').classList.toggle('active', !!pHeld);
   if (sim.shutdown > 0) { sim.shutdown -= dt; if (sim.shutdown <= 0) refreshLCD(); }
   if (sim.power && sim.boot <= 0 && sim.charging) { sim.errT = (sim.errT || 0) + dt; refreshLCD();
@@ -2633,7 +2634,7 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
   paddle.rotation.z = sim.throttle * 0.55;              // thumb pushes the paddle down/forward
   if (M.calipers && Math.abs((M.calipers.lastPull ?? -1) - sim.brake) > 0.002) { M.calipers.forEach(c => c.userData.setPull(Math.min(1, sim.brake * 1.8))); M.calipers.lastPull = sim.brake; }
   bar.userData.leverL.rotation.y = sim.brake * 0.3; bar.userData.leverR.rotation.y = -sim.brake * 0.3;   // levers pull back toward the grips
-  hornBtn.position.x = hornIn() ? -0.0282 : -0.0295;
+  hornBtn.position.x = hornIn() ? SLABX - 0.0015 : SLABX - 0.0032;
   rocker.position.y += ((sim.lights ? 0.003 : -0.003) - rocker.position.y) * Math.min(1, dt * 25);   // whole cap slides: toward the bar = ON   // slides: up = ON, down = OFF   // rocks: ON end pressed in / OFF end pressed in   // light switch slides up (ON) / down (OFF)
   signalKnob.position.z += (-0.002 + sim.signal * 0.0028 - signalKnob.position.z) * Math.min(1, dt * 25);       // signal slider: left / centre / right
   // sequential signal (from the video): LEDs fill front-to-back over ~0.5 s, all off ~0.3 s, repeat (1.25 Hz, small lights only)

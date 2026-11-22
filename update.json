@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1507",
-  "notes": "Display turn arrow bigger, placed like the real one, and flashes in step with the speedometer icon",
+  "version": "2026.1122.1512",
+  "notes": "Stem lights: real LED dots like the videos; two taps only turn them on/off (effects cycle by themselves); horn button shaped like the power button",
   "page": "rt6.html",
-  "sha256": "23feba9ddd265fda9bf9bb8fb3994245f755a03a85626827df390ba42596be0b",
+  "sha256": "996726e428ecb98b532c11ae34ac0487f99442d86078c4ad392422c682bb29b1",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T21:07:22.091Z"
+  "published": "2026-11-22T21:12:38.884Z"
 }
