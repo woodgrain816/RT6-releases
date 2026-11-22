@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1704";</script>
+<script>window.RT6_VERSION = "2026.1122.1714";</script>
 <style>html,body{margin:0}</style>
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -2701,7 +2701,7 @@ const MS = [
   { t: 'Hold a wheelie for 6 seconds', k: 'wheelie', n: 6, pts: 200 },
   { t: 'Pizza run 2: marker across town in 90 s', k: 'goto', i: -3, j: 2, time: 90, pts: 200 },
   { t: 'Highway: reach 28 mph', k: 'speed', n: 12.5, pts: 250, hint: 'East of town, mode 3' },
-  { t: 'Ride 1 km without a crash', k: 'dist', n: 1000, pts: 250 },
+  { t: 'Ride half a mile without a crash', k: 'dist', n: 804.67, pts: 250 },
   { t: 'Hold a wheelie for 10 seconds', k: 'wheelie', n: 10, pts: 400 },
   { t: 'Take a break: sit on a park bench', k: 'sit', pts: 150, hint: 'F, J, X, walk to a bench, Z' },
   { t: 'Pizza run 3: last order, 100 s', k: 'goto', i: 4, j: 3, time: 100, pts: 300 }];
@@ -2723,10 +2723,10 @@ function msStep(dt) {
         g.add(new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 60, 24, 1, true), mat), new THREE.Mesh(new THREE.RingGeometry(2.6, 3.8, 32).rotateX(-PI / 2), new THREE.MeshBasicMaterial({ color: 0xffd24a, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide })));
         g.children[0].position.y = 30; g.children[1].position.y = 0.08; RM.town.add(g); RM.beacon = g; }
     RM.beacon.visible = true; RM.beacon.position.set(x, 0, z); if (!m.t) { m.t = c.time; toast('Order up! Get to the marker in ' + c.time + ' s'); } m.t -= dt;
-    const d = Math.hypot(sp.x - x, sp.z - z); set(Math.round(d) + ' m   ' + Math.max(0, m.t).toFixed(0) + ' s left');
+    const d = Math.hypot(sp.x - x, sp.z - z); set((d < 480 ? Math.round(d * 3.281) + ' ft' : (d / 1609.34).toFixed(2) + ' mi') + '   ' + Math.max(0, m.t).toFixed(0) + ' s left');
     if (d < 7) { msNext(); } else if (m.t <= 0) { m.t = c.time; toast('Too slow, the pizza went cold. Try again!'); } }
   else if (c.k === 'speed') { set((sim.v / 0.44704).toFixed(0) + ' / ' + (c.n / 0.44704).toFixed(0) + ' mph (east of town)'); if (sim.v >= c.n && sp.x > 504) msNext(); }
-  else if (c.k === 'dist') { if (RM.crash) m.a = 0; else m.a += sim.v * dt; set(Math.round(m.a) + ' / ' + c.n + ' m'); if (m.a >= c.n) msNext(); }
+  else if (c.k === 'dist') { if (RM.crash) m.a = 0; else m.a += sim.v * dt; set((m.a / 1609.34).toFixed(2) + ' / 0.50 mi'); if (m.a >= c.n) msNext(); }
   else if (c.k === 'sit') { set(RM.free && RM.free.sit ? 'Nice and comfy...' : 'find a bench'); if (RM.free && RM.free.sit) { m.a += dt; if (m.a > 1.5) msNext(); } } }
 { const st = document.createElement('style'); st.textContent = '#msHud{position:fixed;right:14px;top:132px;width:206px;z-index:13;padding:8px 10px;border-radius:12px;background:rgba(12,16,24,.62);color:#e8f0ff;font:12px/1.35 system-ui,sans-serif;cursor:pointer;border:1px solid rgba(255,255,255,.16)}#msHud i{color:#9cc4ff;font-style:normal}body:not(.riding) #msHud{display:none}';
   document.head.appendChild(st); const h = document.createElement('div'); h.id = 'msHud'; document.body.appendChild(h); h.onclick = () => msNext(true); msHud(); }

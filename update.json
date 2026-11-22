@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1704",
-  "notes": "Missions (wheelie holds, wheelie carve, pizza runs, highway speed, distance, bench) + you can lean-turn during a wheelie",
+  "version": "2026.1122.1714",
+  "notes": "Mission distances in miles / feet, speeds in mph",
   "page": "rt6.html",
-  "sha256": "f5b98a06444749158e315220f24d1155c1daef3bc86e3d5f882468eeda302e4f",
+  "sha256": "3cea0b10b14b8ce205a24861cb126932dbd0582603974df0275abf73da5dac2f",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T23:04:39.709Z"
+  "published": "2026-11-22T23:14:07.865Z"
 }
