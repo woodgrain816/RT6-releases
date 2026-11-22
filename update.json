@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1314",
-  "notes": "Rear fender: ribbed panel moved to the front half like yours, light bump barely sticks out",
+  "version": "2026.1122.1319",
+  "notes": "Rear fender panel is now subtle bumps lying on the fender; smaller, straight-sided light bump",
   "page": "rt6.html",
-  "sha256": "cb309907d307c4678f053c20d05bf93d5e7b6e94872779614c31be272507aedb",
+  "sha256": "aeed420295e13bbed73b972e908102e3e79a0f52973cbcb28a9e0aacc50c4954",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T19:14:50.681Z"
+  "published": "2026-11-22T19:19:08.955Z"
 }
