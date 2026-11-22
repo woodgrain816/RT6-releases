@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1352",
-  "notes": "Neck plate traced from your side photo (deep arm, slanted back); front wheel has one centred set of three spokes",
+  "version": "2026.1122.1359",
+  "notes": "Display shape traced from the product photo, cables out of the display back into one smooth wrap, motor cable behind the swingarm, rear fender higher",
   "page": "rt6.html",
-  "sha256": "1283ba3127305e7f13997af42074a8cdc024ff4bacf40eeef84771deb41310fe",
+  "sha256": "8b3345ae4017c2c9c4ed6cedc4e27bee3e7a20b98ddc66bab23deba8903a3bcd",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T19:52:39.182Z"
+  "published": "2026-11-22T19:59:43.158Z"
 }

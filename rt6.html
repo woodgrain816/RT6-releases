@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1352";</script>
+<script>window.RT6_VERSION = "2026.1122.1359";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -908,7 +908,7 @@ const kick = new THREE.Group(); kick.name = 'Kickstand'; swingG.add(kick);   // 
   kick.userData = { swing, Qup, Q0: new THREE.Quaternion() }; tag(kick, 'kick'); }
 
 // rear fender (owner photos): mounted on the swingarm, so everything here hangs off swingG (its rest frame = frame coords)
-const RR = 0.145, RW = 0.043, FK = 1.15, RA0 = 44 * D2R, RA1 = 191 * D2R;   // narrower, and the rear drop runs well below the axle (owner's rear photo)   // front stops behind the deck end, back drops to axle height
+const RR = 0.145, RW = 0.043, FK = 1.15, RA0 = 44 * D2R, RA1 = 182 * D2R;   // narrower, and the rear drop runs well below the axle (owner's rear photo)   // front stops behind the deck end, back drops to axle height
 const FAI = 0.11 / FK, FBI = 0.07;
 const rIn = a => Math.min(RR - 0.014, 1 / Math.sqrt((Math.cos(a) / FAI) ** 2 + (Math.sin(a) / FBI) ** 2));
 const rTop = (z, a) => 0;   // no crown: it stepped 4.6 mm into the side corners and read as a line down the middle (owner)
@@ -946,7 +946,7 @@ const hump = new THREE.Group(); swingG.add(hump);
   hump.userData.rear = new THREE.Vector3(xr - 0.004, (top + ybot) / 2, 0); }
 const tail = mesh(new THREE.ExtrudeGeometry(ovalShape(0.04, 0.018), { depth: 0.004, bevelEnabled: true, bevelThickness: 0.0015, bevelSize: 0.0015, bevelSegments: 4, curveSegments: 24 }).rotateY(-PI / 2), M.tail, hump, hump.userData.rear.toArray(), [0, 0, 0], 'TailLight');   // oval lamp on the flat rear face
 // reflector on the rear drop, below the light box
-const rp = onFender(178 * D2R, 0.0005);   // sits ON the fender (it floated 12 mm off)
+const rp = onFender(171 * D2R, 0.0005);   // sits ON the fender (it floated 12 mm off)
 const refl = new THREE.Group(); refl.position.set(rp.x, rp.y, 0); refl.rotation.z = rp.n - PI / 2; swingG.add(refl);
 mesh(new THREE.ShapeGeometry(ovalShape(0.038, 0.018), 24).rotateX(-PI / 2), M.reflector, refl, [0, 0.0004, 0]);   // tall oval, low on the drop
 for (const sz of [1, -1]) {   // fender mount on the swingarm: tab at the front end
@@ -956,12 +956,12 @@ for (const sz of [1, -1]) {   // fender mount on the swingarm: tab at the front 
 }
 
 queueMicrotask(() => {   // spiralWrap is defined further down
-  spiralWrap(new THREE.CatmullRomCurve3([V(-0.285, 0.2, -0.05), V(-0.302, 0.198, -0.055), V(-0.322, 0.19, -0.066), V(-0.36, 0.165, -0.067), V(-0.395, 0.142, -0.067), V(-0.418, 0.112, -0.066)]), frame, 0.0048);
+  spiralWrap(new THREE.CatmullRomCurve3([V(-0.285, 0.2, -0.046), V(-0.31, 0.19, -0.046), V(-0.35, 0.162, -0.046), V(-0.39, 0.134, -0.046), V(-0.405, 0.12, -0.052), V(-0.412, 0.114, -0.062), V(-0.418, 0.11, -0.066)]), frame, 0.0048);   // behind the swingarm plate, out at the dropout (owner)
   { const cb = std(0x121214, 0.5, 0.05), g = new THREE.Group(); g.position.set(-0.425, 0.104, -0.066); g.rotation.z = 0.75; swingG.add(g);   // connector at the dropout: boot with a spring strain relief
     mesh(new THREE.CylinderGeometry(0.0055, 0.0055, 0.016, 16), cb, g); mesh(new THREE.TubeGeometry(new Helix(0.0058, 0.012, 6), 60, 0.0008, 5), cb, g, [0, -0.02, 0]);
     mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(-0.42, 0.112, -0.066), V(-0.435, 0.118, -0.064), V(-0.445, 0.127, -0.06)]), 16, 0.003, 8), cb, swingG); }   // short lead into the axle
-  mesh(new THREE.CircleGeometry(0.0035, 16), std(0x030303, 1, 0), frame, [-0.36, 0.131, -0.0587], [0, PI, 0]);   // hole in the plate
-  const zt = new THREE.Group(); zt.position.set(-0.375, 0.155, -0.067); frame.add(zt);
+  mesh(new THREE.CircleGeometry(0.0035, 16), std(0x030303, 1, 0), frame, [-0.407, 0.12, -0.0587], [0, PI, 0]);   // where it comes out past the plate
+  const zt = new THREE.Group(); zt.position.set(-0.414, 0.112, -0.064); frame.add(zt);
   mesh(new THREE.TorusGeometry(0.0062, 0.0011, 6, 20), std(0x1a1a1c, 0.5, 0), zt, [0, 0, 0], [0, PI / 2, 0]);
   mesh(new RoundedBoxGeometry(0.004, 0.006, 0.004, 2, 0.0008), std(0x1a1a1c, 0.5, 0), zt, [0, -0.007, -0.002]);   // zip-tie head
   mesh(new RoundedBoxGeometry(0.002, 0.009, 0.0012, 1, 0.0004), std(0x1a1a1c, 0.5, 0), zt, [0, -0.0125, -0.002]); });   // cut tail
@@ -1224,8 +1224,8 @@ for (const sz of [1, -1]) {
   { const cm = std(0x0c0c0d, 0.55, 0.05);
     mesh(new THREE.CylinderGeometry(0.0042, 0.0042, 0.012, 12).rotateX(PI / 2), M.plastic, bar, [0.012, 0.016, sz * 0.1]);   // barrel adjuster
     const mouth = V(0.022, -0.046, sz * 0.003);   // lever cables join the display harness head
-    mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(0.012, 0.016, sz * 0.093), V(0.03, -0.004, sz * 0.07), V(0.022, -0.03, sz * 0.03), V(-0.012, -0.035, sz * 0.012), mouth.clone().add(V(0.004, -0.004, 0.0015 * sz))]), 60, 0.0024, 8), cm, bar);
-    const sw = new THREE.CatmullRomCurve3([V(0.004, 0.008, sz * 0.1), V(0.02, -0.008, sz * 0.08), V(0.016, -0.036, sz * 0.04), V(-0.014, -0.038, sz * 0.01), mouth.clone().add(V(0.002, -0.006, -0.0015 * sz))]);
+    mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(0.012, 0.016, sz * 0.093), V(0.03, -0.004, sz * 0.07), V(0.022, -0.03, sz * 0.03), V(-0.012, -0.035, sz * 0.012), mouth.clone().add(V(0.004, -0.004, 0.0015 * sz)), V(0.006, -0.05, 0.0015 * sz)]), 60, 0.0024, 8), cm, bar);
+    const sw = new THREE.CatmullRomCurve3([V(0.004, 0.008, sz * 0.1), V(0.02, -0.008, sz * 0.08), V(0.016, -0.036, sz * 0.04), V(-0.014, -0.038, sz * 0.01), mouth.clone().add(V(0.002, -0.006, -0.0015 * sz)), V(0.006, -0.05, -0.0015 * sz)]);
     mesh(new THREE.TubeGeometry(sw, 40, 0.0014, 6), cm, bar);
     { // waterproof inline connector on the brake cut-off wire (owner photos): two black ribbed halves pushed together, red pin insert hidden inside
       const c = new THREE.Group(), p = sw.getPointAt(0.5), t = sw.getTangentAt(0.5); c.position.copy(p); c.quaternion.setFromUnitVectors(V(0, 1, 0), t); bar.add(c);
@@ -1416,10 +1416,10 @@ for (const sz of [1, -1]) { ringClamp(dispMount, sz * 0.045, 0.0185, 0.014); mes
 const disp = new THREE.Group(); disp.name = 'Display'; disp.position.set(0.012, 0.031, 0); disp.rotation.z = 0.45; disp.scale.setScalar(0.76); bar.add(disp);   // real unit ~15 cm wide (measured against the ignition lock + stem head)   // raised on brackets above the stem top; key sits under its rider-side edge
 // outline traced from the straight-on photo (97025eed), averaged left/right: two raised ears on top with a dip for the badge, side points halfway down
 const OUT = (() => { const arc = (cx, cy, r, a0, a1) => Array.from({ length: 9 }, (_, k) => { const a = a0 + (a1 - a0) * k / 8; return [cx + Math.cos(a) * r, cy + Math.sin(a) * r]; });
-  return [[-0.095, 0.004], [-0.095, -0.037], [-0.075, -0.057], [0.075, -0.057], [0.095, -0.037], [0.095, 0.004], [0.095, 0.013], [0.066, 0.057], [0.021, 0.057], [0.017, 0.053], [-0.017, 0.053], [-0.021, 0.057], [-0.066, 0.057], [-0.095, 0.013]]; })();   // round bottom corners (owner)
+  return [[-0.095, -0.004], [-0.095, -0.011], [-0.093, -0.0135], [-0.0745, -0.0478], [0.0745, -0.0478], [0.093, -0.0135], [0.095, -0.011], [0.095, -0.004], [0.0929, 0.0], [0.0625, 0.0455], [0.06, 0.0477], [0.0195, 0.0477], [0.0175, 0.0435], [-0.0175, 0.0435], [-0.0195, 0.0477], [-0.06, 0.0477], [-0.0625, 0.0455], [-0.0929, 0.0]]; })();   // traced from the product photo: ears either side of the badge notch, long upper diagonals to short side points, lower diagonals, flat bottom
 const OUTS = OUT.map(([x, y]) => [x * 0.86, y * 0.9]);   // slimmer frame: ~1 cm border round the glass
 mesh(permute(smoothExt(roundPoly(OUTS, 0.0008), 0.01, 0.0011, 3), FACE_UP), M.plastic, disp, [0, 0.004, 0]);   // top bezel layer
-for (const sx of [1, -1]) { const t = new THREE.Shape([[sx * 0.0795, 0.004], [sx * 0.064, 0.03], [sx * 0.064, -0.029]].map(([x, y]) => new THREE.Vector2(x, y)));   // triangle facets on the side points (photo)
+for (const sx of [1, -1]) { const t = new THREE.Shape([[sx * 0.0775, -0.0065], [sx * 0.0715, -0.001], [sx * 0.0715, -0.012]].map(([x, y]) => new THREE.Vector2(x, y)));   // triangle facets on the side points (photo)
   mesh(permute(smoothExt(t, 0.0012, 0.0005, 2), FACE_UP), std(0x1b1c1f, 0.5, 0.1), disp, [0, 0.0148, 0]); }
 mesh(permute(smoothExt(roundPoly(OUTS.map(([x, y]) => [x * 1.025, y * 1.03]), 0.0009), 0.009, 0.001, 3), FACE_UP), std(0x121315, 0.65, 0.05), disp, [0, -0.0085, 0]);   // lower body layer, slightly larger, with the seam between
 // (no separate back housing: the case is one thin shell)
@@ -1446,11 +1446,12 @@ tag(disp, 'mode');
     for (const y of [-0.008, -0.005, -0.002]) mesh(new THREE.TorusGeometry(0.0041, 0.0006, 5, 16).rotateX(PI / 2), cb, pg, [0, y, 0]);
     if (red) mesh(new THREE.CylinderGeometry(0.0044, 0.0044, 0.004, 16), std(0xc81a22, 0.45, 0), pg, [0, 0.004, 0]); };
   for (const [sz, dy, red] of [[-1, 0.006, false], [-1, -0.006, false], [1, 0, true]]) {   // out of the display's ends (photo): two on the left, one on the right
-    const st = D(0.0, 0.002 + dy * 0.2, sz * 0.079), out = D(-0.004, -0.004, sz * 0.096);
-    const c = new THREE.CatmullRomCurve3([st, out, V(out.x - 0.006, out.y - 0.025, out.z * 0.95), V(0.04, -0.05, sz * 0.04), V(0.03, -0.052, sz * 0.012), head.clone().add(V(0, 0, sz * 0.003))]);
+    const st = D(-0.004, -0.0125, sz * 0.02 + dy), b1 = D(-0.004, -0.022, sz * 0.022 + dy);   // out of the display's back (photo)
+    const c = new THREE.CatmullRomCurve3([st, b1, V(0.04, -0.04, sz * 0.012 + dy * 0.3), V(0.03, -0.047, sz * 0.004), V(0.008, -0.049, sz * 0.002)]);
     mesh(new THREE.TubeGeometry(c, 60, 0.0019, 6), cb, bar); plugAt(c, 0.38, red); }
   // harness wrap: down the FRONT of the round pole and into the orange collar (owner's photos)
-  spiralWrap(new THREE.CatmullRomCurve3([V(0.1, 0.612, 0.004), V(0.068, 0.604, 0.03), V(0.03, 0.594, 0.033), V(0.012, 0.578, 0.018), V(0.0105, 0.55, 0.008), V(0.0115, 0.505, 0.006), V(0.0125, 0.465, 0.006), V(0.0135, 0.44, 0.005), V(0.014, 0.419, 0.005)]), stemPivot, 0.0068); }   // round to the RIDER side of the pole, down into the collar
+  mesh(new THREE.CylinderGeometry(0.0082, 0.0082, 0.007, 18).rotateZ(PI / 2), std(0x121214, 0.5, 0.05), stemPivot, [0.1, 0.612, 0]);   // ferrule at the wrap mouth: every cable goes in here
+  spiralWrap(new THREE.CatmullRomCurve3([V(0.1, 0.612, 0), V(0.07, 0.603, 0), V(0.036, 0.59, 0.001), V(0.017, 0.571, 0.003), V(0.0105, 0.55, 0.005), V(0.0115, 0.505, 0.006), V(0.0125, 0.465, 0.006), V(0.0135, 0.44, 0.005), V(0.014, 0.419, 0.005)]), stemPivot, 0.0068); }   // round to the RIDER side of the pole, down into the collar
 // ---- ignition lock on the stem under the display ("OFF ON / IGNITION"), key + keyring
 const ignTex = canvasTex(256, 256, (g, W, Hh) => {
   g.fillStyle = '#121315'; g.fillRect(0, 0, W, Hh); g.fillStyle = '#5a5d63'; g.font = '700 30px "IBM Plex Mono", monospace'; g.textAlign = 'center'; g.textBaseline = 'middle';
