@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1607";</script>
+<script>window.RT6_VERSION = "2026.1122.1614";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -2307,13 +2307,7 @@ function buildCorvette() {
       const tm = add(new THREE.PlaneGeometry(0.62, 0.23).rotateY(-PI / 2), new THREE.MeshBasicMaterial({ map: tl, transparent: true, side: THREE.DoubleSide }), XR - 0.012, 0.73, sd * 0.55); if (sd < 0) tm.scale.z = -1; }
     add(new THREE.BoxGeometry(0.03, 0.17, 0.27), matte, XR - 0.004, 0.5, sd * 0.7);   // black vents under the lamps
                                                              // front corner intakes
-    { const bt = canvasTex(512, 160, (c, Wd, Hd) => { c.clearRect(0, 0, Wd, Hd);   // 70th door badge (owner image): slanted 70 over a red 1953 - 2023 bar
-        const para = (x0, y0, w, h, sk) => { c.beginPath(); c.moveTo(x0 + sk, y0); c.lineTo(x0 + w + sk, y0); c.lineTo(x0 + w, y0 + h); c.lineTo(x0, y0 + h); c.closePath(); };
-        c.fillStyle = '#1c1e22'; c.strokeStyle = '#f2f2f2'; c.lineWidth = 5; c.font = 'italic 900 112px Arial Black, Arial'; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-        c.save(); c.transform(1, 0, -0.45, 1, 40, 0); c.strokeText('70', 300, 104); c.fillText('70', 300, 104); c.restore();
-        para(30, 110, 400, 42, 40); c.fillStyle = '#1c1e22'; c.fill(); c.stroke(); para(52, 116, 360, 30, 30); c.fillStyle = '#c8121a'; c.fill();
-        c.fillStyle = '#16171a'; c.font = 'italic 800 26px Arial'; c.fillText('1953 - 2023', 240, 141); });
-      const x = 0.55, y = 0.6, bm = add(new THREE.PlaneGeometry(0.26, 0.081), new THREE.MeshBasicMaterial({ map: bt, transparent: true }), x, y, sd * (sideZ(x, y) + 0.008)); if (sd < 0) bm.rotation.y = PI; } }
+  }   // (no badges on the car: it is a generic sports car)
                                                                     // black lower fascia
   add(new THREE.BoxGeometry(0.3, 0.025, 1.5), black, 2.0, 0.125, 0);                                                                 // splitter
   add(new THREE.BoxGeometry(0.22, 0.22, 1.72), new THREE.MeshStandardMaterial({ color: 0x0b0b0c, roughness: 0.55 }), XR + 0.08, 0.25, 0);   // full-width black diffuser band                                                              // diffuser
@@ -2324,16 +2318,7 @@ function buildCorvette() {
     add(new THREE.PlaneGeometry(0.3, 0.15).rotateY(-PI / 2), new THREE.MeshStandardMaterial({ map: plate, roughness: 0.5 }), XR - 0.01, 0.52, 0);
     const word = canvasTex(512, 64, (c, Wd, Hd) => { c.clearRect(0, 0, Wd, Hd); c.fillStyle = '#111'; c.font = '600 44px Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('C O R V E T T E', Wd / 2, Hd / 2); });
     // (no CORVETTE lettering: owner says it is too small on the real car to show)
-    const flags = canvasTex(256, 256, (c) => { c.clearRect(0, 0, 256, 256);   // 70th-anniversary crossed flags (owner image): chrome V, checkered left flag, red right flag with a silver 70 + fleur-de-lis
-      const L = [[22, 24], [64, 54], [128, 176], [128, 240], [104, 196], [22, 84]], Rr = L.map(([x, y]) => [256 - x, y]);
-      const path = P => { c.beginPath(); P.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.closePath(); };
-      c.save(); path(L); c.clip(); c.fillStyle = '#f2f2f2'; c.fillRect(0, 0, 256, 256); c.fillStyle = '#1a1b1e'; c.translate(22, 24); c.transform(1, 0.71, 0, 1, 0, 0);
-      for (let i = 0; i < 6; i++) for (let j = 0; j < 6; j++) if ((i + j) % 2) c.fillRect(i * 18, j * 18 - 20, 18, 18); c.restore();
-      c.save(); path(Rr); c.clip(); c.fillStyle = '#b8101a'; c.fillRect(0, 0, 256, 256); c.restore();
-      c.lineJoin = 'round'; c.strokeStyle = '#e4e6ea'; c.lineWidth = 8; path(L); c.stroke(); path(Rr); c.stroke(); c.strokeStyle = '#8d9096'; c.lineWidth = 2; path(L); c.stroke(); path(Rr); c.stroke();
-      c.save(); c.translate(178, 132); c.rotate(-0.62); c.fillStyle = '#e6e8ec'; c.font = 'italic 900 46px Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('70', 0, 0); c.restore();
-      c.fillStyle = '#eceef2'; c.font = '700 26px serif'; c.textAlign = 'center'; c.fillText('⚜', 214, 70); });
-    const fb = add(new THREE.PlaneGeometry(0.17, 0.17).rotateY(PI / 2), new THREE.MeshBasicMaterial({ map: flags, transparent: true }), 2.3, 0.465, 0); fb.rotation.z = 0.5; }
+  }   // (no emblem on the nose)
   { // carbon wing (owner photo): full-width blade low over the deck lip, two short swept posts, big angled end plates
     const cf = canvasTex(128, 128, (c) => { c.fillStyle = '#121316'; c.fillRect(0, 0, 128, 128); for (let y = 0; y < 128; y += 8) for (let x = 0; x < 128; x += 8) { c.fillStyle = ((x + y) / 8) % 2 ? '#1d1f23' : '#0d0e10'; c.fillRect(x, y, 8, 8); } }); cf.wrapS = cf.wrapT = THREE.RepeatWrapping; cf.repeat.set(14, 2);
     const carbon = new THREE.MeshPhysicalMaterial({ map: cf, color: 0xffffff, roughness: 0.25, metalness: 0.2, clearcoat: 1, clearcoatRoughness: 0.03, side: THREE.DoubleSide });

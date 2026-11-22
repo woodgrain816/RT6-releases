@@ -4,4 +4,4 @@ Update files for the fan-made Ruitoo RT6 scooter sim (non-commercial; Ruitoo, RT
 The Android app reads `update.json` on launch and downloads `rt6.html` when it is newer (checked against its SHA-256).
 To install the app: download `RT6Sim.apk`.
 
-Current version: **2026.1122.1607** - Highway east of town (6 lanes, median, fast traffic incl. a Corvette), cars yield at intersections, Corvette parked outside the garage, escalating police speech with impound, rider proportions + C camera fixed in walk mode
+Current version: **2026.1122.1614** - Sports car has no logos or badges; scooter unchanged
