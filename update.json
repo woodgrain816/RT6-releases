@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1622",
-  "notes": "Landscape app with a floating on-screen joystick (steer, throttle, brake) plus Brake / Lean / Horn / Lights buttons",
+  "version": "2026.1122.1628",
+  "notes": "Fixed the stuck/overlapping controls on the phone: old control panel hidden while riding, buttons in the right place, small legal line",
   "page": "rt6.html",
-  "sha256": "af16f9ddf8c6722555463e4a249abc51753cf8e24e7c57010b45dd7ffe3e6589",
+  "sha256": "d2e449adc5e42f2319a57b386c89abf7db26d6184966b3723f93d60410cdfb44",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T22:22:58.490Z"
+  "published": "2026-11-22T22:28:54.355Z"
 }

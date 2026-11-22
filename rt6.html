@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1622";</script>
+<script>window.RT6_VERSION = "2026.1122.1628";</script>
 <style>html,body{margin:0}</style>
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -107,6 +107,13 @@ body.riding .card, body.riding .views{display:none}
 @media (orientation:landscape){ .tpad .acts{flex-direction:row;flex-wrap:wrap;max-width:calc(100% - 250px)} .tpad .steer{top:26%;height:84px} }
 .tpad .acts button{padding:8px 11px;min-height:38px}
 @media (pointer:coarse){ body.riding .tpad{display:block} }
+@media (pointer:coarse){ body.riding .dock, body.riding .lcdwrap + .dock{display:none}
+  body.riding .tpad #tsLean{left:auto;top:auto;right:max(16px,env(safe-area-inset-right,0px));bottom:118px;width:84px;height:84px;border-radius:50%}
+  body.riding .tpad #tBrake{right:max(112px,env(safe-area-inset-right,0px));bottom:16px;width:96px;height:96px}
+  body.riding .tpad #tHorn{right:max(16px,env(safe-area-inset-right,0px));bottom:16px}
+  body.riding .tpad #tLights{right:max(112px,env(safe-area-inset-right,0px));bottom:118px;width:68px;height:68px}
+  body.riding .legal{left:max(8px,env(safe-area-inset-left,0px));right:250px;bottom:2px;text-align:left;font-size:7px;line-height:1.2;padding:0;opacity:.75}
+  body.riding .toast{bottom:calc(24px + env(safe-area-inset-bottom,0px))} }
 .updbar{position:fixed;left:50%;top:max(10px,env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:20;display:none;background:var(--fg);color:var(--bg);border:0;border-radius:10px;padding:9px 14px;font:600 13px var(--f-body);max-width:calc(100% - 32px);cursor:pointer}
 .updbar.show{display:block}
 @media (prefers-reduced-motion: reduce){ .toast{transition:none} }
