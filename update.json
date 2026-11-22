@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1454",
-  "notes": "Wheelies! Hold G (or Lean back on the phone) and punch the throttle; ease off to hold it, brake brings it down, too far and you loop it",
+  "version": "2026.1122.1457",
+  "notes": "P settings: 5 quick taps of power opens P01; taps step P01/P03/P04/P05/P06/PC; hold 1 s to edit (value flashes), tap to change, hold 1 s to save; 8.5 s idle returns. P01 km/mph, P05 cruise, P06 zero start, PC clears ODO. Only a single tap changes speed mode",
   "page": "rt6.html",
-  "sha256": "a60210aee8647b07d0976825c48314b33935d87795b63abed9661306e91a8715",
+  "sha256": "1e0e602874ce343b092bb1e97d9a52d8dff2974377ccdaa0063b298690e043af",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T20:54:25.265Z"
+  "published": "2026-11-22T20:57:55.341Z"
 }

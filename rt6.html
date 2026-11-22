@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1454";</script>
+<script>window.RT6_VERSION = "2026.1122.1457";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -458,6 +458,8 @@ const sim = { key: false, power: false, boot: 0, fill: 1, mode: 1, signal: 0, li
 const BOOT_T = 1.4;   // seconds from the power beep to the full display (video PXL_20261122_024212038)
 // on the road with the owner aboard (113 lb): top mph and time constant (s) fitted to his timings
 // mode 1: 0-9 in ~4 s; mode 2: 0-16 in ~6 s, 17 at ~8 s; mode 3: 0-31 in ~18 s
+const PSET = [['P01', 1, [0, 1]], ['P03', 100, null], ['P04', 28, null], ['P05', 0, [0, 1]], ['P06', 0, [0, 1]], ['PC ', 0, [0, 1]]];   // code, value, allowed values (null = locked)
+const pval = c => PSET.find(p => p[0].trim() === c)[1], KMH = () => pval('P01') === 0;   // codes + values as on the owner's display
 const RIDE = { 1: { max: 9, tau: 1.35 }, 2: { max: 17, tau: 2.3 }, 3: { max: 31, tau: 4.4 } };
 const BATT_WH = 720;   // assumed 48 V 15 Ah pack
 const OCV = [[0, 39.0], [5, 43.6], [10, 45.1], [20, 46.8], [30, 47.7], [40, 48.4], [50, 49.0], [60, 49.8], [70, 50.7], [80, 51.7], [90, 53.0], [100, 54.6]];
@@ -496,32 +498,33 @@ function drawLCD(g, W, H, hud) {
   g.lineWidth = 2.6; g.beginPath();
   g.moveTo(120, 40); g.lineTo(46, 40); g.quadraticCurveTo(40, 40, 40, 46); g.lineTo(40, 168); g.quadraticCurveTo(40, 178, 50, 178);
   g.lineTo(470, 178); g.quadraticCurveTo(478, 178, 478, 170); g.lineTo(478, 76); g.quadraticCurveTo(478, 69, 471, 69); g.lineTo(432, 69); g.stroke();
-  seg7Str(g, String(Math.min(999, Math.round(sim.v / 0.44704))).padStart(3, '0'), 205, 57, 51, 99, 11, 7);
+  const pm = sim.pMenu ? PSET[sim.pIdx] : null, units = !pm || sim.pIdx === 0;
+  seg7Str(g, pm ? pm[0] : String(Math.min(999, Math.round(sim.v / (KMH() ? 0.27778 : 0.44704)))).padStart(3, '0'), 205, 57, 51, 99, 11, 7);
   g.textBaseline = 'alphabetic'; g.textAlign = 'left';
-  g.font = '600 18px "Chakra Petch", sans-serif'; g.fillText('mph', 386, 165);
+  g.font = '600 18px "Chakra Petch", sans-serif'; if (units) g.fillText(KMH() ? 'km/h' : 'mph', 386, 165);
   g.font = '600 16px "Chakra Petch", sans-serif'; g.fillText('Mode', 388, 74);
   g.lineWidth = 2.2; roundRect(g, 436, 98, 31, 48, 4); g.stroke();
   seg7Str(g, String(sim.mode), 444, 106, 16, 32, 4, 0);
-  seg7Str(g, sim.volts.toFixed(1), 122, 129, 21, 36, 5, 4);
+  if (!pm) seg7Str(g, sim.volts.toFixed(1), 122, 129, 21, 36, 5, 4);
   // V symbol on its own short line inside the box, low on the left
-  g.lineWidth = 2.2; g.beginPath(); g.moveTo(44, 158); g.lineTo(57, 158); g.moveTo(79, 158); g.lineTo(97, 158); g.stroke();
+  if (!pm) { g.lineWidth = 2.2; g.beginPath(); g.moveTo(44, 158); g.lineTo(57, 158); g.moveTo(79, 158); g.lineTo(97, 158); g.stroke();
   g.beginPath(); g.arc(68, 158, 10, 0, TAU); g.stroke();
-  g.font = '700 13px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText('V', 68, 163); g.textAlign = 'left';
+  g.font = '700 13px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText('V', 68, 163); g.textAlign = 'left'; }
   // battery under the box
   g.lineWidth = 2; roundRect(g, 53, 193, 156, 24, 3); g.stroke(); g.fillRect(209, 199, 4, 12);
   const cells = Math.ceil(Math.min(100, pctOfV(shownV())) / 10 * Math.min(1, Math.max(0, (sim.fill - 0.7) / 0.3)));   // the bars follow the loaded voltage: they dip under hard throttle
   for (let i = 0; i < 10; i++) if (i < cells) g.fillRect(57.5 + i * 15, 197, 12.5, 16);
-  const showOdo = now < sim.odoUntil || Math.floor(now / 2500) % 2 === 1;
+  const showOdo = !!pm || now < sim.odoUntil || Math.floor(now / 2500) % 2 === 1;
   g.font = '600 13px "Chakra Petch", sans-serif'; g.textAlign = 'right'; g.fillText(showOdo ? 'ODO' : 'Trip', 316, 205);
-  seg7Str(g, String(Math.floor(showOdo ? sim.odo : sim.trip)).padStart(5, '0'), 321, 190, 19, 28, 4, 4);
-  g.textAlign = 'left'; g.font = '600 12px "Chakra Petch", sans-serif'; g.fillText('mile', 442, 218);
+  if (!(pm && sim.pEdit && now % 1000 >= 500)) seg7Str(g, String(pm ? pm[1] : Math.floor((showOdo ? sim.odo : sim.trip) * (KMH() ? 1.609344 : 1))).padStart(5, '0'), 321, 190, 19, 28, 4, 4);   // editing: value flashes 0.5 s on / 0.5 s off
+  g.textAlign = 'left'; g.font = '600 12px "Chakra Petch", sans-serif'; if (units) g.fillText(KMH() ? 'km' : 'mile', 442, 218);
   if (now % 610 < 280) {   // cruise/speedometer icon below "mile": blinks whenever the display is on (owner)
     const cx = 462, cy = 240;
     g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, 9, PI * 0.8, PI * 2.2); g.stroke();
     g.lineWidth = 1.5; for (let k = 0; k < 5; k++) { const a = PI * (0.95 + k * 0.275); g.beginPath(); g.moveTo(cx + Math.cos(a) * 5, cy + Math.sin(a) * 5); g.lineTo(cx + Math.cos(a) * 7.2, cy + Math.sin(a) * 7.2); g.stroke(); }
     g.lineWidth = 2; g.beginPath(); g.moveTo(cx, cy + 1); g.lineTo(cx + 5, cy - 5); g.stroke(); }
   if (sim.brake > 0.05) { const tx = 142; g.lineWidth = 2; g.beginPath(); g.moveTo(tx, 22); g.lineTo(tx + 9, 38); g.lineTo(tx - 9, 38); g.closePath(); g.stroke(); g.fillRect(tx - 1, 27, 2, 6); g.fillRect(tx - 1, 34.5, 2, 2); }
-  if (sim.lights) { const cx = 76, cy = 240; g.lineWidth = 2.4; g.beginPath(); g.moveTo(cx, cy - 10); g.quadraticCurveTo(cx + 16, cy - 10, cx + 16, cy); g.quadraticCurveTo(cx + 16, cy + 10, cx, cy + 10); g.closePath(); g.stroke();
+  if (sim.lights && !pm) { const cx = 76, cy = 240; g.lineWidth = 2.4; g.beginPath(); g.moveTo(cx, cy - 10); g.quadraticCurveTo(cx + 16, cy - 10, cx + 16, cy); g.quadraticCurveTo(cx + 16, cy + 10, cx, cy + 10); g.closePath(); g.stroke();
     for (const dy of [-6, 0, 6]) { g.beginPath(); g.moveTo(cx - 4, cy + dy); g.lineTo(cx - 15, cy + dy + 2); g.stroke(); } }
   // turn arrows (videos): small; left one above the top-left stub, right one between the speed digits and "Mode"
   if (sim.signal && sim.blink) { const d = sim.signal > 0 ? 1 : -1, ax = d > 0 ? 384 : 66, ay = d > 0 ? 44 : 25;
@@ -530,7 +533,7 @@ function drawLCD(g, W, H, hud) {
   g.shadowBlur = 0;
 }
 // 7-segment glyphs like the real LCD
-const SEG7 = { 'E': 'adefg', 'O': 'abcdef', 'F': 'aefg', '0': 'abcdef', '1': 'bc', '2': 'abged', '3': 'abgcd', '4': 'fgbc', '5': 'afgcd', '6': 'afgedc', '7': 'abc', '8': 'abcdefg', '9': 'abcdfg', '-': 'g' };
+const SEG7 = { 'E': 'adefg', 'O': 'abcdef', 'F': 'aefg', '0': 'abcdef', '1': 'bc', '2': 'abged', '3': 'abgcd', '4': 'fgbc', '5': 'afgcd', '6': 'afgedc', '7': 'abc', '8': 'abcdefg', '9': 'abcdfg', '-': 'g', 'P': 'abefg', 'C': 'adef' };
 function seg7(g, ch, x, y, w, h, t) {
   const m = y + h / 2, s = t / 2, P = (pts) => { g.beginPath(); pts.forEach(([px, py], i) => i ? g.lineTo(px, py) : g.moveTo(px, py)); g.closePath(); g.fill(); };
   const hz = (yy) => P([[x + s, yy], [x + t, yy - s], [x + w - t, yy - s], [x + w - s, yy], [x + w - t, yy + s], [x + t, yy + s]]);
@@ -2580,14 +2583,19 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
     if (!sim.pHold) sim.pHoldFrom = sim.power;
     sim.pHold = (sim.pHold || 0) + dt;
     if (!sim.pHoldFrom && !sim.power && sim.pHold > 1.0) { if (sim.key && sim.chargeLock) { if (!sim.pWarned) { toast('Nothing: unplug the charger first'); sim.pWarned = true; } } else if (sim.key) setPower(true); else if (!sim.pWarned) { toast('Turn the key first'); sim.pWarned = true; } }
-    if (sim.pHoldFrom && sim.power && sim.pHold > 1.5) setPower(false);
+    if (sim.pMenu) { if (sim.pHold > 1.0 && !sim.pHoldDone) { sim.pHoldDone = true; sim.pAt = performance.now();   // hold 1 s: start / finish editing
+        if (sim.pEdit) { sim.pEdit = false; const p = PSET[sim.pIdx]; if (p[0] === 'PC ' && p[1] === 1) { sim.odo = 0; p[1] = 0; toast('Odometer cleared'); } } else sim.pEdit = true; refreshLCD(); } }
+    else if (sim.pHoldFrom && sim.power && sim.pHold > 1.5) setPower(false);
   } else {
     if (sim.pHold > 0.03 && sim.pHold < 0.6 && sim.pHoldFrom && sim.power && sim.boot <= 0) {   // quick tap: mode; two quick taps: stem light bar effect
       const now = performance.now();
-      if (sim.tapAt && now - sim.tapAt < 450) { sim.tapAt = 0; sim.bar = (sim.bar + 1) % LIGHTBAR.length; toast('Stem lights: ' + LIGHTBAR[sim.bar]); }
-      else sim.tapAt = now; }
-    sim.pHold = 0; sim.pWarned = false; }
-  if (sim.tapAt && performance.now() - sim.tapAt >= 450) { sim.tapAt = 0; cycleMode(); }
+      if (sim.pMenu) { const p = PSET[sim.pIdx]; if (sim.pEdit) { if (p[2]) p[1] = p[2][(p[2].indexOf(p[1]) + 1) % p[2].length]; } else sim.pIdx = (sim.pIdx + 1) % PSET.length; sim.pAt = now; refreshLCD(); }
+      else { sim.taps = (sim.tapAt && now - sim.tapAt < 450 ? sim.taps || 0 : 0) + 1; sim.tapAt = now; } }
+    sim.pHold = 0; sim.pWarned = false; sim.pHoldDone = false; }
+  if (sim.tapAt && performance.now() - sim.tapAt >= 450) { const n = sim.taps || 1; sim.tapAt = 0; sim.taps = 0;
+    if (n >= 5 && sim.power) { sim.pMenu = true; sim.pIdx = 0; sim.pAt = performance.now(); refreshLCD(); }
+    else if (n === 2) { sim.bar = (sim.bar + 1) % LIGHTBAR.length; toast('Stem lights: ' + LIGHTBAR[sim.bar]); } else if (n === 1) cycleMode(); }   // only a single tap changes the speed mode (owner)
+  if (sim.pMenu && (!sim.power || performance.now() - sim.pAt > 8500)) { sim.pMenu = false; if (sim.pEdit) { sim.pEdit = false; const p = PSET[sim.pIdx]; if (p[0] === 'PC ' && p[1] === 1) { sim.odo = 0; p[1] = 0; } } refreshLCD(); }   // back to the normal screen, no animation
   pwrBtn.position.x = pHeld ? -0.0148 : -0.0165;
   { const on = sim.power && sim.bar > 0; M.stemDecal.emissiveIntensity = on ? 1.6 : 0;
     if (on && (!sim.barT || performance.now() - sim.barT > 50)) { sim.barT = performance.now(); drawStemGlow(matchMedia('(prefers-reduced-motion: reduce)').matches && sim.bar !== 1 ? sim.bar : sim.bar, sim.barT / 1000); } }
@@ -2599,7 +2607,12 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
   if (sim.power && (sim.boot > 0 || sim.fill < 1)) {
     if (sim.boot > 0) sim.boot = Math.max(0, sim.boot - dt); else sim.fill = Math.min(1, sim.fill + dt * 2);   // battery cells fill one by one over ~1.2 s (startup video)
     refreshLCD(); }
-  if (sim.power && sim.boot <= 0 && !sim.charging && sim.brake < 0.05 && sim.throttle > 0.02 && !RM.crash && !RM.walk) {
+  if (pval('P06') === 1 && sim.v < 1.3 && sim.throttle > 0.02 && RM.on && !RM.walk && !RM.crash && sim.power && sim.brake < 0.05) { sim.v = 1.6; toast('Kick-off (P06 = 1: non-zero start)'); }   // rider kicks to get it rolling
+  if (pval('P05') === 1 && sim.power) { const steady = sim.throttle > 0.1 && Math.abs(sim.throttle - (sim.thrLast ?? 0)) < 0.02; sim.thrLast = sim.throttle;
+    sim.cruiseT = steady ? (sim.cruiseT || 0) + dt : 0; if (sim.cruiseT > 5 && !sim.cruise) { sim.cruise = sim.v; toast('Cruise on'); } }
+  if (sim.cruise && (sim.brake > 0.05 || !sim.power || pval('P05') !== 1 || sim.throttle > (sim.cruiseThr ?? 1))) sim.cruise = 0;
+  if (sim.power && sim.boot <= 0 && !sim.charging && sim.brake < 0.05 && sim.cruise && sim.v < sim.cruise && !RM.crash && !RM.walk) a = Math.min(2, (sim.cruise - sim.v) * 2);   // cruise holds the speed
+  if (sim.power && sim.boot <= 0 && !sim.charging && sim.brake < 0.05 && sim.throttle > 0.02 && !RM.crash && !RM.walk && (pval('P06') === 0 || sim.v >= 1.3)) {
     const target = vmax * sim.throttle;
     if (sim.v < target) a = (sim.riding ? (target - sim.v) / RIDE[sim.mode].tau : Math.min(3.2, (target - sim.v) * 2.2)) * (sim.volts > 40 ? 1 : 0);   // controller cuts out at low voltage
   }
@@ -2708,7 +2721,7 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
   // UI
   $('tFill').style.width = (sim.throttle * 100).toFixed(1) + '%'; $('tVal').textContent = Math.round(sim.throttle * 100) + '%';
   tEl.setAttribute('aria-valuenow', Math.round(sim.throttle * 100));
-  lcdTimer += dt; const shown = `${sim.lights}|${performance.now() % 610 < 280}|${sim.blink}|${performance.now() < sim.odoUntil || Math.floor(performance.now() / 2500) % 2}|${Math.round(sim.v / 0.44704)}|${Math.floor(sim.odo)}|${Math.ceil(pctOfV(shownV()) / 10)}|${sim.brake > 0.05}|${sim.volts.toFixed(1)}`;
+  lcdTimer += dt; const shown = `${sim.pMenu}|${sim.pIdx}|${sim.pEdit && performance.now() % 1000 < 500}|${sim.lights}|${performance.now() % 610 < 280}|${sim.blink}|${performance.now() < sim.odoUntil || Math.floor(performance.now() / 2500) % 2}|${Math.round(sim.v / 0.44704)}|${Math.floor(sim.odo)}|${Math.ceil(pctOfV(shownV()) / 10)}|${sim.brake > 0.05}|${sim.volts.toFixed(1)}`;
   if (lcdTimer > 0.1 && shown !== lastShown) { refreshLCD(); lastShown = shown; lcdTimer = 0; }
   $('bBrake').classList.toggle('active', brkIn > 0); $('bHorn').classList.toggle('active', hornOn());
   if (tween) { const k = Math.min(1, (performance.now() - tween.s) / 850), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
