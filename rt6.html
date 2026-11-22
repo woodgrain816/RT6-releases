@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1239";</script>
+<script>window.RT6_VERSION = "2026.1122.1243";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -321,22 +321,31 @@ const deckTex = canvasTex(1536, 540, (g, W, H) => {
 });
 const deckBump = canvasTex(1536, 540, (g, W, H) => { deckPattern(g, W, H, '#000', '#fff'); }, false);   // band is flush with the pill tops
 
-function plateTex(right) {   // owner's side photo: diagonal red/salmon/grey bands, circuit traces with dots, big white "Ruitoo" down the plate
-  return canvasTex(512, 512, (g, W, H) => {
-    g.fillStyle = '#1b1e29'; g.fillRect(0, 0, W, H);
-    g.save(); if (right) { g.translate(W, 0); g.scale(-1, 1); }
-    g.translate(W * 0.5, H * 0.5); g.rotate(0.86);
-    const band = (c, y, h, glow) => { g.fillStyle = c; g.fillRect(-520, y, 1040, h); if (glow) { const gr = g.createLinearGradient(0, y - 30, 0, y + h + 30); gr.addColorStop(0, 'rgba(255,80,40,0)'); gr.addColorStop(0.5, 'rgba(255,80,40,.35)'); gr.addColorStop(1, 'rgba(255,80,40,0)'); g.fillStyle = gr; g.fillRect(-520, y - 30, 1040, h + 60); } };
-    band('#3a3f52', -260, 60); band('#ff7a5a', -150, 70, true); band('#c2271c', -70, 26); band('#5a6074', -30, 70); band('#ff5a3c', 60, 90, true); band('#9e1d16', 160, 34); band('#454a5e', 200, 80);
-    g.strokeStyle = 'rgba(255,60,40,.85)'; g.lineWidth = 3; g.fillStyle = '#ff4a3a';
-    for (let i = 0; i < 12; i++) { const y = -240 + i * 42, k = -200 + (i * 73) % 320;
-      g.beginPath(); g.moveTo(-520, y); g.lineTo(k, y); g.lineTo(k + 24, y + 22); g.lineTo(520, y + 22); g.stroke(); g.beginPath(); g.arc(k + 160, y + 22, 6, 0, TAU); g.fill(); }
-    g.strokeStyle = 'rgba(225,232,245,.85)'; g.lineWidth = 7;
-    for (const y of [-205, 150]) { g.beginPath(); g.moveTo(-520, y); g.lineTo(-120, y); g.lineTo(-90, y + 28); g.lineTo(520, y + 28); g.stroke(); }
-    g.restore();
-    g.save(); g.translate(W * (right ? 0.46 : 0.54), H * 0.52); g.rotate(right ? -PI / 4 : PI / 4);   // runs along the plate, letter tops toward the rear-top
-    g.font = '700 118px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; try { g.letterSpacing = '4px'; } catch {}
-    g.lineWidth = 12; g.strokeStyle = '#1b1e29'; g.strokeText('Ruitoo', 0, 0); g.fillStyle = '#f5f6f8'; g.fillText('Ruitoo', 0, 0);
+const PL = { x0: 0.272, x1: 0.405, y0: 0.186, y1: 0.41 };   // plate bounds (frame metres); canvas = 4096 px per metre
+function plateTex(right) {   // owner's photos: black plate, big salmon-red band down the leg with darker edges, grey edge lines, red circuit traces with dots, white "Ruitoo" up the leg
+  const S = 4096, W = Math.round((PL.x1 - PL.x0) * S), H = Math.round((PL.y1 - PL.y0) * S);
+  return canvasTex(W, H, (g) => {
+    const X = x => (right ? x - PL.x0 : PL.x1 - x) * S, Y = y => (PL.y1 - y) * S;
+    g.fillStyle = '#121318'; g.fillRect(0, 0, W, H);
+    const A = [0.296, 0.19], B = [0.333, 0.372];   // leg centre line, bottom to top
+    const ax = X(A[0]), ay = Y(A[1]), bx = X(B[0]), by = Y(B[1]), ang = Math.atan2(by - ay, bx - ax), len = Math.hypot(bx - ax, by - ay);
+    g.save(); g.translate(ax, ay); g.rotate(ang);   // leg frame: +x up the leg, +y across it
+    const band = (c, y, h) => { g.fillStyle = c; g.fillRect(-400, y, len + 800, h); };
+    band('#7d1712', -58, 116); band('#e04434', -44, 88); band('#ff6a52', -18, 36);              // the big red band
+    g.fillStyle = '#121318'; for (let k = 0; k < 7; k++) { const t = 40 + k * 120; g.beginPath(); g.moveTo(t, -60); g.lineTo(t + 60, -60); g.lineTo(t + 20, 60); g.lineTo(t - 40, 60); g.closePath(); g.globalAlpha = 0.35; g.fill(); } g.globalAlpha = 1;
+    g.strokeStyle = '#9ba1ad'; g.lineWidth = 7;   // grey edge lines with a jog
+    for (const [yy, j] of [[-92, 1], [92, -1]]) { g.beginPath(); g.moveTo(-400, yy); g.lineTo(len * 0.35, yy); g.lineTo(len * 0.35 + 30, yy + j * 30); g.lineTo(len + 400, yy + j * 30); g.stroke(); }
+    g.strokeStyle = '#ff3b2e'; g.lineWidth = 3.5; g.fillStyle = '#ff3b2e';   // circuit traces ending in dots
+    for (let k = 0; k < 9; k++) { const y0 = -130 + k * 32, x0 = ((k * 97) % 300) - 60, x1 = x0 + 120 + (k * 53) % 160;
+      g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y0); g.lineTo(x1 + 22, y0 + (k % 2 ? 22 : -22)); g.stroke(); g.beginPath(); g.arc(x1 + 22, y0 + (k % 2 ? 22 : -22), 6, 0, TAU); g.fill(); }
+    g.fillStyle = '#c92d22'; g.globalAlpha = 0.9;   // red blocks low on the leg
+    g.beginPath(); g.moveTo(-60, -130); g.lineTo(150, -130); g.lineTo(110, -60); g.lineTo(-60, -60); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(-60, 60); g.lineTo(80, 60); g.lineTo(120, 130); g.lineTo(-60, 130); g.closePath(); g.fill(); g.globalAlpha = 1;
+    g.fillStyle = '#2b2e37'; g.fillRect(len * 0.9, -150, 260, 52); g.fillRect(len * 0.95, 96, 240, 46);
+    // "Ruitoo" up the leg, readable from this side
+    g.translate(len * 0.42, 6); if (Math.cos(ang) < 0) g.rotate(PI);
+    g.font = '700 128px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; try { g.letterSpacing = '6px'; } catch {}
+    g.lineWidth = 16; g.strokeStyle = '#121318'; g.strokeText('Ruitoo', 0, 0); g.fillStyle = '#e9ecf1'; g.fillText('Ruitoo', 0, 0);
     g.restore();
   });
 }
@@ -786,21 +795,25 @@ const chargerSet = new THREE.Group(); chargerSet.name = 'ChargerBrick'; chargerS
   mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([acEnd, acDir, W(V(0.05, 0.004, -0.3)), W(V(0.25, 0.004, -0.45))]), 60, 0.003, 8), cab, chargerSet); }
 
 // neck plates with the red "Ruitoo" graphic
-const plateP = [[0.3905, 0.407], [0.33, 0.407], [0.272, 0.30], [0.272, 0.206], [0.316, 0.206], [0.385, 0.30], [0.4035, 0.322]];   // whole plate BEHIND the head tube, front edge leaning back with the steering axis (owner)   // front edge up the head tube, corner cut back behind the crown (owner)
-const pminX = 0.272, pW = 0.1315, pminY = 0.206, pH = 0.201;
+const plateP = [[0.3905, 0.405], [0.33, 0.405], [0.318, 0.401], [0.312, 0.393], [0.278, 0.222], [0.278, 0.196], [0.284, 0.19], [0.31, 0.19], [0.316, 0.196], [0.339, 0.305], [0.344, 0.321], [0.352, 0.331], [0.364, 0.336], [0.4013, 0.336]];   // inverted L: top arm along the head tube, concave inner corner, leg to the deck (owner)
+const pminX = PL.x0, pW = PL.x1 - PL.x0, pminY = PL.y0, pH = PL.y1 - PL.y0;
 for (const [i, sz] of [[0, -1], [1, 1]]) {
   ext(poly(plateP), 0.005, M.frame, frame, sz * 0.033, 0.001);
   const dg = mapUV(new THREE.ShapeGeometry(poly(plateP)), (x, y) => [sz < 0 ? (pminX + pW - x) / pW : (x - pminX) / pW, (y - pminY) / pH]);
   mesh(dg, plateMats[i], frame, [0, 0, sz * 0.0374]);   // just proud of the plate bevel (was z-fighting)
 }
 // lattice across the rear face between the plates (open windows, graphic behind), top cap, foot block
-{ const lat = new THREE.Group(); lat.position.set(0.326, 0.335, 0); lat.rotation.z = 1.07; frame.add(lat);
+{ const lat = new THREE.Group(); lat.position.set(0.322, 0.33, 0); lat.rotation.z = 1.36; frame.add(lat);
   for (const x of [0.006, -0.047]) mesh(new THREE.CylinderGeometry(0.0065, 0.0065, 0.062, 8).rotateX(PI / 2).scale(0.8, 1, 1), M.frame, lat, [x, 0, 0]);   // two faceted round bars (owner)   // flat rungs, as seen from above
 }   // windows left open; frame + plate insides are black
-mesh(new RoundedBoxGeometry(0.05, 0.008, 0.066, 4, 0.003), M.frame, frame, [0.36, 0.403, 0]);   // top cap
+mesh(new RoundedBoxGeometry(0.065, 0.008, 0.066, 4, 0.003), M.frame, frame, [0.358, 0.401, 0]);   // top cap
 mesh(new RoundedBoxGeometry(0.03, 0.05, 0.066, 4, 0.005), M.frame, frame, [0.29, 0.233, 0]);
-for (const sz of [1, -1]) for (const [x, y] of [[0.29, 0.225], [0.34, 0.25], [0.39, 0.35], [0.3866, 0.373], [0.383, 0.394], [0.35, 0.385]])   // three bolts up the head tube (owner)
-  mesh(new THREE.CylinderGeometry(0.0048, 0.0042, 0.002, 20).rotateX(PI / 2), M.chrome, frame, [x, y, sz * 0.0377]);
+for (const sz of [1, -1]) {
+  for (const [x, y] of [[0.389, 0.358], [0.386, 0.376], [0.3833, 0.394]]) {   // three big countersunk bolts into the head tube
+    mesh(new THREE.CylinderGeometry(0.0068, 0.0068, 0.0012, 28).rotateX(PI / 2), M.chrome, frame, [x, y, sz * 0.0378]);
+    mesh(new THREE.CylinderGeometry(0.0024, 0.0024, 0.0006, 6).rotateX(PI / 2), std(0x050506, 0.9, 0), frame, [x, y, sz * 0.0385]); }
+  for (const [x, y] of [[0.328, 0.393], [0.392, 0.342], [0.291, 0.29], [0.296, 0.199]])   // small domed button bolts
+    mesh(new THREE.SphereGeometry(0.0038, 16, 8, 0, TAU, 0, PI / 2).scale(1, 0.55, 1).rotateX(sz * PI / 2), M.chrome, frame, [x, y, sz * 0.0377]); }
 // rear swingarm, shocks, kickstand
 const SWP = V(-0.28, 0.165, 0), swingG = new THREE.Group(); swingG.name = 'Swingarm'; frame.add(swingG);
 const shockG = new THREE.Group(); shockG.name = 'Shocks'; shockG.matrixAutoUpdate = false; frame.add(shockG);
@@ -812,7 +825,7 @@ for (const sz of [1, -1]) {
   mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.01, 16).rotateX(PI / 2), M.zinc, frame, [-0.28, 0.165, sz * 0.061]);
   // shock: eye on a tab above the axle, angled up to the frame end beside the deck light. Short end piece, fat body,
   // stepped collar, slimmer front tube; silver button-head bolts through both eyes
-  const zS = sz * 0.074, b = V(-0.403, 0.179, zS), a = V(-0.267, 0.227, zS), at = t => b.clone().lerp(a, t).toArray();
+  const zS = sz * 0.074, b = V(-0.415, 0.176, zS), a = V(-0.318, 0.216, zS), at = t => b.clone().lerp(a, t).toArray();
   rod(at(0.08), at(0.2), 0.0095, M.frame, shockG, 24);
   rod(at(0.2), at(0.6), 0.0178, M.frame, shockG, 32);
   rod(at(0.6), at(0.7), 0.0186, M.frame, shockG, 32);
@@ -821,7 +834,10 @@ for (const sz of [1, -1]) {
     mesh(new THREE.CylinderGeometry(0.0115, 0.0115, 0.02, 24).rotateX(PI / 2), M.frame, shockG, e.toArray());
     mesh(new THREE.SphereGeometry(0.0072, 16, 8, 0, TAU, 0, PI / 2).scale(1, 0.55, 1).rotateX(sz * PI / 2), M.chrome, shockG, [e.x, e.y, e.z + sz * 0.01]);
     mesh(new THREE.CylinderGeometry(0.0075, 0.0075, 0.012, 16).rotateX(PI / 2), M.frame, shockG, [e.x, e.y, sz * 0.062]); }
-  mesh(new RoundedBoxGeometry(0.034, 0.05, 0.006, 3, 0.002), M.frame, frame, [-0.265, 0.235, sz * 0.064]);   // frame tab at the deck end
+  { // rear bracket (owner photos): plate hanging under the deck's rear end, shock eye bolted to its top through a spacer, swingarm pivot through its bottom
+    ext(roundPoly([[-0.305, 0.236], [-0.33, 0.236], [-0.337, 0.212], [-0.3, 0.152], [-0.27, 0.152], [-0.262, 0.168], [-0.27, 0.206], [-0.305, 0.21]], 0.006), 0.006, M.frame, frame, sz * 0.062, 0.0008);
+    mesh(new THREE.CylinderGeometry(0.0085, 0.0085, 0.008, 20).rotateX(PI / 2), M.frame, frame, [-0.318, 0.216, sz * 0.069]);   // spacer between the bracket and the shock eye
+    mesh(new THREE.CylinderGeometry(0.0072, 0.0072, 0.004, 6).rotateX(PI / 2), M.frame, frame, [-0.28, 0.165, sz * 0.067]); }   // swingarm pivot bolt head   // frame tab at the deck end
   // axle: steel rod through the hub with spacers between the motor and the swingarm plates
   if (sz > 0) mesh(new THREE.CylinderGeometry(0.0062, 0.0062, 0.15, 16).rotateX(PI / 2), M.steel, swingG, [RX, AX, 0]);
   mesh(new THREE.CylinderGeometry(0.0105, 0.0105, 0.021, 20).rotateX(PI / 2), M.zinc, swingG, [RX, AX, sz * 0.0415]);
@@ -878,10 +894,6 @@ const rFender = mesh(rfGeo, M.fender, frame, [0, 0, 0], [0, 0, 0], 'RearFender')
   const sc = mesh(new THREE.CylinderGeometry(0.0034, 0.0034, 0.0012, 20), std(0x1a1b1e, 0.5, 0.2), frame, sp); sc.quaternion.setFromUnitVectors(V(0, 1, 0), nv); }   // screw at the front of the pad
 const onFender = (a, off) => { const r = RR + off; const nx = Math.cos(a) / FK, ny = Math.sin(a);   // point + outward normal angle
   return { x: RX + FK * r * Math.cos(a), y: AX + r * Math.sin(a), n: Math.atan2(ny, nx) }; };
-for (const sz of [1, -1]) {                                                          // front mounting tabs + bolts
-  mesh(new RoundedBoxGeometry(0.03, 0.014, 0.004, 2, 0.0015), M.fender, frame, [RX + 0.17, AX - 0.012, sz * (RW + 0.002)]);
-  mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.003, 16).rotateX(PI / 2), M.chrome, frame, [RX + 0.175, AX - 0.012, sz * (RW + 0.0045)]);
-}
 // light box: sits on the top-rear and sticks straight back, oval red lens on its rear face
 const ovalShape = (w, h) => { const s = new THREE.Shape(), r = h / 2; s.absarc(-w / 2 + r, 0, r, PI / 2, 3 * PI / 2, false); s.absarc(w / 2 - r, 0, r, -PI / 2, PI / 2, false); s.closePath(); return s; };
 const hp = onFender(142 * D2R, 0);
@@ -1040,17 +1052,13 @@ let cableM2; const headG = new THREE.Group(); headG.name = 'Headlight'; headG.po
   const pg = new THREE.Group(), p = lc.getPointAt(0.55); pg.position.copy(p); pg.quaternion.setFromUnitVectors(V(0, 1, 0), lc.getTangentAt(0.55)); steer.add(pg);
   mesh(new THREE.CylinderGeometry(0.0038, 0.003, 0.022, 14), cableM2, pg);
   for (const y of [-0.007, -0.004, 0.006]) mesh(new THREE.TorusGeometry(0.0036, 0.0005, 5, 14).rotateX(PI / 2), cableM2, pg, [0, y, 0]); }
-{ // body (photos): round lens, flat top + bottom plates with a slanted front edge, stacks of horizontal fins on both sides
+{ // body (owner photos): round heatsink, fins running front-to-back all the way round, flat round back
   const finM = std(0x1b1c1f, 0.55, 0.35);
-  mesh(new THREE.CylinderGeometry(0.027, 0.024, 0.045, 32).rotateZ(PI / 2), finM, headG);
-  const plate = new THREE.Shape(); plate.moveTo(-0.024, -0.027); plate.lineTo(0.016, -0.027); plate.lineTo(0.024, -0.02); plate.lineTo(0.024, 0.027); plate.lineTo(-0.024, 0.027); plate.closePath();
-  for (const sy of [1, -1]) { const pg = new THREE.ExtrudeGeometry(plate, { depth: 0.004, bevelEnabled: true, bevelThickness: 0.0008, bevelSize: 0.0008, bevelSegments: 2 }).translate(0, 0, -0.002).rotateX(PI / 2);
-    mesh(pg, finM, headG, [0, sy * 0.0285, 0]); }                                                      // flat top / bottom
-  const fin = new THREE.Shape(); fin.moveTo(-0.024, 0); fin.lineTo(0.018, 0); fin.lineTo(0.022, 0.009); fin.lineTo(-0.02, 0.009); fin.closePath();
-  const fg = new THREE.ExtrudeGeometry(fin, { depth: 0.0026, bevelEnabled: true, bevelThickness: 0.0005, bevelSize: 0.0005, bevelSegments: 2 }).translate(0, 0, -0.0013).rotateX(PI / 2);
-  for (const sz of [1, -1]) for (let k = 0; k < 7; k++) { const y = -0.0225 + k * 0.0075, r = Math.sqrt(Math.max(0, 0.026 * 0.026 - y * y));
-    const f = new THREE.Mesh(fg, finM); f.castShadow = f.receiveShadow = true; f.position.set(0, y, sz * (r - 0.002)); f.scale.z = sz; headG.add(f); }   // fins stick out sideways
-}
+  mesh(new THREE.CylinderGeometry(0.0255, 0.0255, 0.046, 40).rotateZ(PI / 2), finM, headG);
+  mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.006, 40).rotateZ(PI / 2), finM, headG, [0.02, 0, 0]);   // front collar behind the lens ring
+  const fin = new RoundedBoxGeometry(0.036, 0.0085, 0.0024, 2, 0.0008);
+  for (let k = 0; k < 20; k++) { const a = k / 20 * TAU, f = new THREE.Mesh(fin, finM); f.castShadow = f.receiveShadow = true;
+    f.position.set(-0.004, Math.cos(a) * 0.029, Math.sin(a) * 0.029); f.rotation.x = -a; headG.add(f); } }
 mesh(new THREE.CircleGeometry(0.029, 32), std(0x2a2d31, 0.2, 0.9), headG, [0.0228, 0, 0], [0, PI / 2, 0]);
 mesh(new THREE.TorusGeometry(0.0312, 0.0026, 10, 48), std(0x141518, 0.5, 0.2), headG, [0.0252, 0, 0], [0, PI / 2, 0]);   // black rim round the lens
 for (const [y, z] of [[0.011, 0.011], [0.011, -0.011], [-0.011, 0.011], [-0.011, -0.011]])
@@ -1325,7 +1333,7 @@ const paddle = new THREE.Group(); paddle.position.set(0, 0, -0.003); thr.add(pad
 tag(paddle, 'throttle');
 const throttleCable = new THREE.CatmullRomCurve3([V(0.01, -0.02, 0.19), V(0.03, -0.05, 0.15), V(0.035, -0.07, 0.06), V(0.03, -0.08, 0.02)]);
 // cables left off for now
-const ZAX = V(0, 0, 1), SHK_A = V(-0.267, 0.227, 0), SHK_B = V(-0.403, 0.179, 0);
+const ZAX = V(0, 0, 1), SHK_A = V(-0.318, 0.216, 0), SHK_B = V(-0.415, 0.176, 0);
 function setSusp(cF, cR) {   // cF: fork compression along the stanchions, cR: rear axle rise (m)
   forkLow.position.y = cF;
   const th = -cR / 0.169; swingG.rotation.z = th; swingG.position.copy(SWP).sub(SWP.clone().applyAxisAngle(ZAX, th));
@@ -1540,8 +1548,8 @@ mesh(new THREE.CircleGeometry(0.0085, 20), std(0x030303, 1, 0), frame, [0.2905, 
   mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(-0.031, 0.444, 0.0055), V(-0.037, 0.443, 0.0055), V(-0.039, 0.433, 0.008), V(-0.043, 0.405, 0.02), V(-0.045, 0.37, 0.036), V(-0.042, 0.24, 0.075), stop.clone().add(V(-0.004, 0.03, 0.004)), stop], false, 'centripetal'), 60, 0.0022, 8), cableM, steer); }   // front brake cable: out of the deck, behind the fork leg
 { // rear brake cable comes out of a rubber grommet in the deck's rear-right side, runs past the shock to the caliper
   const gx = -0.235, gy = 0.222, gz = sideZ(gx, gy);
-  mesh(new THREE.TorusGeometry(0.0042, 0.0018, 8, 20), M.rubber, frame, [gx, gy, gz + 0.0006], [0, 0, 0]);
-  mesh(new THREE.CircleGeometry(0.0036, 16), std(0x020202, 1, 0), frame, [gx, gy, gz + 0.0003]);
+  mesh(new THREE.CylinderGeometry(0.0075, 0.0082, 0.004, 24).rotateX(PI / 2), M.rubber, frame, [gx, gy, gz + 0.0015]);   // rubber grommet
+  mesh(new THREE.CylinderGeometry(0.0034, 0.0042, 0.012, 16).rotateX(PI / 2), M.rubber, frame, [gx, gy, gz + 0.008]);    // boot round the cable where it leaves
   mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(gx, gy, gz - 0.004), V(gx - 0.01, gy - 0.004, gz + 0.012), V(-0.31, 0.215, 0.1), V(RX + 0.02, AX + 0.15, 0.085), V(RX - 0.01, AX + 0.124, 0.068)]), 60, 0.0022, 8), cableM, frame); }
 // rear wheel + caliper
 const rearWheel = makeWheel(true); rearWheel.scale.setScalar(0.96); rearWheel.position.set(RX, AX, 0); swingG.add(rearWheel);

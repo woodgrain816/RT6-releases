@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1239",
-  "notes": "Horn: single button on the tab, extra layer removed",
+  "version": "2026.1122.1243",
+  "notes": "Neck plate reshaped and redrawn with the real bolt pattern, round headlight, rear bracket joins shocks and swingarm, floating tabs removed, rear brake cable grommet",
   "page": "rt6.html",
-  "sha256": "f727f982cad8f8f28e4eebb7e114d55b44f3043df4d5a8d261f53e9fd0fd8339",
+  "sha256": "c33301f1510d3e3893785af4b4b550f95623101ffd0769a7d21e7c1684bf1b85",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T18:39:11.645Z"
+  "published": "2026-11-22T18:43:54.895Z"
 }
