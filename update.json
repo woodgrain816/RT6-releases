@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1557",
-  "notes": "Wheelies easier: start from slow speed, G + W lifts the front much harder",
+  "version": "2026.1122.1558",
+  "notes": "Wheelie no longer slides the scooter backwards",
   "page": "rt6.html",
-  "sha256": "abbae21b1b6c1ccc996a85cb9042a796dc7dcfb3578d2fc61f79e757b7781ef4",
+  "sha256": "ec5694cbef98943a151c4c0e81963b99553ceebe3a617d73f14f2244718c0e42",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T21:57:03.850Z"
+  "published": "2026-11-22T21:58:52.827Z"
 }

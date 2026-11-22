@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1557";</script>
+<script>window.RT6_VERSION = "2026.1122.1558";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -2723,7 +2723,8 @@ function rideStep(dt, omega) {
   suspStep(dt); trafficStep(dt);
   const B = RM.body; scooter.position.y = B.y + 0.25 * Math.max(0, Math.abs(Math.sin(RM.lean)) - 0.5);   // lying on its side it rests on the deck edge
   scooter.rotation.set(RM.lean, RM.yaw, B.th + (RM.wh ? RM.wh.a : 0));
-  if (RM.wh && RM.wh.a > 0) { const a = RM.wh.a, lx = SUS.xR * (1 - Math.cos(a)); scooter.position.y += -SUS.xR * Math.sin(a); scooter.position.x += Math.cos(RM.yaw) * lx; scooter.position.z -= Math.sin(RM.yaw) * lx; }   // pivot on the rear tyre
+  { const a = RM.wh && RM.wh.a > 0 ? RM.wh.a : 0, lx = SUS.xR * (1 - Math.cos(a)), ox = Math.cos(RM.yaw) * lx, oz = -Math.sin(RM.yaw) * lx;   // pivot on the rear tyre: apply only the CHANGE in the offset each frame (it used to pile up and slide the scooter backwards)
+    if (a > 0) scooter.position.y += -SUS.xR * Math.sin(a); scooter.position.x += ox - (RM.pvx || 0); scooter.position.z += oz - (RM.pvz || 0); RM.pvx = ox; RM.pvz = oz; }
   if (RM.walk) { RM.walkQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(RM.lean, 0, B.th, 'XYZ')); RM.rider.quaternion.copy(RM.walkQ).invert();
     const rp = V(scooter.position.x + Math.sin(RM.yaw) * -0.5, 0, scooter.position.z + Math.cos(RM.yaw) * -0.5); RM.walkG = groundAt(rp.x, rp.z) - scooter.position.y; }
   else RM.rider.quaternion.identity();
