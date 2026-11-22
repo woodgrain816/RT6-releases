@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1324";</script>
+<script>window.RT6_VERSION = "2026.1122.1325";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -707,12 +707,15 @@ const gripGeo = (() => {
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals(); return g; })();   // real 3D tread, low enough to barely notice
 mesh(gripGeo, M.deckTop, frame, [0, DECK_TOP + 0.0006, 0], [0, 0, 0], 'DeckGrip');
 // side details, laid onto the curved side by following the outline
-const onSide = (x, y, sz, off = 0.0008) => V(x, y, sz * (wAt(x) + off));
+const onSide = (x, y, sz, off = 0.0008) => V(x, y, sz * (sideZ(x, y) + off));   // on the real angled side (wAt is only the ridge)
 for (const sz of [1, -1]) {
   // recessed groove running along the lower side
-  mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([-0.16, -0.05, 0.07, 0.18].map(x => onSide(x, deckBottom(x) + 0.33 * (DECK_TOP - deckBottom(x)), sz, -0.0005))), 40, 0.0022, 8), std(0x060607, 0.9, 0), frame);
+  { const cut = std(0x060607, 0.9, 0), seam = [];   // thin cut lines in the body that follow its surface (owner)
+    for (let k = 0; k <= 40; k++) { const x = -0.16 + 0.34 * k / 40; seam.push(onSide(x, deckBottom(x) + 0.3 * (DECK_TOP - deckBottom(x)), sz, -0.0004)); }
+    mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(seam), 120, 0.0008, 6), cut, frame);
+    for (const x of [-0.105, 0.17]) { const pts = []; for (let k = 0; k <= 12; k++) { const y = deckBottom(x) + 0.008 + (DECK_TOP - 0.008 - deckBottom(x) - 0.008) * k / 12; pts.push(onSide(x, y, sz, -0.0004)); }
+      mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, 0.0007, 6), cut, frame); } }
   // moulding seams where the end caps meet the middle section
-  for (const x of [-0.105, 0.2]) mesh(new THREE.TubeGeometry(new THREE.LineCurve3(onSide(x, deckBottom(x) + 0.008, sz, -0.0003), onSide(x, DECK_TOP - 0.008, sz, -0.0003)), 2, 0.0012, 6), std(0x060607, 0.9, 0), frame);
   // red wedge reflector on the rear side: tall at the back, tapering forward
   { // signal lens in the end cap: tall at the back, tapering forward; built ON the deck side surface so it sits flush
     const N = 40, NY = 6, x0 = -0.286, x1 = -0.11;
