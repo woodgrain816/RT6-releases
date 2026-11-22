@@ -1,0 +1,9 @@
+{
+  "version": "2026.1122.1129",
+  "notes": "First Android release: touch steering, get off/on, camera and reset buttons",
+  "page": "rt6.html",
+  "sha256": "a99e210f5d72007b18e81fa3b3a67cba952b1b0658ae2cf1d6b7eb990d7ee4dc",
+  "minNative": 1,
+  "apk": "RT6Sim.apk",
+  "published": "2026-11-22T17:29:32.204Z"
+}
