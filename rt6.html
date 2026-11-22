@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1616";</script>
+<script>window.RT6_VERSION = "2026.1122.1622";</script>
 <style>html,body{margin:0}</style>
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -90,6 +90,12 @@ dt{color:var(--muted)} dd{margin:0;font-family:var(--f-mono);font-size:12px;font
 }
 body.riding .card, body.riding .views{display:none}
 .tpad{display:none}
+#joyZone{position:fixed;left:0;top:18%;bottom:0;width:52%;z-index:9;touch-action:none;display:none;-webkit-user-select:none;user-select:none}
+#joyRing{position:fixed;width:132px;height:132px;margin:-66px 0 0 -66px;border-radius:50%;border:2px solid rgba(255,255,255,.42);background:rgba(255,255,255,.08);display:none;z-index:10;pointer-events:none}
+#joyKnob{position:fixed;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:rgba(255,255,255,.55);display:none;z-index:11;pointer-events:none}
+.tpad .rbtn{position:fixed;right:max(16px,env(safe-area-inset-right,0px));font:700 15px var(--f-body);border-radius:50%;width:84px;height:84px;display:grid;place-items:center}
+.tpad .rbtn.active{background:var(--accent);color:#fff}
+@media (pointer:coarse){ body.riding #joyZone{display:block} .tpad #tsL,.tpad #tsR{display:none} .tpad #tsLean{left:auto;right:max(16px,env(safe-area-inset-right,0px));top:auto;bottom:118px;width:84px;height:84px;border-radius:50%} .tpad #tBrake{bottom:16px;width:96px;height:96px;right:max(112px,env(safe-area-inset-right,0px))} .tpad #tHorn{bottom:16px} .tpad #tLights{bottom:118px;right:max(112px,env(safe-area-inset-right,0px));width:68px;height:68px} }
 .tpad button{font:600 13px var(--f-body);color:var(--fg);background:color-mix(in srgb,var(--chip) 82%,transparent);border:1px solid var(--line);border-radius:14px;cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none}
 .tpad .steer{position:fixed;top:34%;width:76px;height:96px;font-size:30px;display:grid;place-items:center}
 .tpad .steer.active{background:var(--accent);color:#fff}
@@ -174,10 +180,14 @@ body.riding .card, body.riding .views{display:none}
     </div>
   </div>
 </section>
+<div id="joyZone"></div><div id="joyRing"></div><div id="joyKnob"></div>
 <div class="tpad" id="tpad" aria-label="Touch ride controls">
   <button class="steer" id="tsL" aria-label="Steer left">&#9664;</button>
   <button class="steer" id="tsR" aria-label="Steer right">&#9654;</button>
   <button class="steer" id="tsLean" aria-label="Lean back for a wheelie">Lean<br>back</button>
+  <button class="rbtn" id="tBrake" aria-label="Brake">Brake</button>
+  <button class="rbtn" id="tHorn" aria-label="Horn">Horn</button>
+  <button class="rbtn" id="tLights" aria-label="Lights">Lights</button>
   <div class="acts">
     <button id="tWalk">Get off / on</button>
     <button id="tCam">Camera</button>
@@ -2717,7 +2727,7 @@ function rideStep(dt, omega) {
       else { RM.stopT = 0; if (d < 40 && bad) { RM.yellT = (RM.yellT || 0) - dt; if (RM.yellT <= 0) { RM.yellT = 3.2;
           const Y = RM.offence === 'wheelie' ? ['Put that front wheel DOWN!', 'Stop the wheelie, right now!', 'Wheels on the ground! Pull over!', 'Do NOT make me tell you again!'] : ['SLOW DOWN!', 'Pull over, you are speeding!', 'Ease off the throttle, now!', 'Stop that scooter!'];
           toast('Officer (megaphone): "' + Y[Math.floor(Math.random() * Y.length)] + '"'); } } } } }
-  const k = RM.keys, steerIn = (k.a || k.arrowleft ? 1 : 0) - (k.d || k.arrowright ? 1 : 0), v = sim.v;
+  const k = RM.keys, steerIn = Math.max(-1, Math.min(1, (k.a || k.arrowleft ? 1 : 0) - (k.d || k.arrowright ? 1 : 0) - (RM.joyX || 0))), v = sim.v;
   const wantSit = seat.visible && !RM.stand && !RM.walk ? 1 : 0; RM.sit += (wantSit - RM.sit) * Math.min(1, dt * 3.5);
   const accNow = Math.max(-10, Math.min(6, (v - RM.lastV) / Math.max(dt, 1e-3))); RM.lastV = v; RM.acc += (accNow - RM.acc) * Math.min(1, dt * 4);
   if (accNow < -2.2 && v > 2) RM.jolt = Math.max(RM.jolt, 0.6);   // hard braking
@@ -2822,6 +2832,20 @@ addEventListener('keyup', e => { const k = e.key.toLowerCase(); RM.keys[k] = fal
   const press = key => dispatchEvent(new KeyboardEvent('keydown', { key }));
   $('tWalk').onclick = () => press('f'); $('tCam').onclick = () => press('c'); $('tStand').onclick = () => press('t');
   $('tReset').onclick = () => press('r'); $('tExit').onclick = () => press('Escape'); }
+{ // floating joystick (touch): appears where the left thumb lands
+  const zone = $('joyZone'), ring = $('joyRing'), knob = $('joyKnob'), R = 66; let id = null, ox = 0, oy = 0;
+  const reset = () => { RM.joyX = 0; input.throttleUI = 0; input.brakeUI = false; input.brakeHard = false; if (RM.free) { input.throttleKey = false; input.backKey = false; RM.keys.a = RM.keys.d = false; } };
+  const apply = (x, y) => { const dx = x - ox, dy = y - oy, d = Math.hypot(dx, dy), k = d > R ? R / d : 1, px = dx * k, py = dy * k, nx = px / R, ny = py / R;
+    knob.style.left = (ox + px) + 'px'; knob.style.top = (oy + py) + 'px';
+    if (RM.free) { input.throttleKey = ny < -0.3; input.backKey = ny > 0.3; input.brakeHard = ny < -0.85; RM.keys.a = nx < -0.3; RM.keys.d = nx > 0.3; return; }
+    RM.joyX = Math.abs(nx) < 0.12 ? 0 : nx; input.throttleUI = ny < -0.1 ? Math.min(1, (-ny - 0.1) / 0.8) : 0; input.brakeUI = ny > 0.45; };
+  zone.addEventListener('pointerdown', e => { if (id !== null) return; id = e.pointerId; zone.setPointerCapture(id); ox = e.clientX; oy = e.clientY; ring.style.left = ox + 'px'; ring.style.top = oy + 'px'; ring.style.display = knob.style.display = 'block'; apply(ox, oy); e.preventDefault(); });
+  zone.addEventListener('pointermove', e => { if (e.pointerId === id) apply(e.clientX, e.clientY); });
+  for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) zone.addEventListener(ev, e => { if (e.pointerId !== id && ev !== 'lostpointercapture') return; id = null; ring.style.display = knob.style.display = 'none'; reset(); });
+  const hold = (el, down, up) => { el.addEventListener('pointerdown', e => { e.preventDefault(); el.setPointerCapture(e.pointerId); el.classList.add('active'); down(); }); for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) el.addEventListener(ev, () => { if (el.classList.contains('active')) { el.classList.remove('active'); up(); } }); el.addEventListener('contextmenu', e => e.preventDefault()); };
+  hold($('tBrake'), () => { input.brakeUI = true; }, () => { input.brakeUI = false; });
+  hold($('tHorn'), () => dispatchEvent(new KeyboardEvent('keydown', { key: 'h' })), () => dispatchEvent(new KeyboardEvent('keyup', { key: 'h' })));
+  $('tLights').addEventListener('click', () => setLights(!sim.lights)); }
 // Android app: back button leaves the ride first; update banner
 window.__rt6back = () => { if (RM.on) { exitRide(); return true; } return false; };
 window.grUpdate = (state, version, notes) => { const b = $('updbar'); if (!b) return;

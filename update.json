@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1616",
-  "notes": "Fuller legal notice (private, non-commercial, not distributed, generic cars); hidden from search engines",
+  "version": "2026.1122.1622",
+  "notes": "Landscape app with a floating on-screen joystick (steer, throttle, brake) plus Brake / Lean / Horn / Lights buttons",
   "page": "rt6.html",
-  "sha256": "73586531e7c82fcb86cad96931c3924915306930abb3991fa93111f526998e39",
+  "sha256": "af16f9ddf8c6722555463e4a249abc51753cf8e24e7c57010b45dd7ffe3e6589",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T22:16:15.589Z"
+  "published": "2026-11-22T22:22:58.490Z"
 }
