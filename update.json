@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1226",
-  "notes": "Steering head rebuilt to your measurements: thinner fork crown, 3 in head tube with the serial, 4 in fold block with the knob near its top",
+  "version": "2026.1122.1233",
+  "notes": "Crown in front of the Ruitoo plates, light cable outside them, rounded front fender, cables go up inside the stem and into the deck, thicker deck, new jacket, floating fork bolts removed",
   "page": "rt6.html",
-  "sha256": "88e8ded63b8365f187d28fd470283dc5dbfaed570aafaa64f5fd72a6f3844547",
+  "sha256": "f4ffd4e0fb6047c8df4f7490f180704be9efa667b68a36aa275286817eb32ccb",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T18:26:06.562Z"
+  "published": "2026-11-22T18:33:53.919Z"
 }
