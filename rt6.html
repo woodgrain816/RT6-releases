@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1533";</script>
+<script>window.RT6_VERSION = "2026.1122.1539";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -1684,6 +1684,9 @@ const Sound = {
     { const sq = c.createOscillator(), sq2 = c.createOscillator(), lfo = c.createOscillator(), lg = c.createGain(), g2 = c.createGain(), g = c.createGain();
       sq.frequency.value = 2950; sq2.frequency.value = 4420; lfo.frequency.value = 7; lg.gain.value = 0; g2.gain.value = 0.35; g.gain.value = 0;
       lfo.connect(lg); lg.connect(sq.frequency); sq.connect(g); sq2.connect(g2); g2.connect(g); g.connect(out); sq.start(); sq2.start(); lfo.start(); this.squeal = g; }
+    { const so = c.createOscillator(), sw = c.createOscillator(), swg = c.createGain(), sg2 = c.createGain(), lp2 = c.createBiquadFilter();   // police siren: wail 650-1500 Hz
+      so.type = 'sawtooth'; so.frequency.value = 1075; sw.frequency.value = 0.22; swg.gain.value = 425; sw.connect(swg); swg.connect(so.frequency); lp2.type = 'lowpass'; lp2.frequency.value = 2400;
+      sg2.gain.value = 0; so.connect(lp2); lp2.connect(sg2); sg2.connect(out); so.start(); sw.start(); this.siren = sg2; }
     let hsrc = null; const hos = [];
     if (!this.buf.hornloop) for (const f of [420, 504]) { const o = c.createOscillator(); o.type = 'square'; o.frequency.value = f; const og = c.createGain(); og.gain.value = 0.16; o.connect(og); og.connect(hg); o.start(); hos.push(o); }
     this.nodes = { mg, src, oscs, hg, hos, hsrc };
@@ -1718,6 +1721,7 @@ const Sound = {
     this.noise.bp.frequency.setTargetAtTime(600 + 900 * rel, t, 0.1);
     if (this.wind) { const v = sim.riding ? sim.v : 0, k = Math.min(1, v / 14), gust = 1 + 0.18 * Math.sin(t * 0.9) + 0.1 * Math.sin(t * 2.3);
       this.wind.wg.gain.setTargetAtTime(0.55 * k * k * gust, t, 0.25); this.wind.lp.frequency.setTargetAtTime(350 + 1500 * k, t, 0.3); }
+    if (this.siren) { const c = RM.wanted, d = c ? Math.hypot(c.x - scooter.position.x, c.z - scooter.position.z) : 1e9; this.siren.gain.setTargetAtTime(c && RM.on ? Math.min(0.09, 0.09 * 25 / Math.max(25, d)) : 0, t, 0.3); }
     if (this.squeal) { const hard = sim.brake > 0.75 && sim.v > 1.2; this.squeal.gain.setTargetAtTime(hard ? 0.05 * Math.min(1, sim.v / 5) : 0, t, 0.05); }
   },
   horn(down) {
@@ -1771,7 +1775,7 @@ $('bPower').onclick = () => setKey(!sim.key);
 $('bNight').onclick = () => { setNight(!RM.night); if (!RM.on) toast(RM.night ? 'Night: takes effect in ride mode' : 'Day'); };
 $('bLights').onclick = () => setLights(!sim.lights);
 $('bMode').onclick = cycleMode;
-$('bFold').onclick = () => { sim.foldTarget = sim.foldTarget ? 0 : 1; $('bFold').setAttribute('aria-pressed', !!sim.foldTarget); };
+$('bFold').onclick = () => { if (RM.on && !RM.walk && !sim.foldTarget) { toast('Get off first (F): the stem will not fold while you are on it'); return; } sim.foldTarget = sim.foldTarget ? 0 : 1; $('bFold').setAttribute('aria-pressed', !!sim.foldTarget); };
 $('bRide').onclick = () => { sim.riding = !sim.riding; $('bRide').setAttribute('aria-pressed', sim.riding); toast(sim.riding ? 'Riding: on-road speeds with a 113 lb rider (9 / 17 / 31 mph)' : 'On the stand: free-spinning wheel (10 / 19 / 37 mph)'); };
 function setCharging(on) { if (on && RM.on && !inGarage()) { toast('No outlet out here: ride back into the garage to charge'); return; }
   sim.charging = on; if (!on) sim.chargeLock = false; frame.userData.chargePort.userData.plug.visible = on; scooter.getObjectByName('ChargerBrick').visible = on; if (on) sim.capOpen = true;
@@ -2240,12 +2244,32 @@ function buildCorvette() {
     return 0; };
   const bg = new THREE.BufferGeometry(); bg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); bg.setIndex(idx); bg.computeVertexNormals();
   add(bg, white);
-  { // black / smoked areas: their own glossy skins a few mm proud of the white body (white clearcoat washed vertex-black out to grey)
-    const cat = []; for (let i = 0; i < pos.length; i += 3) cat.push(paint(pos[i], pos[i + 1], pos[i + 2]));
-    const nrm = bg.attributes.normal, off = []; for (let i = 0; i < pos.length / 3; i++) off.push(pos[i * 3] + nrm.getX(i) * 0.004, pos[i * 3 + 1] + nrm.getY(i) * 0.004, pos[i * 3 + 2] + nrm.getZ(i) * 0.004);
-    for (const [k, m] of [[1, new THREE.MeshStandardMaterial({ color: 0x0a0a0b, roughness: 0.6, side: THREE.DoubleSide })], [2, new THREE.MeshPhysicalMaterial({ color: 0x15171b, roughness: 0.05, metalness: 0.4, clearcoat: 1, side: THREE.DoubleSide })]]) {
-      const id2 = []; for (let t = 0; t < idx.length; t += 3) if (cat[idx[t]] === k && cat[idx[t + 1]] === k && cat[idx[t + 2]] === k) id2.push(idx[t], idx[t + 1], idx[t + 2]);
-      const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(off, 3)); sg.setIndex(id2); sg.computeVertexNormals(); add(sg, m); } }
+  // ---- paint strips that follow the body exactly (owner's paint plan)
+  const secC = {}, curveAt = x => { const k = x.toFixed(4); if (!secC[k]) { const c = new THREE.CatmullRomCurve3(SEC(x).map(([z, y]) => V(z, y, 0)), false, 'centripetal'); secC[k] = { c, pts: c.getSpacedPoints(240) }; } return secC[k]; };
+  const uAtY = (x, y) => { const { pts } = curveAt(x); for (let i = 60; i < pts.length; i++) if (pts[i].y <= y) return i / 240; return 1; };   // on the way down the side
+  const uAtZ = (x, zf) => { const { pts } = curveAt(x), w = HW(x); for (let i = 0; i < 120; i++) if (pts[i].x >= zf * w) return i / 240; return 0.5; };   // across the top
+  const band = (x0, x1, range, mat, off = 0.004, NX = 48, NK = 14) => { const vp = [], ids = [];
+    for (let i = 0; i <= NX; i++) { const x = x0 + (x1 - x0) * i / NX, [ua, ub] = range(x), { c } = curveAt(x);
+      for (let k = 0; k <= NK; k++) { const u = Math.min(1, Math.max(0, ua + (ub - ua) * k / NK)), p = c.getPointAt(u), t = c.getTangentAt(u); let nz = t.y, ny = -t.x;
+        if (nz * p.x + ny * (p.y - 0.5) < 0) { nz = -nz; ny = -ny; } vp.push(x, p.y + ny * off, p.x + nz * off); } }
+    for (let i = 0; i < NX; i++) for (let k = 0; k < NK; k++) { const p0 = i * (NK + 1) + k, p1 = p0 + NK + 1; ids.push(p0, p1, p0 + 1, p1, p1 + 1, p0 + 1); }
+    for (const sd of [1, -1]) { const g2 = new THREE.BufferGeometry(); g2.setAttribute('position', new THREE.Float32BufferAttribute(vp.map((v, i) => (i % 3 === 2 ? v * sd : v)), 3)); g2.setIndex(ids); g2.computeVertexNormals(); add(g2, mat); } };
+  const trim = new THREE.MeshStandardMaterial({ color: 0x0a0a0b, roughness: 0.55, side: THREE.DoubleSide });
+  const smoke = new THREE.MeshPhysicalMaterial({ color: 0x14161a, roughness: 0.05, metalness: 0.4, clearcoat: 1, side: THREE.DoubleSide });
+  // lower front intake: everything under the bumper line, the line dipping in a V under the emblem
+  band(1.98, XF - 0.004, x => [uAtY(x, 0.33 - 0.03 * Math.max(0, 1 - Math.abs(x - XF) / 0.4)), 1], trim);
+  // corner vents low on the front corners, under the headlights
+  band(1.72, 2.14, x => [uAtY(x, 0.46), uAtY(x, 0.24)], trim, 0.005);
+  // swept smoked headlights on the fender tops + white running-light blade on their outer edge
+  const hlIn = x => 0.62 + (x - 1.58) / 0.69 * 0.12, hlOut = x => 0.98 - Math.max(0, x - 2.05) * 0.5;
+  band(1.58, 2.27, x => [uAtZ(x, hlIn(x)), uAtZ(x, Math.min(0.995, hlOut(x)))], smoke, 0.006);
+  band(1.62, 2.24, x => [uAtZ(x, Math.min(0.99, hlOut(x)) - 0.03), uAtZ(x, Math.min(0.995, hlOut(x)))], new THREE.MeshBasicMaterial({ color: 0xf2f6ff, side: THREE.DoubleSide }), 0.009);
+  // rocker band and rear diffuser area
+  band(AXR + ar - 0.02, AXF - ar + 0.02, x => [uAtY(x, 0.25), 1], trim, 0.005);
+  band(XR + 0.002, -1.98, x => [uAtY(x, 0.37), 1], trim, 0.005);
+  { // nose face: black below the bumper line
+    const rg = rings[NS], P = rg.filter(p => p[1] < 0.31).map(p => new THREE.Vector2(p[2], p[1]));
+    if (P.length > 2) { const ng = new THREE.ShapeGeometry(new THREE.Shape(P)).rotateY(PI / 2); add(ng, trim, XF + 0.004, 0, 0); } }
   const sideZ = (x, y) => { const S = SEC(x); let best = S[4][0]; for (let k = 3; k < 7; k++) { const [z0, y0] = S[k], [z1, y1] = S[k + 1]; if ((y - y0) * (y - y1) <= 0 && y0 !== y1) { best = z0 + (z1 - z0) * (y - y0) / (y1 - y0); break; } } return best; };
   const topY = (x, z) => { const S = SEC(x), az = Math.abs(z); for (let k = 0; k < 4; k++) { const [z0, y0] = S[k], [z1, y1] = S[k + 1]; if (az >= z0 && az <= z1) return y0 + (y1 - y0) * (az - z0) / (z1 - z0); } return S[4][1]; };
   // conforming decal-like panel: polygon in (x,y) on the side, or (x,z) on the top
@@ -2274,7 +2298,6 @@ function buildCorvette() {
                                                   // scoop opening
                                            // black rocker band
     // smoked headlight swept up the fender, white running-light blade along its edge
-    topPanel([[2.24, 0.85], [2.04, 0.94], [1.64, 0.965], [1.64, 0.945], [2.03, 0.92], [2.22, 0.83]], new THREE.MeshBasicMaterial({ color: 0xf2f6ff, side: THREE.DoubleSide }), sd, 0.011);
     add(new RoundedBoxGeometry(0.22, 0.11, 0.2, 3, 0.04), black, 0.6, 0.93, sd * 1.0);                                                   // mirror
     add(new THREE.BoxGeometry(0.1, 0.03, 0.12), black, 0.64, 0.9, sd * 0.9);
     // rear: C-shaped tail lamps, hex vents
@@ -2355,13 +2378,24 @@ function buildTraffic(town) {
     if (Math.hypot(sx - 22.6, sz + 5) < 14) continue;   // keep the end of the home driveway clear
     let g, wheels, tp;
     if (n === 0 || n === 9) { const cv = buildCorvette(); g = cv.g; wheels = cv.wheels; tp = { T: cv.T }; g.name = 'Corvette'; }
+    else if (n === 3 || n === 14 || n === 25) { tp = tpl.sedan; g = new THREE.Group(); g.name = 'Police'; const T = tp.T;   // police cruiser: black & white sedan, light bar, POLICE doors
+      const bm = new THREE.Mesh(tp.body, new THREE.MeshPhysicalMaterial({ color: 0x0c0d10, roughness: 0.3, metalness: 0.4, clearcoat: 1 })); bm.castShadow = true;
+      g.add(bm, new THREE.Mesh(tp.glass, glassM), new THREE.Mesh(tp.trim, trimM), new THREE.Mesh(tp.lamp, lampM));
+      const wm = new THREE.MeshPhysicalMaterial({ color: 0xf3f3f0, roughness: 0.3, clearcoat: 1 }), doorTex = canvasTex(256, 64, (c, Wd, Hd) => { c.fillStyle = '#f3f3f0'; c.fillRect(0, 0, Wd, Hd); c.fillStyle = '#10131a'; c.font = '900 40px Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('POLICE', Wd / 2, Hd / 2 + 2); });
+      for (const sd of [-1, 1]) { const dp = new THREE.Mesh(new THREE.BoxGeometry(T.wb * 0.95, 0.4, 0.012), wm); dp.position.set(0.05, T.belt - 0.33, sd * (T.W / 2 + 0.012)); g.add(dp);
+        const tx = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.27), new THREE.MeshBasicMaterial({ map: doorTex })); tx.position.set(0.05, T.belt - 0.33, sd * (T.W / 2 + 0.02)); if (sd < 0) tx.rotation.y = PI; g.add(tx); }
+      const bx = (T.wsx + T.rex) / 2, by = T.roof + 0.06; { const bar0 = new THREE.Mesh(new RoundedBoxGeometry(0.26, 0.06, 1.15, 2, 0.02), new THREE.MeshStandardMaterial({ color: 0x1a1b1e, roughness: 0.4 })); bar0.position.set(bx, by, 0); g.add(bar0); }
+      const red = new THREE.MeshStandardMaterial({ color: 0x5a0a0e, emissive: 0xff1a22, emissiveIntensity: 0 }), blue = new THREE.MeshStandardMaterial({ color: 0x0a1650, emissive: 0x2a50ff, emissiveIntensity: 0 });
+      for (const [z, m2] of [[0.3, red], [-0.3, blue]]) { const lb = new THREE.Mesh(new RoundedBoxGeometry(0.22, 0.07, 0.48, 2, 0.02), m2); lb.position.set(bx, by + 0.04, z); g.add(lb); }
+      g.userData.lights = { red, blue };
+      wheels = []; for (const [wx, sd] of [[T.wb / 2, 1], [T.wb / 2, -1], [-T.wb / 2, 1], [-T.wb / 2, -1]]) { const w = new THREE.Mesh(tp.wheel, wheelM); w.position.set(wx, T.r, sd * (T.W / 2 - 0.16)); w.scale.z = sd; w.rotation.order = 'YXZ'; w.castShadow = true; g.add(w); wheels.push(w); } }
     else { const type = types[Math.floor(R() * types.length)]; tp = tpl[type]; g = new THREE.Group();
     const bm = new THREE.Mesh(tp.body, paints[Math.floor(R() * paints.length)]); bm.castShadow = true;
     g.add(bm, new THREE.Mesh(tp.glass, glassM), new THREE.Mesh(tp.trim, trimM), new THREE.Mesh(tp.lamp, lampM));
     wheels = []; for (const [wx, sd] of [[tp.T.wb / 2, 1], [tp.T.wb / 2, -1], [-tp.T.wb / 2, 1], [-tp.T.wb / 2, -1]]) {
       const w = new THREE.Mesh(tp.wheel, wheelM); w.position.set(wx, tp.T.r, sd * (tp.T.W / 2 - 0.16)); w.scale.z = sd; w.rotation.order = 'YXZ'; w.castShadow = true; g.add(w); wheels.push(w); } }
     town.add(g);
-    const c = { id: n, g, wheels, T: tp.T, len: tp.T.L, wid: tp.T.W, i, j, dx: d[0], dz: d[1], x: sx, z: sz, a: Math.atan2(-d[1], d[0]), v: 6 + R() * 4, s: 0, segs: [] };
+    const c = { id: n, police: g.name === 'Police', fast: g.name === 'Corvette', g, wheels, T: tp.T, len: tp.T.L, wid: tp.T.W, i, j, dx: d[0], dz: d[1], x: sx, z: sz, a: Math.atan2(-d[1], d[0]), v: 6 + R() * 4, s: 0, segs: [] };
     c.segs.push(mkSeg(sx, sz, null, null, nx - d[0] * STOPC + rx * LANE, nz - d[1] * STOPC + rz * LANE, true));
     RM.cars.push(c); n++; } }
 function mkSeg(ax, az, cx, cz, bx, bz, approach) {
@@ -2383,8 +2417,17 @@ function trafficStep(dt) {
   if (!RM.cars) return; RM.simT = (RM.simT || 0) + dt;
   for (const o of RM.sigMats) o.m.emissiveIntensity = sigState(o.g, o.axis) === o.col ? 2.6 : 0.06;
   const sp = scooter.position;
+  const tNow = performance.now() / 1000;
   for (const c of RM.cars) {
-    let sg = c.segs[0], vmax = sg.curve ? 6.5 : 11;
+    if (c.police) { const L = c.g.userData.lights, on = RM.wanted === c; L.red.emissiveIntensity = on ? 1.2 + 1.2 * Math.sin(tNow * 4) : 0; L.blue.emissiveIntensity = on ? 1.2 - 1.2 * Math.sin(tNow * 4) : 0;   // soft alternating glow, no strobe
+      if (on || c.back) { let tx, tz, stopAt;
+        if (on) { tx = sp.x; tz = sp.z; stopAt = 5; } else { const [hx, hz] = segAt(c.segs[0], Math.min(1, c.s / c.segs[0].len)); tx = hx; tz = hz; stopAt = 0.6; }
+        const dx = tx - c.x, dz = tz - c.z, d = Math.hypot(dx, dz), want = d > stopAt ? Math.min(on ? 15 : 9, (d - stopAt) * 1.2) : 0;
+        c.v += Math.max(-9 * dt, Math.min(5 * dt, want - c.v)); if (d > 0.3) { const ta = Math.atan2(-dz, dx); let da2 = Math.atan2(Math.sin(ta - c.a), Math.cos(ta - c.a)); c.a += Math.max(-2.2 * dt, Math.min(2.2 * dt, da2)); }
+        c.x += Math.cos(c.a) * c.v * dt; c.z -= Math.sin(c.a) * c.v * dt; c.g.position.set(c.x, 0, c.z); c.g.rotation.y = c.a;
+        c.wheels.forEach(w => { w.rotation.z -= c.v * dt / c.T.r; });
+        if (!on && d < 0.8) c.back = false; continue; } }
+    let sg = c.segs[0], vmax = sg.curve ? (c.fast ? 8 : 6.5) : (c.fast ? 22 : 11);   // Corvettes run ~50 mph between lights
     if (sg.approach) { const rem = sg.len - c.s, st = sigState((c.i + c.j) & 1, c.dx ? 'x' : 'z');
       if (st === 'r' || (st === 'y' && rem > 16)) vmax = Math.min(vmax, Math.sqrt(2 * 3.5 * Math.max(0, rem - 0.2)));
       if (rem < 22) vmax = Math.min(vmax, 6.5 + rem * 0.25); }
@@ -2393,7 +2436,7 @@ function trafficStep(dt) {
       if (Math.abs(-rx * fz + rz * fx) > 2.1) continue; if (Math.cos(o.a - c.a) < -0.3 && c.id < o.id) continue; gap = Math.min(gap, al - (c.len + o.len) / 2); }
     { const rx = sp.x - c.x, rz = sp.z - c.z, al = rx * fx + rz * fz; if (al > 0 && al < 32 && Math.abs(-rx * fz + rz * fx) < 2.0) gap = Math.min(gap, al - c.len / 2 - 0.8); }
     if (gap < 1e9) vmax = Math.min(vmax, Math.sqrt(2 * 4.5 * Math.max(0, gap - 1.8)));
-    c.v += Math.max(-8 * dt, Math.min(2.6 * dt, vmax - c.v)); c.v = Math.max(0, c.v);
+    c.v += Math.max(-8 * dt, Math.min((c.fast ? 6.5 : 2.6) * dt, vmax - c.v)); c.v = Math.max(0, c.v);
     c.s += c.v * dt;
     while (c.s >= sg.len) { c.s -= sg.len; c.segs.shift(); if (!c.segs.length) planTurn(c); sg = c.segs[0]; }
     const u = Math.min(1, c.s / sg.len), [x, z] = segAt(sg, u), [x2, z2] = segAt(sg, Math.min(1, u + 0.02));
@@ -2587,7 +2630,7 @@ const SUS = { kF: 42000, kR: 60000, dF: 2400, dR: 2900, tF: 0.045, tR: 0.032, m:
 function crash(why) { if (RM.crash || RM.walk || !RM.on) return; RM.crash = { t: 0 }; RM.jolt = 1; toast(why + '. Down you go'); }
 function toggleWalk() {
   if (RM.crash) return;
-  if (RM.walk) { if (Math.abs(RM.lean) > 0.15) return; RM.walk = null; RM.rider.quaternion.identity(); toast('Back on'); }
+  if (RM.walk) { if (Math.abs(RM.lean) > 0.15) return; if (sim.fold > 0.05 || sim.foldTarget) { toast('Unfold the stem and tighten the knob first'); return; } RM.walk = null; RM.rider.quaternion.identity(); toast('Back on'); }
   else if (sim.v < 2.5) { RM.walk = { ph: 0 }; toast('Off: walking it. W push, A/D steer, F hop back on'); } else toast('Slow down first'); }
 function suspStep(dt) {
   const p = scooter.position, fx = Math.cos(RM.yaw), fz = -Math.sin(RM.yaw);
@@ -2620,6 +2663,13 @@ function rideStep(dt, omega) {
   if (RM.crash) { RM.crash.t += dt; sim.v = Math.max(0, sim.v - 9 * dt);
     if (RM.crash.t > 1.4) { RM.crash = null; RM.walk = { ph: 0 }; toast('Picked it back up. W walks it, A/D steer, F hops back on'); } }
   else if (RM.walk) { const back = input.backKey || RM.keys.arrowdown, want = back ? -0.8 : (input.throttleKey || RM.keys.arrowup || input.throttleUI > 0.15) && !input.brakeUI ? 1.35 : 0; sim.v += (want - sim.v) * Math.min(1, dt * 2.5); RM.walk.ph += sim.v * dt / 0.72 * PI; }   // S walks it backwards
+  if (RM.cars && !RM.crash) {
+    const bad = (RM.wh && RM.wh.a > 0.2) || sim.v > 12.5; RM.heat = Math.max(0, Math.min(4, (RM.heat || 0) + (bad ? dt : -dt * 0.25)));
+    if (RM.heat > 1.2 && !RM.wanted) { let best = null, bd = 900; for (const c of RM.cars) if (c.police) { const d = Math.hypot(c.x - scooter.position.x, c.z - scooter.position.z); if (d < bd) { bd = d; best = c; } }
+      if (best) { RM.wanted = best; RM.stopT = 0; toast('Police lights behind you: pull over and stop'); } }
+    if (RM.wanted) { const c = RM.wanted, d = Math.hypot(c.x - scooter.position.x, c.z - scooter.position.z);
+      if (d < 8 && sim.v < 0.6) { RM.stopT = (RM.stopT || 0) + dt; if (RM.stopT > 2) { toast('Officer: "Easy on the wheelies and the speed. That\'s a warning - ride safe."'); c.back = true; RM.wanted = null; RM.heat = 0; } }
+      else RM.stopT = 0; } }
   const k = RM.keys, steerIn = (k.a || k.arrowleft ? 1 : 0) - (k.d || k.arrowright ? 1 : 0), v = sim.v;
   const wantSit = seat.visible && !RM.stand && !RM.walk ? 1 : 0; RM.sit += (wantSit - RM.sit) * Math.min(1, dt * 3.5);
   const accNow = Math.max(-10, Math.min(6, (v - RM.lastV) / Math.max(dt, 1e-3))); RM.lastV = v; RM.acc += (accNow - RM.acc) * Math.min(1, dt * 4);
@@ -2644,7 +2694,7 @@ function rideStep(dt, omega) {
   const targetLean = RM.crash ? 1.32 : RM.walk ? 0 : -Math.atan(v * yawRate / 9.81) * 0.9;
   RM.footDown = (RM.footDown || 0) + ((sim.v < 0.6 && !input.throttleKey && !RM.crash && !RM.walk ? 1 : 0) - (RM.footDown || 0)) * Math.min(1, dt * 4);
   if (RM.crash) RM.lean += (targetLean - RM.lean) * Math.min(1, dt * (RM.crash.t < 0.12 ? 0.5 : 4.5));   // goes over onto its right side
-  else RM.lean += (Math.max(-0.5, Math.min(0.5, targetLean - 0.07 * RM.footDown)) - RM.lean) * Math.min(1, dt * (RM.walk ? 1.8 : 5));   // rests on the planted foot; picked back up
+  else RM.lean += (Math.max(-0.5, Math.min(0.5, targetLean - 0.13 * RM.footDown)) - RM.lean) * Math.min(1, dt * (RM.walk ? 1.8 : 5));   // rests on the planted foot; picked back up
   { // wheelie: pitch W about the rear tyre's contact patch
     const W = RM.wh || (RM.wh = { a: 0, v: 0 }), lean = RM.keys.g ? 1 : 0;
     if (RM.crash || RM.walk || (sim.v < 0.8 && W.a < 0.02)) { W.a += (0 - W.a) * Math.min(1, dt * 6); W.v = 0; }
@@ -2730,9 +2780,10 @@ function resize() { const w = stage.clientWidth || innerWidth || 800, h = stage.
 addEventListener('resize', resize); resize(); goView('three', true);
 const clock = new THREE.Clock(); let lcdTimer = 0, lastShown = '';
 const R = 0.131;
-let lastFrameT = 0;
+let lastRaf = 0, rafAvg = 16.7, rafN = 0;
 function tick(fixed) {   // fixed: test hook steps the sim without animation frames
-  if (!(fixed && fixed.dt)) { const t = performance.now(); if (t - lastFrameT < 15.5) { requestAnimationFrame(tick); return; } lastFrameT = t; }   // cap at 60 fps: 144-240 Hz monitors ran it 2-4x as often
+  if (!(fixed && fixed.dt)) { const t = performance.now(), d = t - lastRaf; lastRaf = t; if (d > 0 && d < 100) rafAvg += (d - rafAvg) * 0.05;   // ~60 fps on fast monitors by drawing every Nth refresh at an even rhythm (a time cap made uneven, juddery frames)
+    const skip = Math.max(1, Math.round(15.9 / rafAvg)); if (++rafN % skip) { requestAnimationFrame(tick); return; } }
   const dt = fixed && fixed.dt ? fixed.dt : Math.min(0.05, clock.getDelta());
   // inputs
   const thrIn = Math.max(input.throttleUI, input.throttleKey ? 1 : 0, input.throttle3D);
@@ -2780,7 +2831,7 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
     sim.cruiseT = steady ? (sim.cruiseT || 0) + dt : 0; if (sim.cruiseT > 5 && !sim.cruise) { sim.cruise = sim.v; toast('Cruise on'); } }
   if (sim.cruise && (sim.brake > 0.05 || !sim.power || pval('P05') !== 1 || sim.throttle > (sim.cruiseThr ?? 1))) sim.cruise = 0;
   if (sim.power && sim.boot <= 0 && !sim.charging && sim.brake < 0.05 && sim.cruise && sim.v < sim.cruise && !RM.crash && !RM.walk) a = Math.min(2, (sim.cruise - sim.v) * 2);   // cruise holds the speed
-  if (sim.power && sim.boot <= 0 && !sim.charging && sim.brake < 0.05 && sim.throttle > 0.02 && !RM.crash && !RM.walk && (pval('P06') === 0 || sim.v >= 1.3)) {
+  if (sim.power && sim.boot <= 0 && !sim.charging && sim.brake < 0.05 && sim.throttle > 0.02 && !RM.crash && !RM.walk && sim.fold < 0.05 && (pval('P06') === 0 || sim.v >= 1.3)) {
     const target = vmax * sim.throttle;
     if (sim.v < target) a = (sim.riding ? (target - sim.v) / RIDE[sim.mode].tau : Math.min(3.2, (target - sim.v) * 2.2)) * (sim.volts > 40 ? 1 : 0);   // controller cuts out at low voltage
   }

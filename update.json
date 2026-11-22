@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1533",
-  "notes": "Corvette: no rear lettering",
+  "version": "2026.1122.1539",
+  "notes": "Smooth frame pacing (no stutter), fast Corvettes, police cars with light bar + siren that pull you over for wheelies/speeding (stop next to them for a warning), can't fold while on it or ride folded, more lean when you put your foot down",
   "page": "rt6.html",
-  "sha256": "4ad72889a8f5e16687a8b7e8d6853a5d22b976fe15e0ce7dd3d9bdc6f58f8173",
+  "sha256": "c9b62a148e2bded6595b09c701f2b3bab6129ab292de5d8cad547f51fca56edc",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T21:33:13.212Z"
+  "published": "2026-11-22T21:39:51.345Z"
 }
