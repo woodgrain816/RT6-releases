@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1448";</script>
+<script>window.RT6_VERSION = "2026.1122.1450";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -2592,7 +2592,7 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
     if (sim.v < target) a = (sim.riding ? (target - sim.v) / RIDE[sim.mode].tau : Math.min(3.2, (target - sim.v) * 2.2)) * (sim.volts > 40 ? 1 : 0);   // controller cuts out at low voltage
   }
   // riding: average rear brake (0.5) adds 1.36 m/s2 on top of drag -> 31 mph to 0 in 6.0 s, as measured; full (1.0) ~2.7 m/s2 (estimate)
-  if (sim.brake > 0.05) a = sim.riding ? -(0.35 + 0.012 * sim.v * sim.v) - 2.72 * sim.brake : -7.5 * Math.min(1, sim.brake * 2);
+  if (sim.brake > 0.05) a = sim.riding ? -(0.35 + 0.012 * sim.v * sim.v) - (sim.brake <= 0.5 ? 3.2 * sim.brake : 1.6 + (sim.brake - 0.5) * 5.2) : -7.5 * Math.min(1, sim.brake * 2);   // owner: real brakes bite harder. S (0.5) 1.6 m/s2, Shift+S (1.0) 4.2 m/s2 on top of drag
   if (!(RM.on && RM.walk)) sim.v = Math.max(0, sim.v + a * dt);   // walking sets its own speed (and can go backwards)
   const omega = sim.v / R;
   rearWheel.rotation.z -= omega * dt;

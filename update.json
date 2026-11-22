@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1448",
-  "notes": "Seat thinner, curved like the photo; stiffer suspension (no bouncing, no rear hop); smooth one-piece coat; turn signal lights only the dots at the real speed; steady brake squeal; speedometer icon blinks at the real rate; hold S to walk it backwards; no riding on the pond",
+  "version": "2026.1122.1450",
+  "notes": "Stronger brakes: S stops from 31 mph in 5.4 s, Shift+S (full) in 2.7 s",
   "page": "rt6.html",
-  "sha256": "13923f9446990cf801ce999aa1dac30cd4a81a4aeedfaf84d3e2d3e22289c4a3",
+  "sha256": "0a52e826ac72d2803a27b05e120eb656c6d5aed4c6ba8e404ce83532627ca967",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T20:48:07.540Z"
+  "published": "2026-11-22T20:50:07.683Z"
 }
