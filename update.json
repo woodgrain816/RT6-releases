@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1305",
-  "notes": "Rear end laid out like yours: straight swingarm, shock from the deck corner ear to the swingarm, rear brake cable out of the deck end over the shock",
+  "version": "2026.1122.1311",
+  "notes": "Rear fender rebuilt: mounted on the swingarm, flat-topped light box, ribbed top panel, stops before the swingarm pivot",
   "page": "rt6.html",
-  "sha256": "4e5c4f65ae56dfb120488fe6c5383d0979f07d7365459597ecf67c6614799065",
+  "sha256": "bb133af638985c3a905b5cc85c361c44e26c43c95e18657f08d1788f4fde9cb0",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T19:05:18.531Z"
+  "published": "2026-11-22T19:11:20.086Z"
 }

@@ -4,4 +4,4 @@ Update files for the fan-made Ruitoo RT6 scooter sim (non-commercial; Ruitoo, RT
 The Android app reads `update.json` on launch and downloads `rt6.html` when it is newer (checked against its SHA-256).
 To install the app: download `RT6Sim.apk`.
 
-Current version: **2026.1122.1305** - Rear end laid out like yours: straight swingarm, shock from the deck corner ear to the swingarm, rear brake cable out of the deck end over the shock
+Current version: **2026.1122.1311** - Rear fender rebuilt: mounted on the swingarm, flat-topped light box, ribbed top panel, stops before the swingarm pivot
