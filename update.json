@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1348",
-  "notes": "Rear fender bottom raised, charge cap strap stays attached when open, neck plate tilted back with a rising curve",
+  "version": "2026.1122.1349",
+  "notes": "Serial number moved beside the plate edge like the real one",
   "page": "rt6.html",
-  "sha256": "ae3518a9f1abdd2d3d7c557d537feb8fb5d93da34f1682cfa28979d5fbe2f059",
+  "sha256": "b41b1e3455354ec1651cc211b729fdd0d491f6a5a7987cc814811f8d6c0db7f4",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T19:48:31.489Z"
+  "published": "2026-11-22T19:49:08.940Z"
 }

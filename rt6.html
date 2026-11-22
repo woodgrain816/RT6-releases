@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1348";</script>
+<script>window.RT6_VERSION = "2026.1122.1349";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -1193,7 +1193,7 @@ const H = 0.69;    // handlebar height above the hinge
     for (const sz of [1, -1]) mesh(new THREE.ShapeGeometry(poly([[0, 0], [sz * 0.011, 0], [sz * 0.011, 0.012]])).rotateY(sx * PI / 2), std(0x050506, 0.9, 0), stemPivot, [fx + sx * 0.0002, 0.036, sz * 0.012]); } }
 // serial number etched on the left of the head tube (photo)
 { const st = canvasTex(512, 64, (g, W, Hh) => { g.fillStyle = '#121316'; g.fillRect(0, 0, W, Hh); g.fillStyle = '#e8eaee'; g.font = '600 40px "IBM Plex Mono", monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('RT20250803421', W / 2, Hh / 2 + 2); });
-  mesh(new THREE.PlaneGeometry(0.075, 0.0094), std(0xffffff, 0.5, 0.2, { map: st }), steer, [0.0193, 0.2473, -0.0161], [0, PI - 0.87, PI / 2]); }   // serial engraved down the head tube (owner photo)
+  mesh(new THREE.PlaneGeometry(0.075, 0.0094), std(0xffffff, 0.5, 0.2, { map: st }), steer, [-0.006, 0.2473, -0.0242], [0, PI + 0.25, PI / 2]); }   // on the side of the head tube, right beside the plate (owner photo)   // serial engraved down the head tube (owner photo)
 // coiled cable down the back of the stem
 const cab = new THREE.CatmullRomCurve3([V(SX - 0.01, H - 0.01, 0.03), V(SX - 0.04, H - 0.08, 0.02), V(SX - 0.035, 0.4, 0.012), V(SX - 0.034, 0.12, 0.01), V(SX - 0.05, -0.02, 0.0)]);
 // (coiled stem cable removed at the owner's request)
