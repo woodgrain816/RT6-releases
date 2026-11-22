@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1556",
-  "notes": "Sitting on benches: rider now faces the right way",
+  "version": "2026.1122.1557",
+  "notes": "Wheelies easier: start from slow speed, G + W lifts the front much harder",
   "page": "rt6.html",
-  "sha256": "eaea218828544f0315591f9c864540cd8dfee59565afa7585604d980ba15f5a7",
+  "sha256": "abbae21b1b6c1ccc996a85cb9042a796dc7dcfb3578d2fc61f79e757b7781ef4",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T21:56:15.450Z"
+  "published": "2026-11-22T21:57:03.850Z"
 }
