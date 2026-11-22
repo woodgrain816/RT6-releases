@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1219";</script>
+<script>window.RT6_VERSION = "2026.1122.1226";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -738,7 +738,7 @@ for (const sz of [1, -1]) {
     g.fillStyle = '#111'; g.textAlign = 'left'; g.font = '11px Arial, sans-serif';
     ['1. CARELESS RIDING CAN CAUSE A FALL AND SERIOUS', '   INJURY.', '2. FOLLOW ALL LOCAL LAWS AND REGULATIONS WHEN', '   RIDING.', '3. WEAR A HELMET, ELBOW AND KNEE PROTECTION',
      '   WHENEVER RIDING.', '4. CAREFULLY READ AND FOLLOW ALL REQUIREMENTS', '   AND RECOMMENDATIONS IN THE USER MANUAL.', '5. STORE INDOORS.'].forEach((l, i) => g.fillText(l, 8, 48 + i * 16)); });
-  queueMicrotask(() => mesh(new THREE.PlaneGeometry(0.044, 0.033), std(0xffffff, 0.4, 0, { map: t }), steer, [0, 0.28, -0.0335], [0, PI, 0])); }   // label on the LEFT side of the fold block (owner photo)   // warning label on the fold block (photo)
+  queueMicrotask(() => mesh(new THREE.PlaneGeometry(0.044, 0.033), std(0xffffff, 0.4, 0, { map: t }), steer, [0, 0.3165, -0.0335], [0, PI, 0])); }   // label on the LEFT side of the fold block (owner photo)   // warning label on the fold block (photo)
 { const cp = new THREE.Group(); cp.position.set(0.165, 0.222, -0.0975); cp.rotation.y = PI; frame.add(cp);   // charge port (photos), faces out the left side
   const boss = new THREE.Shape(); boss.absarc(0, 0, 0.0125, -PI * 0.36, PI * 1.36, false); boss.lineTo(-0.004, -0.019); boss.lineTo(0.004, -0.019); boss.closePath();   // round boss, flange tapering down to the strap
   mesh(new THREE.ExtrudeGeometry(boss, { depth: 0.002, bevelEnabled: true, bevelThickness: 0.0008, bevelSize: 0.0008, bevelSegments: 2, curveSegments: 32 }), M.plastic, cp, [0, 0, -0.001]);
@@ -998,14 +998,14 @@ for (const sz of [1, -1]) {
   rod([0, -0.012, sz * 0.068], [0, 0.118, sz * 0.068], 0.02, M.frame, steer, 24);          // lower legs
   rod([0, 0.11, sz * 0.068], [0, 0.205, sz * 0.068], 0.0145, M.chrome, steer, 24);         // stanchions
   mesh(new THREE.CylinderGeometry(0.0215, 0.0215, 0.012, 24), M.rubber, steer, [0, 0.118, sz * 0.068]);
-  mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.05, 24), M.frame, steer, [0, 0.205, sz * 0.068]); // crown caps
-  mesh(new RoundedBoxGeometry(0.034, 0.048, 0.02, 3, 0.003), M.frame, steer, [-0.026, 0.205, sz * 0.068]);   // pinch tab
-  mesh(new THREE.BoxGeometry(0.0015, 0.05, 0.021), std(0x050506, 0.9, 0), steer, [-0.0215, 0.205, sz * 0.068]);   // slot
-  for (const y of [0.193, 0.217]) mesh(new THREE.CylinderGeometry(0.0042, 0.0042, 0.003, 20).rotateX(PI / 2), M.chrome, steer, [-0.03, y, sz * 0.0795]);
-  mesh(new THREE.CylinderGeometry(0.0255, 0.025, 0.006, 24), M.plastic, steer, [0, 0.233, sz * 0.068]);
+  mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.032, 24), M.frame, steer, [0, 0.196, sz * 0.068]); // crown caps
+  mesh(new RoundedBoxGeometry(0.034, 0.03, 0.02, 3, 0.003), M.frame, steer, [-0.026, 0.196, sz * 0.068]);   // pinch tab
+  mesh(new THREE.BoxGeometry(0.0015, 0.03, 0.021), std(0x050506, 0.9, 0), steer, [-0.0215, 0.196, sz * 0.068]);   // slot
+  for (const y of [0.189, 0.203]) mesh(new THREE.CylinderGeometry(0.0042, 0.0042, 0.003, 20).rotateX(PI / 2), M.chrome, steer, [-0.03, y, sz * 0.0795]);
+  mesh(new THREE.CylinderGeometry(0.0255, 0.025, 0.006, 24), M.plastic, steer, [0, 0.215, sz * 0.068]);
   mesh(new THREE.CylinderGeometry(0.011, 0.011, 0.007, 6).rotateX(PI / 2), M.zinc, steer, [0, 0, sz * 0.09]);
 }
-mesh(new RoundedBoxGeometry(0.05, 0.044, 0.15, 6, 0.01), M.frame, steer, [0, 0.205, 0]);
+mesh(new RoundedBoxGeometry(0.05, 0.026, 0.15, 6, 0.008), M.frame, steer, [0, 0.196, 0]);   // fork crown, ~1 in thick (top ~13 in off the ground)
 mesh(new THREE.CylinderGeometry(0.0203, 0.0203, 0.026, 24, 1, true, -0.5, 1.0), std(0xf0c400, 0.35, 0, { side: THREE.DoubleSide }), steer, [0, 0.032, 0.068]);   // reflective tape wrapped on the outside of the right fork leg
 const fCal = caliper(steer, 0.0384); M.calipers = [fCal]; fCal.rotation.z = -RAKE + 0.42; fCal.updateMatrix();
 const fFender = mesh(fenderGeo(0, 0, 0.142, 0.04, 22 * D2R, 150 * D2R, a => 0.142 - 0.028, (z) => 0.012 * (1 - (z / 0.042) ** 2)), M.fender, steer, [0, 0, 0], [0, 0, 0], 'FrontFender');
@@ -1069,9 +1069,9 @@ for (const [y, z] of [[0.011, 0.011], [0.011, -0.011], [-0.011, 0.011], [-0.011,
 const spot = new THREE.SpotLight(0xfff4e6, 0, 6, 0.42, 0.55, 1.2); spot.position.set(0.06, 0.23, 0);
 const spotT = new THREE.Object3D(); spotT.position.set(1.6, -0.35, 0); steer.add(spot, spotT); spot.target = spotT;
 // steerer collar + fold joint with the orange hex knob
-mesh(new THREE.CylinderGeometry(0.031, 0.031, 0.03, 32), M.frame, steer, [0, 0.24, 0]);
-mesh(new RoundedBoxGeometry(0.075, 0.115, 0.066, 6, 0.01), M.frame, steer, [0, 0.3, 0]);
-const knob = new THREE.Group(); knob.position.set(0.036, 0.298, 0); knob.rotation.z = -PI / 2; steer.add(knob);   // seated on the block face
+mesh(new THREE.CylinderGeometry(0.0245, 0.0245, 0.0765, 40), M.frame, steer, [0, 0.2473, 0]);   // round head tube, ~3 in between the crown and the fold block (owner)
+mesh(new RoundedBoxGeometry(0.075, 0.102, 0.066, 6, 0.01), M.frame, steer, [0, 0.3365, 0]);      // fold block, 4 in (owner)
+const knob = new THREE.Group(); knob.position.set(0.036, 0.362, 0); knob.rotation.z = -PI / 2; steer.add(knob);   // seated on the block face
 const knobSpin = new THREE.Group(); knob.add(knobSpin);   // spins + backs out along local +y (forward) when unscrewed
 { // 6-sided open wheel, 6 spokes to the corners (owner's close-ups): thick rim with wavy grip ribs, 7 spokes, deep open windows, raised flower boss
   const ko = M.orange, N = 6, R = 0.031, D = 0.017, P = (r, a) => [Math.cos(a) * r, Math.sin(a) * r];
@@ -1089,7 +1089,7 @@ const knobSpin = new THREE.Group(); knob.add(knobSpin);   // spins + backs out a
   for (let i = 0; i < 9; i++) mesh(new THREE.TorusGeometry(0.0062, 0.0007, 4, 16).rotateX(PI / 2), M.zinc, knob, [0, -0.004 + i * 0.0032, 0]); }
 
 // stem pivots back at the fold joint
-const stemPivot = new THREE.Group(); stemPivot.name = 'Stem'; stemPivot.position.set(-0.03, 0.33, 0); steer.add(stemPivot);
+const stemPivot = new THREE.Group(); stemPivot.name = 'Stem'; stemPivot.position.set(-0.03, 0.36, 0); steer.add(stemPivot);
 const SX = 0.03;   // stem centre relative to the hinge
 // lower stem: rectangular tube (40 mm fore-aft x 48 mm side to side) with a recessed channel down each side
 function octPrism(hx, hz, ch, h, bev = 0.0008) {   // stem tubes (owner): rectangle with flat 45 deg chamfered corners, x fore-aft, z side to side, y up
@@ -1142,7 +1142,7 @@ const H = 0.69;    // handlebar height above the hinge
     for (const sz of [1, -1]) mesh(new THREE.ShapeGeometry(poly([[0, 0], [sz * 0.011, 0], [sz * 0.011, 0.012]])).rotateY(sx * PI / 2), std(0x050506, 0.9, 0), stemPivot, [fx + sx * 0.0002, 0.036, sz * 0.012]); } }
 // serial number etched on the left of the head tube (photo)
 { const st = canvasTex(512, 64, (g, W, Hh) => { g.fillStyle = '#121316'; g.fillRect(0, 0, W, Hh); g.fillStyle = '#e8eaee'; g.font = '600 40px "IBM Plex Mono", monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('RT20250803421', W / 2, Hh / 2 + 2); });
-  mesh(new THREE.PlaneGeometry(0.075, 0.0094), std(0xffffff, 0.5, 0.2, { map: st }), steer, [0.026, 0.3, -0.0335], [0, PI, PI / 2]); }
+  mesh(new THREE.PlaneGeometry(0.075, 0.0094), std(0xffffff, 0.5, 0.2, { map: st }), steer, [0.0193, 0.2473, -0.0161], [0, PI - 0.87, PI / 2]); }   // serial engraved down the head tube (owner photo)
 // coiled cable down the back of the stem
 const cab = new THREE.CatmullRomCurve3([V(SX - 0.01, H - 0.01, 0.03), V(SX - 0.04, H - 0.08, 0.02), V(SX - 0.035, 0.4, 0.012), V(SX - 0.034, 0.12, 0.01), V(SX - 0.05, -0.02, 0.0)]);
 // (coiled stem cable removed at the owner's request)
@@ -1340,7 +1340,7 @@ function setSusp(cF, cR) {   // cF: fork compression along the stanchions, cR: r
   shockG.matrixWorldNeedsUpdate = true; }
 setSusp(0, 0);
 // owner measured 39 in (0.991 m) from the deck to the top of the bars: lift everything above the orange collar, stretch what crosses it
-queueMicrotask(() => { const T = 0.6, d = 0.0775, root = stemPivot, f0 = root.rotation.z; root.rotation.z = 0; scooter.updateMatrixWorld(true);
+queueMicrotask(() => { const T = 0.6, d = 0.0475, root = stemPivot, f0 = root.rotation.z; root.rotation.z = 0; scooter.updateMatrixWorld(true);
   const inv = root.matrixWorld.clone().invert(), toRoot = o => new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld), p = V(0, 0, 0);
   const span = o => { let lo = 1e9, hi = -1e9; o.traverse(m => { if (!m.geometry) return; const M = toRoot(m); let b;
       if (m.isInstancedMesh) { m.computeBoundingBox(); b = m.boundingBox; } else { m.geometry.computeBoundingBox(); b = m.geometry.boundingBox; }
@@ -1528,13 +1528,13 @@ const cableM = std(0x0c0c0d, 0.55, 0.05);
   M.glandM = std(0x1a1b1d, 0.5, 0.3, { bumpMap: kn, bumpScale: 0.6 }); }   // knurled cable gland
 // from the bottom of the stem the wrap loops down the right side of the neck and into the front of the deck (rubber grommet)
 { // harness leaves the stem through a knurled gland that points DOWN along the wrap; the wrap comes straight out of its end (owner)
-  const hc = new THREE.CatmullRomCurve3([V(-0.022, 0.43, 0.0155), V(-0.032, 0.423, 0.0155), V(-0.039, 0.41, 0.018), V(-0.045, 0.385, 0.026), V(-0.04, 0.33, 0.043), V(-0.05, 0.25, 0.05), V(-0.1, 0.16, 0.05), V(-0.15, 0.12, 0.041)]);
+  const hc = new THREE.CatmullRomCurve3([V(-0.022, 0.46, 0.0155), V(-0.032, 0.453, 0.0155), V(-0.039, 0.438, 0.018), V(-0.043, 0.41, 0.022), V(-0.045, 0.385, 0.026), V(-0.04, 0.33, 0.043), V(-0.05, 0.25, 0.05), V(-0.1, 0.16, 0.05), V(-0.15, 0.12, 0.041)]);
   spiralWrap(hc, steer);
   }   // no gland cylinder: the wrap comes straight out of the grommeted hole (owner)
 mesh(new THREE.TorusGeometry(0.0085, 0.0028, 10, 24), M.rubber, frame, [0.292, 0.222, 0.04], [0, PI / 2, 0]);   // grommet in the deck front
 mesh(new THREE.CircleGeometry(0.0085, 20), std(0x030303, 1, 0), frame, [0.2905, 0.222, 0.04], [0, PI / 2, 0]);
 { const stop = V(-0.01, 0.124, 0.0384 + 0.03).applyMatrix4(fCal.matrix);   // barrel adjuster tip, in steer space
-  mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(-0.022, 0.428, 0.0055), V(-0.032, 0.42, 0.0055), V(-0.039, 0.404, 0.008), V(-0.045, 0.37, 0.036), V(-0.042, 0.24, 0.075), stop.clone().add(V(-0.004, 0.03, 0.004)), stop], false, 'centripetal'), 60, 0.0022, 8), cableM, steer); }   // front brake cable: out of the deck, behind the fork leg
+  mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(-0.022, 0.458, 0.0055), V(-0.032, 0.45, 0.0055), V(-0.039, 0.433, 0.008), V(-0.043, 0.405, 0.02), V(-0.045, 0.37, 0.036), V(-0.042, 0.24, 0.075), stop.clone().add(V(-0.004, 0.03, 0.004)), stop], false, 'centripetal'), 60, 0.0022, 8), cableM, steer); }   // front brake cable: out of the deck, behind the fork leg
 { // rear brake cable comes out of a rubber grommet in the deck's rear-right side, runs past the shock to the caliper
   const gx = -0.235, gy = 0.222, gz = sideZ(gx, gy);
   mesh(new THREE.TorusGeometry(0.0042, 0.0018, 8, 20), M.rubber, frame, [gx, gy, gz + 0.0006], [0, 0, 0]);
