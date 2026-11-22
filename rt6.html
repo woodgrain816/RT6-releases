@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1138";</script>
+<script>window.RT6_VERSION = "2026.1122.1159";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -270,13 +270,14 @@ function sector(r1, r2, a0, a1) {
 }
 // Fender shell around a wheel axle at (cx, cy): sweeps a U cross-section from angle a0 to a1.
 // rin(a) = radius of the skirt's lower edge, top(z, a) = extra height of the top surface at width z.
-function fenderGeo(cx, cy, R, W, a0, a1, rin, top, segA = 96, corner = 0.012) {
-  const prof = (a) => { const pts = [], c = corner, ri = rin(a), cr = Math.min(0.012, c);   // corner: c across the fender, cr in depth (elliptical)
-    pts.push([ri, -W]); pts.push([R - cr, -W]);
+function fenderGeo(cx, cy, R, W, a0, a1, rin, top, segA = 96, corner = 0.012, crMax = 0.012, bow = 0) {   // bow: sides curve in toward the lower edge (rounded, not flat walls)
+  const prof = (a) => { const pts = [], c = corner, ri = rin(a), cr = Math.min(crMax, c);   // corner: c across the fender, cr in depth (elliptical)
+    const side = (r, sg) => [r, sg * (W - bow * Math.min(1, (R - cr - r) / 0.055) ** 2)];
+    for (let i = 0; i <= 10; i++) pts.push(side(ri + (R - cr - ri) * i / 10, -1));
     for (let i = 1; i < 12; i++) { const t = i / 12 * PI / 2; pts.push([R - cr + Math.sin(t) * cr, -W + c - Math.cos(t) * c]); }
     for (let i = 0; i <= 30; i++) { const z = -W + c + (2 * (W - c)) * i / 30; pts.push([R + top(z, a), z]); }
     for (let i = 11; i > 0; i--) { const t = i / 12 * PI / 2; pts.push([R - cr + Math.sin(t) * cr, W - c + Math.cos(t) * c]); }
-    pts.push([R - cr, W]); pts.push([ri, W]); return pts; };
+    for (let i = 10; i >= 0; i--) pts.push(side(ri + (R - cr - ri) * i / 10, 1)); return pts; };
   const n = prof(a0).length, pos = [], uv = [], idx = [];
   for (let i = 0; i <= segA; i++) { const a = a0 + (a1 - a0) * i / segA, p = prof(a);
     p.forEach(([r, z], j) => { pos.push(cx + r * Math.cos(a), cy + r * Math.sin(a), z); uv.push(i / segA, j / (n - 1)); }); }
@@ -569,7 +570,9 @@ function makeWheel(rear) {
   const rs = new THREE.Shape(); rs.absarc(0, 0, 0.0735, 0, TAU, false);
   const hc = new THREE.Path(); hc.absarc(0, 0, 0.017, 0, TAU, true); rs.holes.push(hc);
   for (let i = 0; i < 5; i++) { const a = i / 5 * TAU, w = new THREE.Path(), P = (r, d) => [Math.cos(a + d) * r, Math.sin(a + d) * r];
-    w.moveTo(...P(0.024, -0.05)); w.lineTo(...P(0.025, 0.42)); w.quadraticCurveTo(...P(0.045, 0.85), ...P(0.054, 0.98)); w.lineTo(...P(0.054, 0.18)); w.closePath(); rs.holes.push(w); }
+    const wp = [P(0.0245, -0.03), P(0.0255, 0.4)]; for (let k = 1; k <= 8; k++) { const t = k / 8, q = (u, v, w2) => (1 - t) * (1 - t) * u + 2 * (1 - t) * t * v + t * t * w2;
+      wp.push([q(P(0.025, 0.42)[0], P(0.045, 0.85)[0], P(0.053, 0.96)[0]), q(P(0.025, 0.42)[1], P(0.045, 0.85)[1], P(0.053, 0.96)[1])]); }
+    wp.push(P(0.0535, 0.2)); rs.holes.push(roundPoly(wp, 0.0032)); }   // rounded corners (no knife-edge points)
   for (let i = 0; i < 22; i++) for (const [r, off] of [[0.0585, 0], [0.0668, 0.5]]) {
     const a = (i + off) / 22 * TAU, h = new THREE.Path(); h.absarc(Math.cos(a) * r, Math.sin(a) * r, 0.0029, 0, TAU, true); rs.holes.push(h); }
   const rz = 0.04;
@@ -609,7 +612,7 @@ function caliper(parent, zd, mount = 'swingarm') {   // built round the axle (x 
   const inner = new THREE.Mesh(new THREE.BufferGeometry(), M.steel); c.add(inner);
   const piv = V(-0.044, 0.066, 0), Aend = V(-0.074, 0.067, zd + 0.044);
   c.userData.setPull = p => {   // p 0..1 = lever pull
-    const ang = -0.42 * p; armG.rotation.z = ang;
+    const ang = -0.62 * p; armG.rotation.z = ang;
     const rot = v => { const dx = v.x - piv.x, dy = v.y - piv.y, cs = Math.cos(ang), sn = Math.sin(ang); return V(piv.x + dx * cs - dy * sn, piv.y + dx * sn + dy * cs, v.z); };
     const a = rot(A), e = rot(Aend), dir = B.clone().sub(a), len = dir.length();
     spr.position.copy(a); spr.quaternion.setFromUnitVectors(V(0, 1, 0), dir.normalize()); spr.scale.y = len / L0;
@@ -850,7 +853,7 @@ const FAI = 0.11 / FK, FBI = 0.07;                                              
 const rIn = a => Math.min(RR - 0.014, 1 / Math.sqrt((Math.cos(a) / FAI) ** 2 + (Math.sin(a) / FBI) ** 2));
 const rTop = (z, a) => { const d = a / D2R; return 0.005 * (1 - (z / RW) ** 2)
   + 0.006 * smooth(0.024, 0.018, Math.abs(z)) * smooth(14, 26, d) * smooth(108, 96, d); };   // ridge on the front half
-const rfGeo = fenderGeo(0, 0, RR, RW, RA0, RA1, rIn, rTop, 140, 0.03); rfGeo.scale(FK, 1, 1); rfGeo.translate(RX, AX, 0); rfGeo.computeVertexNormals();   // soft arch in section (owner)
+const rfGeo = fenderGeo(0, 0, RR, RW, RA0, RA1, rIn, rTop, 140, 0.034, 0.03, 0.017); rfGeo.scale(FK, 1, 1); rfGeo.translate(RX, AX, 0); rfGeo.computeVertexNormals();   // soft arch in section (owner)
 const rFender = mesh(rfGeo, M.fender, frame, [0, 0, 0], [0, 0, 0], 'RearFender');
 const onFender = (a, off) => { const r = RR + off; const nx = Math.cos(a) / FK, ny = Math.sin(a);   // point + outward normal angle
   return { x: RX + FK * r * Math.cos(a), y: AX + r * Math.sin(a), n: Math.atan2(ny, nx) }; };
@@ -993,16 +996,28 @@ const forkLow = new THREE.Group(); forkLow.name = 'ForkLowers'; steer.add(forkLo
       for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) hi = Math.max(hi, p.set(x, y, z).applyMatrix4(Mx).y);
       low = hi < 0.126; }
     if (low) forkLow.attach(o); } }
+{ const fm = M.fender, blk = std(0x111214, 0.55, 0.3);
+  for (const sz of [1, -1]) { const a = 84 * D2R, r = 0.127, x = Math.cos(a) * r, y = Math.sin(a) * r, zw = sz * 0.0405;
+    mesh(new RoundedBoxGeometry(0.017, 0.017, 0.007, 3, 0.002), fm, forkLow, [x, y, zw + sz * 0.0025], [0, 0, a]);            // boss
+    mesh(new THREE.CylinderGeometry(0.0048, 0.0048, 0.0012, 20).rotateX(PI / 2), std(0x050506, 0.9, 0), forkLow, [x, y, zw + sz * 0.0058]);   // counterbore
+    mesh(new THREE.CylinderGeometry(0.0032, 0.0032, 0.0016, 6).rotateX(PI / 2), M.chrome, forkLow, [x, y, zw + sz * 0.0052]);   // socket screw down in it
+    for (const d of [-0.006, 0.006]) { const t = a + d / r * 3;   // two ribs running back from the boss along the side wall
+      rod([Math.cos(a + d * 1.6) * (r - 0.004), Math.sin(a + d * 1.6) * (r - 0.004), zw + sz * 0.001], [Math.cos(t + 0.16) * (r - 0.004), Math.sin(t + 0.16) * (r - 0.004), zw + sz * 0.001], 0.0012, fm, forkLow, 8); }
+    mesh(new RoundedBoxGeometry(0.012, 0.022, 0.016, 2, 0.002), blk, forkLow, [x, y - 0.012, sz * 0.05]);   // bracket from the boss to the leg
+    mesh(new THREE.CylinderGeometry(0.0062, 0.0062, 0.003, 20).rotateX(PI / 2), M.zinc, forkLow, [x, y - 0.016, sz * 0.0895]);   // spacer
+    mesh(new THREE.CylinderGeometry(0.0052, 0.0052, 0.0055, 20).rotateX(PI / 2), M.chrome, forkLow, [x, y - 0.016, sz * 0.0935]);   // socket-cap head
+    mesh(new THREE.CylinderGeometry(0.0026, 0.0026, 0.001, 6).rotateX(PI / 2), std(0x050506, 0.9, 0), forkLow, [x, y - 0.016, sz * 0.0965]); } }
 // headlight (quad LED)
-let cableM2; const headG = new THREE.Group(); headG.name = 'Headlight'; headG.position.set(0.058, 0.192, 0); steer.add(headG);
+let cableM2; const headG = new THREE.Group(); headG.name = 'Headlight'; headG.position.set(0.058, 0.2595, 0); steer.add(headG);
 { // mount (owner photos): bent black sheet-metal bracket bolted to the front of the fork crown with two button bolts, the lamp bolted on top
   const bm = std(0x141518, 0.6, 0.25);
-  mesh(new RoundedBoxGeometry(0.034, 0.0025, 0.05, 2, 0.001), bm, steer, [0.06, 0.161, 0]);          // shelf under the lamp
-  mesh(new RoundedBoxGeometry(0.0025, 0.026, 0.05, 2, 0.001), bm, steer, [0.043, 0.15, 0]);          // bent-down tab against the crown
-  for (const z of [-0.013, 0.013]) mesh(new THREE.SphereGeometry(0.0038, 14, 8, 0, TAU, 0, PI / 2).rotateZ(-PI / 2), M.chrome, steer, [0.0445, 0.147, z]);   // button bolts
-  for (const z of [-0.012, 0.012]) mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.003, 6), M.chrome, steer, [0.07, 0.159, z]);   // lamp screws from below
+  mesh(new RoundedBoxGeometry(0.056, 0.0025, 0.046, 2, 0.001), bm, steer, [0.054, 0.2285, 0]);        // shelf under the lamp, level with the crown top
+  mesh(new RoundedBoxGeometry(0.0025, 0.03, 0.046, 2, 0.001), bm, steer, [0.0265, 0.2145, 0]);       // bent-down tab against the crown's front face
+  mesh(new THREE.CylinderGeometry(0.0042, 0.0042, 0.0025, 20).rotateZ(PI / 2), M.frame, steer, [0.0293, 0.207, 0]);   // black button bolt into the crown
+  mesh(new THREE.CylinderGeometry(0.0016, 0.0016, 0.001, 6).rotateZ(PI / 2), std(0x050506, 0.9, 0), steer, [0.0306, 0.207, 0]);   // its hex socket
+  for (const z of [-0.012, 0.012]) mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.003, 6), M.chrome, steer, [0.064, 0.2265, z]);   // lamp screws from below
   // lamp cable: out of the back of the lamp, loops round the stem side to an inline plug, then joins the main wrap
-  const lc = new THREE.CatmullRomCurve3([V(0.035, 0.192, 0.012), V(0.01, 0.2, 0.035), V(-0.03, 0.24, 0.05), V(-0.05, 0.3, 0.052), V(-0.045, 0.36, 0.045), V(-0.038, 0.4, 0.03)]);
+  const lc = new THREE.CatmullRomCurve3([V(0.035, 0.255, 0.012), V(0.012, 0.262, 0.035), V(-0.03, 0.24, 0.05), V(-0.05, 0.3, 0.052), V(-0.045, 0.36, 0.045), V(-0.038, 0.4, 0.03)]);
   mesh(new THREE.TubeGeometry(lc, 60, 0.0018, 6), cableM2 = std(0x0c0c0d, 0.55, 0.05), steer);
   const pg = new THREE.Group(), p = lc.getPointAt(0.55); pg.position.copy(p); pg.quaternion.setFromUnitVectors(V(0, 1, 0), lc.getTangentAt(0.55)); steer.add(pg);
   mesh(new THREE.CylinderGeometry(0.0038, 0.003, 0.022, 14), cableM2, pg);
@@ -1030,7 +1045,7 @@ for (const [y, z] of [[0.011, 0.011], [0.011, -0.011], [-0.011, 0.011], [-0.011,
   const lensG = new THREE.CircleGeometry(0.0302, 48); mapUV(lensG, (x, y) => [x / 0.0604 + 0.5, y / 0.0604 + 0.5]);
   const lm = new THREE.MeshPhysicalMaterial({ color: 0xffffff, map: lt, bumpMap: lt, bumpScale: 1.6, roughness: 0.12, clearcoat: 1, transparent: true, opacity: 0.68, depthWrite: false, emissive: 0xfff6e8, emissiveMap: lt, emissiveIntensity: 0 }); M.headLens = lm;
   const lens = mesh(lensG, lm, headG, [0.0262, 0, 0], [0, PI / 2, 0]); lens.castShadow = false; lens.renderOrder = 2; }   // clear domed glass over the LEDs (not clickable: lights are switched on the left pod)
-const spot = new THREE.SpotLight(0xfff4e6, 0, 6, 0.42, 0.55, 1.2); spot.position.set(0.06, 0.19, 0);
+const spot = new THREE.SpotLight(0xfff4e6, 0, 6, 0.42, 0.55, 1.2); spot.position.set(0.06, 0.2595, 0);
 const spotT = new THREE.Object3D(); spotT.position.set(1.6, -0.35, 0); steer.add(spot, spotT); spot.target = spotT;
 // steerer collar + fold joint with the orange hex knob
 mesh(new THREE.CylinderGeometry(0.031, 0.031, 0.03, 32), M.frame, steer, [0, 0.24, 0]);
@@ -1192,7 +1207,7 @@ const FACE_BACK_L = [0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, 0];
 
 // ---- left multifunction pod: hangs under the bar between brake clamp and grip, face tipped up at the rider.
 //      Top: ON/OFF light rocker. Middle: turn-signal slider with arrows. Bottom: horn button.
-const podL = new THREE.Group(); podL.name = 'SwitchPod'; podL.position.set(0, 0, -0.144); podL.rotation.z = -1.2; bar.add(podL);   // whole pod tipped well forward round the bar so the face points up at the thumb (owner)
+const podL = new THREE.Group(); podL.name = 'SwitchPod'; podL.position.set(0, 0, -0.144); podL.rotation.z = -0.98; bar.add(podL);   // whole pod tipped well forward round the bar so the face points up at the thumb (owner)
 ringClamp(podL, 0, 0.018, 0.03);
 M.podGloss = std(0x0d0e10, 0.24, 0.0);
 // Pod copied from the owner's top-down photo (scale from the 30 mm pod width, bar centre located from the tube under it).
@@ -1206,7 +1221,7 @@ const podArc = (pts, r, a0, a1, n) => { for (let k = 0; k <= n; k++) { const a =
   const p = roundPoly(pts, 0.002); const h = new THREE.Path(); h.absarc(0, 0, 0.0127, 0, TAU, true); p.holes.push(h);
   mesh(new THREE.ExtrudeGeometry(p, { depth: 0.0108, bevelEnabled: true, bevelThickness: 0.002, bevelSize: 0.002, bevelSegments: 5, curveSegments: 24 }).translate(0, 0, -0.0054), M.podGloss, podL, [0, 0, -0.0081], [0, 0, 0], 'PodBody'); }
 { // block in front of the bar, full width: ON/OFF face tilted ~63 deg forward; underneath it is a C-clamp round the front and bottom of the bar
-  const pts = [[-0.0385, 0.0165], [-0.0165, 0.0275], [-0.006, 0.0245]];
+  const pts = [[-0.0385, 0.0165], [-0.021, 0.034], [-0.006, 0.03]];   // face ~45 deg to the slab (level side photos)
   podArc(pts, 0.0225, 70 * D2R, -110 * D2R, 22); podArc(pts, 0.0137, -110 * D2R, 100 * D2R, 22); pts.push([-0.020, 0.0125]);
   mesh(new THREE.ExtrudeGeometry(roundPoly(pts, 0.0018), { depth: 0.026, bevelEnabled: true, bevelThickness: 0.002, bevelSize: 0.002, bevelSegments: 6, curveSegments: 24 }).translate(0, 0, -0.013), M.podGloss, podL, [0, 0, -0.0005]); }
 mesh(new RoundedBoxGeometry(0.021, 0.0205, 0.025, 5, 0.003), M.podGloss, podL, [-0.0165, -0.0163, -0.003]);   // slab (25 mm, flush on the grip side)
@@ -1214,43 +1229,43 @@ mesh(new RoundedBoxGeometry(0.021, 0.0155, 0.0183, 5, 0.004), M.podGloss, podL, 
 mesh(new THREE.BoxGeometry(0.0006, 0.0007, 0.0235), dark, podL, [SLABX - 0.0001, -0.0236, -0.003]);           // groove before the horn tab
 M.podIcons = [];
 // ON/OFF: the whole cap slides in a pocket on the tilted face
-const faceG = new THREE.Group(); faceG.position.set(-0.0284, 0.0238, -0.0005); faceG.rotation.z = -1.107; podL.add(faceG);
+const faceG = new THREE.Group(); faceG.position.set(-0.0312, 0.0267, -0.0005); faceG.rotation.z = -0.785; podL.add(faceG);
 const onoff = canvasTex(256, 128, (g) => { g.fillStyle = '#0d0e10'; g.fillRect(0, 0, 256, 128); g.fillStyle = '#e8eaed'; g.font = '700 40px "Chakra Petch",sans-serif'; g.textAlign = 'center'; g.fillText('ON', 128, 52); g.fillText('OFF', 128, 106); g.fillStyle = '#2a2c30'; g.fillRect(40, 62, 176, 4); });
-onoff.center.set(0.5, 0.5); onoff.rotation = PI;   // printed the right way up (was inverted)
-mesh(new RoundedBoxGeometry(0.0014, 0.0195, 0.023, 4, 0.004), dark, faceG, [0.0004, 0, 0]);             // pocket
+mesh(new RoundedBoxGeometry(0.0016, 0.0222, 0.0252, 4, 0.0045), btn, faceG, [0.0002, 0, 0]);            // raised frame round the pocket
+mesh(new RoundedBoxGeometry(0.0012, 0.0204, 0.0234, 4, 0.004), dark, faceG, [-0.0002, 0, 0]);            // pocket
 const rocker = new THREE.Group(); rocker.position.set(0, 0.003, 0); faceG.add(rocker);
-mesh(new RoundedBoxGeometry(0.0045, 0.0125, 0.0195, 5, 0.003), btn, rocker, [-0.0016, 0, 0]);          // cap
-{ const m = std(0xffffff, 0.3, 0, { map: onoff, emissiveMap: onoff, emissive: 0xffb46a, emissiveIntensity: 0, transparent: true });
-  M.podIcons.push(m); mesh(new THREE.PlaneGeometry(0.0165, 0.0112), m, rocker, [-0.0039, 0, 0], [0, -PI / 2, 0]); }
+mesh(new RoundedBoxGeometry(0.0045, 0.0148, 0.0206, 5, 0.003), btn, rocker, [-0.0016, 0, 0]);          // cap
+mesh(new THREE.CylinderGeometry(0.0011, 0.0011, 0.0196, 16).rotateX(PI / 2), btn, rocker, [-0.0039, -0.0004, 0]);   // raised step between the ON and OFF halves (owner photos)
+{ const m = std(0xffffff, 0.42, 0, { map: onoff, emissiveMap: onoff, emissive: 0xffb46a, emissiveIntensity: 0, transparent: true });
+  M.podIcons.push(m); mesh(new THREE.PlaneGeometry(0.0186, 0.0132), m, rocker, [-0.0039, 0, 0], [0, -PI / 2, 0]); }
 tag(rocker, 'lights');
 // labels: arrow (pointing toward the stem) and a circle, printed beside the slider
-const arrows = canvasTex(128, 64, (g, W, Hh) => { g.clearRect(0, 0, W, Hh); g.strokeStyle = '#e6e8eb'; g.lineWidth = 4; g.lineJoin = 'miter';
-  g.beginPath(); g.moveTo(120, 32); g.lineTo(100, 12); g.lineTo(100, 23); g.lineTo(76, 23); g.lineTo(76, 41); g.lineTo(100, 41); g.lineTo(100, 52); g.closePath(); g.stroke();
-  g.beginPath(); g.arc(32, 32, 12, 0, TAU); g.stroke(); });
+const arrows = canvasTex(256, 64, (g, W, Hh) => { g.clearRect(0, 0, W, Hh); g.strokeStyle = '#e6e8eb'; g.lineWidth = 4.5; g.lineJoin = 'miter';
+  const arrow = (x, d) => { g.beginPath(); g.moveTo(x + d * 26, 32); g.lineTo(x + d * 4, 10); g.lineTo(x + d * 4, 22); g.lineTo(x - d * 22, 22); g.lineTo(x - d * 22, 42); g.lineTo(x + d * 4, 42); g.lineTo(x + d * 4, 54); g.closePath(); g.stroke(); };
+  arrow(44, -1); arrow(212, 1); g.beginPath(); g.arc(128, 32, 10, 0, TAU); g.stroke(); });
 { const m = std(0xffffff, 0.35, 0, { map: arrows, emissiveMap: arrows, emissive: 0xffb46a, emissiveIntensity: 0, transparent: true }); M.podIcons.push(m);
-  mesh(new THREE.PlaneGeometry(0.012, 0.006), m, podL, [SLABX - 0.0003, -0.0093, 0], [0, -PI / 2, 0]); }
-{ const tt = canvasTex(64, 64, (g) => { g.clearRect(0, 0, 64, 64); g.fillStyle = '#e6e8eb'; g.fillRect(47, 8, 7, 48); g.fillRect(10, 28, 44, 7); });
+  mesh(new THREE.PlaneGeometry(0.019, 0.0048), m, podL, [SLABX - 0.0003, -0.0093, -0.003], [0, -PI / 2, 0]); }
+{ const tt = canvasTex(64, 64, (g) => { g.clearRect(0, 0, 64, 64); g.fillStyle = '#e6e8eb'; g.fillRect(47, 8, 7, 48); g.fillRect(10, 28, 44, 7); });   // T mark (owner's pod)
   const m = std(0xffffff, 0.35, 0, { map: tt, emissiveMap: tt, emissive: 0xffb46a, emissiveIntensity: 0, transparent: true }); M.podIcons.push(m);
-  mesh(new THREE.PlaneGeometry(0.003, 0.003), m, podL, [SLABX - 0.0003, -0.0245, -0.0055], [0, -PI / 2, 0]); }
+  mesh(new THREE.PlaneGeometry(0.0034, 0.0034), m, podL, [SLABX - 0.0003, -0.0247, -0.0098], [0, -PI / 2, 0]); }
 // turn-signal slider: long block along the bar with a raised cross ridge, in a recessed track
-mesh(new RoundedBoxGeometry(0.0014, 0.0108, 0.0244, 3, 0.0012), dark, podL, [SLABX + 0.0001, -0.0171, -0.0027]);   // track
 const signalKnob = new THREE.Group(); signalKnob.position.set(SLABX - 0.0006, -0.0171, -0.002); podL.add(signalKnob);
 mesh(new RoundedBoxGeometry(0.003, 0.0096, 0.019, 5, 0.0016), btn, signalKnob, [-0.0008, 0, 0]);
 mesh(new THREE.CylinderGeometry(0.0017, 0.0017, 0.0088, 16), btn, signalKnob, [-0.0021, 0, -0.001]);   // raised cross ridge (runs along the pod, across the slider)
 tag(signalKnob, 'signal');
-// horn: square button inside a rubber rim on the tab
-mesh(new RoundedBoxGeometry(0.0026, 0.0115, 0.016, 5, 0.0032), btn, podL, [SLABX - 0.0008, -0.0327, -0.005]);    // rubber rim
-mesh(new RoundedBoxGeometry(0.002, 0.0098, 0.0128, 4, 0.0024), dark, podL, [SLABX - 0.0016, -0.0327, -0.005]);
+// horn: button inside a raised rim on the tab (owner photo)
+mesh(new RoundedBoxGeometry(0.0022, 0.0122, 0.0158, 4, 0.003), btn, podL, [SLABX - 0.0006, -0.0327, -0.005]);   // rim
 const hornG = new THREE.Group(); podL.add(hornG);
-const hornBtn = mesh(new RoundedBoxGeometry(0.004, 0.0094, 0.0125, 5, 0.0026), btn, hornG, [SLABX - 0.0025, -0.0327, -0.005]);
+const hornBtn = mesh(new RoundedBoxGeometry(0.0056, 0.0094, 0.0126, 5, 0.0026), btn, hornG, [SLABX - 0.0025, -0.0327, -0.005]);
 tag(hornG, 'horn');
-mesh(new THREE.CylinderGeometry(0.0024, 0.0024, 0.0015, 16).rotateX(PI / 2), M.zinc, podL, [-0.016, -0.033, -0.0145]);
+mesh(new THREE.CylinderGeometry(0.0021, 0.0021, 0.0012, 16).rotateX(PI / 2), btn, podL, [-0.020, -0.0285, -0.0141]);   // screw on the grip-side face of the horn tab
+mesh(new THREE.CylinderGeometry(0.0019, 0.0019, 0.0006, 16).rotateX(PI / 2), btn, podL, [-0.0115, -0.0285, -0.01385]);   // moulded recycling mark
 { // clamp band round the bar on the grip side of the pod, socket screw on top (photo)
   mesh(new THREE.CylinderGeometry(0.0153, 0.0153, 0.0058, 32).rotateX(PI / 2), M.podGloss, podL, [0, 0, -0.0188]);
   mesh(new THREE.CylinderGeometry(0.0034, 0.0034, 0.004, 16).rotateZ(PI / 2), M.podGloss, podL, [-0.0165, 0.004, -0.0188]);
-  mesh(new THREE.CylinderGeometry(0.0026, 0.0026, 0.0012, 6).rotateZ(PI / 2), M.zinc, podL, [-0.0186, 0.004, -0.0188]); }   // screw on the grip-side face of the horn tab
+  mesh(new THREE.CylinderGeometry(0.0026, 0.0026, 0.0012, 6).rotateZ(PI / 2), M.zinc, podL, [-0.0186, 0.004, -0.0188]); }   // socket screw on the clamp band
 { const kt = canvasTex(256, 64, (g, W, H) => { g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.fillStyle = '#fff'; g.font = '700 44px Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('KG802', W / 2, H / 2 + 2); }, false);
-  const km = mesh(new THREE.PlaneGeometry(0.014, 0.004), new THREE.MeshStandardMaterial({ color: 0x0d0e10, roughness: 0.35, bumpMap: kt, bumpScale: 1.5 }), podL, [-0.016, -0.016, -0.0161], [0, PI, PI / 2]); km.castShadow = false; }   // embossed model number
+  const km = mesh(new THREE.PlaneGeometry(0.0125, 0.0034), new THREE.MeshStandardMaterial({ color: 0x0d0e10, roughness: 0.35, bumpMap: kt, bumpScale: 1.5 }), podL, [-0.0168, -0.0358, -0.01375], [0, PI, 0]); km.castShadow = false; }   // embossed model number
 
 // ---- right: thumb-throttle unit (ring housing on the bar, paddle toward the rider, power button underneath)
 const thr = new THREE.Group(); thr.name = 'Throttle'; thr.position.set(0, 0, 0.146); bar.add(thr);
@@ -1490,14 +1505,14 @@ contact.rotation.x = -PI / 2; contact.position.set(0, 0.001, 0); scene.add(conta
 document.getElementById('loading').remove();
 
 // ---------------------------------------------------------------- sound (silent until the rider turns it on)
-const SOUND_V = 12;   // bump when a sound file changes so browsers fetch the new one
+const SOUND_V = 13;   // bump when a sound file changes so browsers fetch the new one
 const Sound = {
   ctx: null, on: false, buf: {}, nodes: null, hornNodes: null,
   async enable() {
     if (!this.ctx) {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
       // recordings cut from the real scooter's videos (make_sounds.js): motor loop at ~35 mph, horn buzzer, key-on beep
-      for (const n of ['motor', 'motor2', 'motor1', 'm1_a', 'm1_b', 'm1_c', 'm2_a', 'm2_c', 'm3_b', 'm3_c', 'horn', 'hornloop', 'start']) for (const ext of ['wav', 'mp3', 'ogg']) {
+      for (const n of ['motor', 'motor2', 'motor1', 'm1_a', 'm1_b', 'm1_c', 'm2_a', 'm2_c', 'm3_b', 'm3_c', 'horn', 'hornloop', 'start', 'sigclick1', 'sigclick2', 'sigclick3', 'seat', 'bounce1', 'bounce2', 'bounce3', 'pwrclick', 'hornclick1', 'hornclick2', 'lightclick1', 'lightclick2', 'brakein', 'brakein2', 'brakeout']) for (const ext of ['wav', 'mp3', 'ogg']) {
         try { const r = await fetch(`${n}.${ext}?v=${SOUND_V}`); if (!r.ok) continue; this.buf[n] = await this.ctx.decodeAudioData(await r.arrayBuffer()); break; } catch {}
       }
       this.build();
@@ -1551,7 +1566,8 @@ const Sound = {
     const level = rel > 0.004 ? Math.min(0.9, Math.pow(Math.min(rel, 1.2), 0.6) * (0.45 + 0.4 * load)) : 0;
     n.mg.gain.setTargetAtTime(this.clips && this.clips.length ? 0.55 : level * 0.5, t, 0.08);
     n.oscs.forEach(o => o.frequency.setTargetAtTime(Math.max(1, f0 * o.userData.ratio), t, 0.03));
-    if (this.clips && this.clips.length) {   // blend the three recordings by WHEEL SPEED (10 / 19 / 37 mph clips), pitch follows the wheel all the way down
+    if (RM.on && (RM.walk || RM.crash)) { n.mg.gain.setTargetAtTime(0, t, 0.05); if (this.clips) for (const k of this.clips) k.g.gain.setTargetAtTime(0, t, 0.08); }
+    else if (this.clips && this.clips.length) {   // blend the three recordings by WHEEL SPEED (10 / 19 / 37 mph clips), pitch follows the wheel all the way down
       // only the CURRENT mode's recording plays (each was made at that mode's full speed: 10 / 19 / 37 mph);
       // its pitch follows the wheel smoothly from a stop up to full speed. No blending between different recordings.
       const mph = sim.v / 0.44704, fadeLow = Math.min(1, mph / 1.2), w = {};
@@ -1587,6 +1603,8 @@ const Sound = {
     }
     n.hg.gain.setTargetAtTime(down ? 1 : 0, t, 0.01);
   },
+  shot(name, vol = 0.8, rate = 1) {   // one-shot recording from the owner's scooter (signal-switch clicks, sitting down)
+    if (!this.on || !this.buf[name] || !this.out) return; const s = this.ctx.createBufferSource(), g = this.ctx.createGain(); g.gain.value = vol; s.buffer = this.buf[name]; s.playbackRate.value = rate; s.connect(g); g.connect(this.out); s.start(); },
   beep() { if (!this.on || !this.buf.start || !this.out) return; const s = this.ctx.createBufferSource(), g = this.ctx.createGain(); g.gain.value = 0.9; s.buffer = this.buf.start; s.connect(g); g.connect(this.out); s.start(); }
 };
 
@@ -2435,7 +2453,7 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
     sim.volts += ((sim.charging ? Math.min(54.6, ocvOf(sim.batt) + 1.2) : ocvOf(sim.batt) - sim.amps * 0.12) - sim.volts) * Math.min(1, dt * 4); }
   // parts follow the inputs
   paddle.rotation.z = sim.throttle * 0.55;              // thumb pushes the paddle down/forward
-  if (M.calipers && Math.abs((M.calipers.lastPull ?? -1) - sim.brake) > 0.002) { M.calipers.forEach(c => c.userData.setPull(sim.brake)); M.calipers.lastPull = sim.brake; }
+  if (M.calipers && Math.abs((M.calipers.lastPull ?? -1) - sim.brake) > 0.002) { M.calipers.forEach(c => c.userData.setPull(Math.min(1, sim.brake * 1.8))); M.calipers.lastPull = sim.brake; }
   bar.userData.leverL.rotation.y = sim.brake * 0.3; bar.userData.leverR.rotation.y = -sim.brake * 0.3;   // levers pull back toward the grips
   hornBtn.position.x = hornOn() ? -0.0282 : -0.0295;
   rocker.position.y += ((sim.lights ? 0.003 : -0.003) - rocker.position.y) * Math.min(1, dt * 25);   // whole cap slides: toward the bar = ON   // slides: up = ON, down = OFF   // rocks: ON end pressed in / OFF end pressed in   // light switch slides up (ON) / down (OFF)
@@ -2485,6 +2503,20 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
   const strobeOn = matchMedia('(prefers-reduced-motion: reduce)').matches || (performance.now() % 258) < 172;
   M.tail.emissiveIntensity = sim.power ? (sim.brake > 0.05 ? (strobeOn ? 3.2 : 0.2) : lit ? 1.1 : 0) : 0;
   M.screen.emissiveIntensity = (sim.power || sim.shutdown > 0) ? 1.25 : 0.35;
+  { // switch and lever clicks recorded on the owner's scooter (edges only)
+    const E = Sound.edges || (Sound.edges = {}), pick = (a) => a[Math.floor(Math.random() * a.length)], vr = () => 0.96 + Math.random() * 0.08;
+    const pw = !!(input.powerUI || input.powerKey || input.power3D), hn = !!hornOn(), lt = !!sim.lights, br = !!(input.brakeUI || input.brakeKey || input.brake3D);
+    if (E.pw === false && pw) Sound.shot('pwrclick', 0.8, vr());
+    if (E.hn !== undefined && hn !== E.hn) Sound.shot(hn ? 'hornclick1' : 'hornclick2', 0.6, vr());
+    if (E.lt !== undefined && lt !== E.lt) Sound.shot(pick(['lightclick1', 'lightclick2']), 0.7, vr());
+    if (E.br !== undefined && br !== E.br) Sound.shot(br ? pick(['brakein', 'brakein2']) : 'brakeout', 0.65, vr());
+    Object.assign(E, { pw, hn, lt, br }); }
+  if (sim.signal !== Sound.lastSig) { if (Sound.lastSig !== undefined) Sound.shot('sigclick' + (1 + Math.floor(Math.random() * 3)), 0.75, 0.96 + Math.random() * 0.08); Sound.lastSig = sim.signal; }
+  { const seated = !!(RM.on && !RM.walk && !RM.crash && !RM.stand && seat.visible); if (seated && Sound.wasSeated === false) Sound.shot('seat', 0.85); Sound.wasSeated = seated;
+    // seat springs: a hit through the suspension while sitting (vertical body acceleration), at most every 0.22 s
+    const B = RM.body; Sound.bCool = Math.max(0, (Sound.bCool || 0) - dt);
+    if (B && seated) { const acc = Sound.lastVy === undefined ? 0 : (B.vy - Sound.lastVy) / Math.max(dt, 1e-3); Sound.lastVy = B.vy; Sound.peakAcc = acc;
+      if (acc > 9 && Sound.bCool === 0) { Sound.shot('bounce' + (1 + Math.floor(Math.random() * 3)), Math.min(0.9, 0.25 + acc / 40), 0.95 + Math.random() * 0.1); Sound.bCool = 0.22; } } else Sound.lastVy = undefined; }
   Sound.update(omega, sim.throttle);
   // UI
   $('tFill').style.width = (sim.throttle * 100).toFixed(1) + '%'; $('tVal').textContent = Math.round(sim.throttle * 100) + '%';

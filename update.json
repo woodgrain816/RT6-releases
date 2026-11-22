@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1138",
-  "notes": "Fixes the app getting stuck on Building RT6",
+  "version": "2026.1122.1159",
+  "notes": "Switch pod matches your photos, headlight on the fork crown, rounder rear fender, real recorded switch, brake and seat sounds",
   "page": "rt6.html",
-  "sha256": "5e20b6a2b9fa2f39633c084a563c6139785399ef419c48bd322ce8d9c329f64e",
+  "sha256": "5523fefd24fbed1887efed10814a3a382d562007cebfc4215487e31d30a239e2",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T17:38:53.062Z"
+  "published": "2026-11-22T17:59:34.883Z"
 }
