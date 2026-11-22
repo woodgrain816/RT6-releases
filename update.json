@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1614",
-  "notes": "Sports car has no logos or badges; scooter unchanged",
+  "version": "2026.1122.1616",
+  "notes": "Fuller legal notice (private, non-commercial, not distributed, generic cars); hidden from search engines",
   "page": "rt6.html",
-  "sha256": "9182f1e214e9fdd2ebe914bbec6f68677543c33b0af897ec80583e831d9d1957",
+  "sha256": "73586531e7c82fcb86cad96931c3924915306930abb3991fa93111f526998e39",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T22:14:49.669Z"
+  "published": "2026-11-22T22:16:15.589Z"
 }
