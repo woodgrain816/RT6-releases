@@ -2591,9 +2591,9 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
     if (sim.pHold > 0.03 && sim.pHold < 0.6 && sim.pHoldFrom && sim.power && sim.boot <= 0) {   // quick tap: mode; two quick taps: stem light bar effect
       const now = performance.now();
       if (sim.pMenu) { const p = PSET[sim.pIdx]; if (sim.pEdit) { if (p[2]) p[1] = p[2][(p[2].indexOf(p[1]) + 1) % p[2].length]; } else sim.pIdx = (sim.pIdx + 1) % PSET.length; sim.pAt = now; refreshLCD(); }
-      else { sim.taps = (sim.tapAt && now - sim.tapAt < 450 ? sim.taps || 0 : 0) + 1; sim.tapAt = now; } }
+      else { sim.taps = (sim.tapAt && now - sim.tapAt < 600 ? sim.taps || 0 : 0) + 1; sim.tapAt = now; } }
     sim.pHold = 0; sim.pWarned = false; sim.pHoldDone = false; }
-  if (sim.tapAt && performance.now() - sim.tapAt >= 450) { const n = sim.taps || 1; sim.tapAt = 0; sim.taps = 0;
+  if (sim.tapAt && performance.now() - sim.tapAt >= 600) { const n = sim.taps || 1; sim.tapAt = 0; sim.taps = 0;
     if (n >= 5 && sim.power) { sim.pMenu = true; sim.pIdx = 0; sim.pAt = performance.now(); refreshLCD(); }
     else if (n === 2) { sim.bar = (sim.bar + 1) % LIGHTBAR.length; toast('Stem lights: ' + LIGHTBAR[sim.bar]); } else if (n === 1) cycleMode(); }   // only a single tap changes the speed mode (owner)
   if (sim.pMenu && (!sim.power || performance.now() - sim.pAt > 8500)) { sim.pMenu = false; if (sim.pEdit) { sim.pEdit = false; const p = PSET[sim.pIdx]; if (p[0] === 'PC ' && p[1] === 1) { sim.odo = 0; p[1] = 0; } } refreshLCD(); }   // back to the normal screen, no animation

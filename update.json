@@ -1,9 +1,9 @@
 {
   "version": "2026.1122.1501",
-  "notes": "Stem Ruitoo RT6 decals / light bars back (they were hidden inside the wider stem)",
+  "notes": "Stem decals back; more time between taps for the 5-tap P settings (0.6 s)",
   "page": "rt6.html",
-  "sha256": "a9715deac09322a56e8a8982e2f403afe290e1a17d0ec839dcdd38c0617d7038",
+  "sha256": "ba2d1c1008f13510346c647edc26ecbb2f65d5ba31ef9681ca9eacf2aa7b6edd",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T21:01:14.493Z"
+  "published": "2026-11-22T21:01:33.955Z"
 }
