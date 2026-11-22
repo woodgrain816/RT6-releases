@@ -4,4 +4,4 @@ Update files for the fan-made Ruitoo RT6 scooter sim (non-commercial; Ruitoo, RT
 The Android app reads `update.json` on launch and downloads `rt6.html` when it is newer (checked against its SHA-256).
 To install the app: download `RT6Sim.apk`.
 
-Current version: **2026.1122.1217** - Stem lengths to your measurements (16 in lower, ~12 in upper), quick-release clip on the right side
+Current version: **2026.1122.1219** - Cables run into a slot like yours, headlight cable branches off the harness, brake pads move, brake lever only clicks on release

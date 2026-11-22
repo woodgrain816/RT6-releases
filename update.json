@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1217",
-  "notes": "Stem lengths to your measurements (16 in lower, ~12 in upper), quick-release clip on the right side",
+  "version": "2026.1122.1219",
+  "notes": "Cables run into a slot like yours, headlight cable branches off the harness, brake pads move, brake lever only clicks on release",
   "page": "rt6.html",
-  "sha256": "a29b760066ab459ecfaeaa574c9123912e2bb367ee22d186bd571333155c8443",
+  "sha256": "d58f27fb97d594e65929f94a5c8c768c5ee8b616d7b5bd63d783faab1536cdd3",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T18:17:17.090Z"
+  "published": "2026-11-22T18:19:23.269Z"
 }

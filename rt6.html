@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1217";</script>
+<script>window.RT6_VERSION = "2026.1122.1219";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -591,6 +591,10 @@ function caliper(parent, zd, mount = 'swingarm') {   // built round the axle (x 
   mesh(new RoundedBoxGeometry(0.026, 0.042, 0.026, 5, 0.005), blk, c, [px, py, zd + 0.015], [0, 0, pa]);
   mesh(new RoundedBoxGeometry(0.022, 0.036, 0.007, 5, 0.0025), blk, c, [px, py, zd - 0.006], [0, 0, pa]);
   mesh(new RoundedBoxGeometry(0.008, 0.036, 0.028, 4, 0.003), blk, c, [Math.cos(pa) * 0.0805, Math.sin(pa) * 0.0805, zd + 0.004], [0, 0, pa]);
+  // pads either side of the disc: inboard fixed just off it, outboard (cable side) pushed onto it by the lever
+  const padM = std(0x3a3632, 0.85, 0.1), padG = new THREE.Group(); c.add(padG);
+  mesh(new RoundedBoxGeometry(0.019, 0.03, 0.0035, 2, 0.0012), padM, c, [Math.cos(pa) * 0.0655, Math.sin(pa) * 0.0655, zd - 0.0035], [0, 0, pa]);
+  mesh(new RoundedBoxGeometry(0.019, 0.03, 0.0035, 2, 0.0012), padM, padG, [Math.cos(pa) * 0.0655, Math.sin(pa) * 0.0655, zd + 0.0045], [0, 0, pa]);
   // body lobe with the big round actuator boss, lever arm back to the cable clamp bolt
   const body = new THREE.Shape(); body.moveTo(-0.03, 0.05); body.quadraticCurveTo(-0.012, 0.06, -0.02, 0.082); body.lineTo(-0.03, 0.106);
   body.lineTo(-0.038, 0.104); body.quadraticCurveTo(-0.042, 0.085, -0.058, 0.08); body.quadraticCurveTo(-0.064, 0.06, -0.05, 0.05); body.closePath();
@@ -612,7 +616,7 @@ function caliper(parent, zd, mount = 'swingarm') {   // built round the axle (x 
   const inner = new THREE.Mesh(new THREE.BufferGeometry(), M.steel); c.add(inner);
   const piv = V(-0.044, 0.066, 0), Aend = V(-0.074, 0.067, zd + 0.044);
   c.userData.setPull = p => {   // p 0..1 = lever pull
-    const ang = -0.62 * p; armG.rotation.z = ang;
+    const ang = -0.62 * p; armG.rotation.z = ang; padG.position.z = -0.0016 * Math.min(1, p * 1.3);   // pad closes the gap onto the disc
     const rot = v => { const dx = v.x - piv.x, dy = v.y - piv.y, cs = Math.cos(ang), sn = Math.sin(ang); return V(piv.x + dx * cs - dy * sn, piv.y + dx * sn + dy * cs, v.z); };
     const a = rot(A), e = rot(Aend), dir = B.clone().sub(a), len = dir.length();
     spr.position.copy(a); spr.quaternion.setFromUnitVectors(V(0, 1, 0), dir.normalize()); spr.scale.y = len / L0;
@@ -1034,7 +1038,7 @@ let cableM2; const headG = new THREE.Group(); headG.name = 'Headlight'; headG.po
   mesh(new THREE.CylinderGeometry(0.0016, 0.0016, 0.001, 6).rotateZ(PI / 2), std(0x050506, 0.9, 0), steer, [0.0306, 0.189, 0]);   // its hex socket
   for (const z of [-0.012, 0.012]) mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.003, 6), M.chrome, steer, [0.064, 0.2005, z]);   // lamp screws from below
   // lamp cable: out of the back of the lamp, loops round the stem side to an inline plug, then joins the main wrap
-  const lc = new THREE.CatmullRomCurve3([V(0.035, 0.226, 0.012), V(0.012, 0.236, 0.035), V(-0.03, 0.24, 0.05), V(-0.05, 0.3, 0.052), V(-0.045, 0.36, 0.045), V(-0.038, 0.4, 0.03)]);
+  const lc = new THREE.CatmullRomCurve3([V(0.035, 0.226, 0.012), V(0.012, 0.236, 0.035), V(-0.012, 0.255, 0.052), V(-0.032, 0.285, 0.056), V(-0.043, 0.302, 0.049), V(-0.045, 0.318, 0.044)]);   // ends inside the wrap: branches out of the harness (owner)
   mesh(new THREE.TubeGeometry(lc, 60, 0.0018, 6), cableM2 = std(0x0c0c0d, 0.55, 0.05), steer);
   const pg = new THREE.Group(), p = lc.getPointAt(0.55); pg.position.copy(p); pg.quaternion.setFromUnitVectors(V(0, 1, 0), lc.getTangentAt(0.55)); steer.add(pg);
   mesh(new THREE.CylinderGeometry(0.0038, 0.003, 0.022, 14), cableM2, pg);
@@ -1515,19 +1519,22 @@ function spiralGeo(curve, r) {
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g; }
 const cableM = std(0x0c0c0d, 0.55, 0.05);
 
-mesh(new THREE.CircleGeometry(0.0062, 20), std(0x030303, 1, 0), stemPivot, [SX - 0.0352, 0.09, 0.014], [0, -PI / 2, 0]);   // hole the harness comes out of
-mesh(new THREE.TorusGeometry(0.0068, 0.0018, 8, 20), M.rubber, stemPivot, [SX - 0.0355, 0.09, 0.014], [0, PI / 2, 0]);
+{ // vertical slot with rounded ends (owner): the harness and the front brake cable both come down out of it
+  const slot = (w, h) => { const sh = new THREE.Shape(), r = w / 2; sh.absarc(0, h / 2 - r, r, 0, PI, false); sh.absarc(0, -h / 2 + r, r, PI, TAU, false); sh.closePath(); return sh; };
+  mesh(new THREE.ShapeGeometry(slot(0.019, 0.03), 16), std(0x030303, 1, 0), stemPivot, [SX - 0.0352, 0.086, 0.012], [0, -PI / 2, 0]);
+  const rim = slot(0.025, 0.036); rim.holes.push(slot(0.019, 0.03));
+  mesh(new THREE.ExtrudeGeometry(rim, { depth: 0.0015, bevelEnabled: true, bevelThickness: 0.0008, bevelSize: 0.0008, bevelSegments: 3, curveSegments: 16 }), M.rubber, stemPivot, [SX - 0.0352, 0.086, 0.012], [0, -PI / 2, 0]); }   // rubber edge
 { const kn = canvasTex(64, 64, (g) => { g.fillStyle = '#222'; g.fillRect(0, 0, 64, 64); g.fillStyle = '#888'; for (let y = 0; y < 64; y += 6) for (let x = (y / 6 % 2) * 3; x < 64; x += 6) g.fillRect(x, y, 3, 3); }, false);
   M.glandM = std(0x1a1b1d, 0.5, 0.3, { bumpMap: kn, bumpScale: 0.6 }); }   // knurled cable gland
 // from the bottom of the stem the wrap loops down the right side of the neck and into the front of the deck (rubber grommet)
 { // harness leaves the stem through a knurled gland that points DOWN along the wrap; the wrap comes straight out of its end (owner)
-  const hc = new THREE.CatmullRomCurve3([V(-0.036, 0.421, 0.014), V(-0.041, 0.405, 0.019), V(-0.045, 0.385, 0.026), V(-0.04, 0.33, 0.043), V(-0.05, 0.25, 0.05), V(-0.1, 0.16, 0.05), V(-0.15, 0.12, 0.041)]);
+  const hc = new THREE.CatmullRomCurve3([V(-0.022, 0.43, 0.0155), V(-0.032, 0.423, 0.0155), V(-0.039, 0.41, 0.018), V(-0.045, 0.385, 0.026), V(-0.04, 0.33, 0.043), V(-0.05, 0.25, 0.05), V(-0.1, 0.16, 0.05), V(-0.15, 0.12, 0.041)]);
   spiralWrap(hc, steer);
   }   // no gland cylinder: the wrap comes straight out of the grommeted hole (owner)
 mesh(new THREE.TorusGeometry(0.0085, 0.0028, 10, 24), M.rubber, frame, [0.292, 0.222, 0.04], [0, PI / 2, 0]);   // grommet in the deck front
 mesh(new THREE.CircleGeometry(0.0085, 20), std(0x030303, 1, 0), frame, [0.2905, 0.222, 0.04], [0, PI / 2, 0]);
 { const stop = V(-0.01, 0.124, 0.0384 + 0.03).applyMatrix4(fCal.matrix);   // barrel adjuster tip, in steer space
-  mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(-0.037, 0.416, 0.011), V(-0.044, 0.37, 0.04), V(-0.042, 0.24, 0.075), stop.clone().add(V(-0.004, 0.03, 0.004)), stop], false, 'centripetal'), 60, 0.0022, 8), cableM, steer); }   // front brake cable: out of the deck, behind the fork leg
+  mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(-0.022, 0.428, 0.0055), V(-0.032, 0.42, 0.0055), V(-0.039, 0.404, 0.008), V(-0.045, 0.37, 0.036), V(-0.042, 0.24, 0.075), stop.clone().add(V(-0.004, 0.03, 0.004)), stop], false, 'centripetal'), 60, 0.0022, 8), cableM, steer); }   // front brake cable: out of the deck, behind the fork leg
 { // rear brake cable comes out of a rubber grommet in the deck's rear-right side, runs past the shock to the caliper
   const gx = -0.235, gy = 0.222, gz = sideZ(gx, gy);
   mesh(new THREE.TorusGeometry(0.0042, 0.0018, 8, 20), M.rubber, frame, [gx, gy, gz + 0.0006], [0, 0, 0]);
@@ -2561,7 +2568,7 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
     if (E.pw === false && pw) Sound.shot('pwrclick', 0.8, vr());
     if (E.hn !== undefined && hn !== E.hn) Sound.shot(hn ? 'hornclick1' : 'hornclick2', 0.6, vr());
     if (E.lt !== undefined && lt !== E.lt) Sound.shot(pick(['lightclick1', 'lightclick2']), 0.7, vr());
-    if (E.br !== undefined && br !== E.br) Sound.shot(br ? pick(['brakein', 'brakein2']) : 'brakeout', 0.65, vr());
+    if (E.br === true && !br) Sound.shot('brakeout', 0.42, vr());   // lever springs back onto its stop (no click on the squeeze)
     Object.assign(E, { pw, hn, lt, br }); }
   if (sim.signal !== Sound.lastSig) { if (Sound.lastSig !== undefined) Sound.shot('sigclick' + (1 + Math.floor(Math.random() * 3)), 0.75, 0.96 + Math.random() * 0.08); Sound.lastSig = sim.signal; }
   { const seated = !!(RM.on && !RM.walk && !RM.crash && !RM.stand && seat.visible); if (seated && Sound.wasSeated === false) { Sound.sitDown(); RM.sprV = (RM.sprV || 0) + 0.9; } Sound.wasSeated = seated;
