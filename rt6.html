@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1336";</script>
+<script>window.RT6_VERSION = "2026.1122.1337";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -558,16 +558,17 @@ function makeWheel(rear) {
   { // one tire with the tread CUT into it (owner photo): centre row of V-shaped blocks split by a thin sipe, a groove each side,
     // offset outer blocks, shallow cross cuts on the shoulders. Grooves are depressions in the surface, nothing is stuck on.
     const P = []; for (let i = 0; i < prof.length - 1; i++) { const p0 = prof[i], p1 = prof[i + 1], n = 7; for (let k = 0; k < n; k++) P.push(p0.clone().lerp(p1, k / n)); } P.push(prof[prof.length - 1]);
-    const NB = 22, NA = NB * 28, D = 0.0042, sm = (e0, e1, x) => { const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
+    const NB = 16, NA = NB * 44, D = 0.0055, sm = (e0, e1, x) => { const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
     const cut = (ph, w, soft) => { const f = ph - Math.floor(ph), d = Math.min(f, 1 - f); return 1 - sm(w, w + soft, d); };   // 1 inside a groove of half-width w (in pitch units)
+    const xh = (a, z) => (Math.abs(Math.sin(a * 260 + z * 900)) < 0.25 || Math.abs(Math.sin(a * 260 - z * 900)) < 0.25) ? 0.12 : 0;   // fine cross-hatch on the shoulders
     const groove = (a, z) => { const az = Math.abs(z), ph = a / TAU * NB;
-      if (az < 0.0165) { const v = cut(ph + az * 9, 0.07, 0.03), sipe = (1 - sm(0.0004, 0.0009, az)) * 0.55; return Math.max(v, sipe); }   // V blocks + centre sipe
-      if (az < 0.0195) return 1;                                                                                                   // groove between rows
-      if (az < 0.0305) return cut(ph + 0.5 + (az - 0.0195) * 6, 0.09, 0.03);                                                       // outer blocks, offset half a pitch
-      return cut(ph * 3, 0.12, 0.05) * 0.35; };                                                                                    // fine shoulder cuts
+      if (az < 0.0155) return Math.max(cut(ph + az * 5, 0.1, 0.02), (1 - sm(0.0003, 0.0007, az)) * 0.85);   // big shallow-V centre blocks split by a sipe
+      if (az < 0.0185) return 1;                                                                            // groove between the rows
+      if (az < 0.0285) return cut(ph + 0.5, 0.13, 0.02);                                                    // outer blocks, half a pitch offset
+      return Math.max(cut(ph, 0.13, 0.03) * 0.8, xh(a, z)); };                                              // shoulder blocks + cross-hatch
     const pos = [], idx = [], W = P.length;
     for (let i = 0; i <= NA; i++) { const a = i / NA * TAU, c = Math.cos(a), sn = Math.sin(a);
-      for (const p of P) { const tread = sm(0.112, 0.12, p.x), r = p.x - D * groove(a, p.y) * tread; pos.push(c * r, sn * r, p.y); } }
+      for (const p of P) { const tread = sm(0.108, 0.116, p.x), r = p.x - D * groove(a, p.y) * tread; pos.push(c * r, sn * r, p.y); } }
     for (let i = 0; i < NA; i++) for (let j = 0; j < W - 1; j++) { const q = i * W + j, n = q + W; idx.push(q, n, q + 1, q + 1, n, n + 1); }
     const tg = new THREE.BufferGeometry(); tg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); tg.setIndex(idx); tg.computeVertexNormals();
     mesh(tg, M.rubber, g, [0, 0, 0], [0, 0, 0], 'Tire'); }

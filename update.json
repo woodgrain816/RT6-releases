@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1336",
-  "notes": "Tire tread cut into the rubber like the real one, charge port sunk into its hole, tidier headlight cable",
+  "version": "2026.1122.1337",
+  "notes": "Tire tread redone to match your photo: big split centre blocks, offset outer and shoulder blocks",
   "page": "rt6.html",
-  "sha256": "fc14b13db47b18000eaae9c0cb07f048432e6bd4e959d079fb1ae97c3e0b1fa1",
+  "sha256": "df7f612789e8fc6f81398ffe20140ec8721706d68c3cee6427c0f1eb297f6da6",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T19:36:37.563Z"
+  "published": "2026-11-22T19:37:24.839Z"
 }
