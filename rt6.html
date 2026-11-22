@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1547";</script>
+<script>window.RT6_VERSION = "2026.1122.1551";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -2243,7 +2243,7 @@ function buildCorvette() {
   const trim = new THREE.MeshStandardMaterial({ color: 0x0a0a0b, roughness: 0.55, side: THREE.DoubleSide });
   const smoke = new THREE.MeshPhysicalMaterial({ color: 0x14161a, roughness: 0.05, metalness: 0.4, clearcoat: 1, side: THREE.DoubleSide });
   // lower front intake: everything under the bumper line, the line dipping in a V under the emblem
-  band(1.72, XF - 0.004, x => [uAtY(x, Math.min(0.4, 0.3 + (x - 1.72) * 0.4)), 1], trim, 0.013, 90, 26);   // big black lower grille across the nose, wrapping the corners   // big black lower grille across the nose
+  band(1.72, XF - 0.004, x => [uAtY(x, 0.42), 1], trim, 0.013, 90, 26);   // big black lower grille across the nose, wrapping the corners   // big black lower grille across the nose
   // corner vents low on the front corners, under the headlights
   // swept smoked headlights on the fender tops + white running-light blade on their outer edge
   const hlIn = x => 0.93 - (x - 1.6) / 0.66 * 0.25, hlOut = x => 0.995;   // narrow swept wedge on the front corner, widening toward the nose (owner photos)
@@ -2647,7 +2647,7 @@ function suspStep(dt) {
 function rideStep(dt, omega) {
   if (RM.crash) { RM.crash.t += dt; sim.v = Math.max(0, sim.v - 9 * dt);
     if (RM.crash.t > 1.4) { RM.crash = null; RM.walk = { ph: 0 }; toast('Picked it back up. W walks it, A/D steer, F hops back on'); } }
-  else if (RM.walk) { const back = input.backKey || RM.keys.arrowdown, want = back ? -0.8 : (input.throttleKey || RM.keys.arrowup || input.throttleUI > 0.15) && !input.brakeUI ? 1.35 : 0; sim.v += (want - sim.v) * Math.min(1, dt * 2.5); RM.walk.ph += sim.v * dt / 0.72 * PI; }   // S walks it backwards
+  else if (RM.walk) { const back = input.backKey || RM.keys.arrowdown, want = back ? -0.8 : (input.throttleKey || RM.keys.arrowup || input.throttleUI > 0.15) && !input.brakeUI ? (input.brakeHard ? 3.4 : 1.35) : 0; sim.v += (want - sim.v) * Math.min(1, dt * 2.5); RM.walk.ph += sim.v * dt / 0.72 * PI; }   // S walks it backwards
   if (RM.cars && !RM.crash) {
     const bad = (RM.wh && RM.wh.a > 0.2) || sim.v > 12.5; RM.heat = Math.max(0, Math.min(4, (RM.heat || 0) + (bad ? dt : -dt * 0.25)));
     if (RM.heat > 1.2 && !RM.wanted) { let best = null, bd = 900; for (const c of RM.cars) if (c.police) { const d = Math.hypot(c.x - scooter.position.x, c.z - scooter.position.z); if (d < bd) { bd = d; best = c; } }

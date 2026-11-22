@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1547",
-  "notes": "Corvette body re-lofted from measured cross-sections: real blunt nose, hood, fenders; black lower grille and swept headlights",
+  "version": "2026.1122.1551",
+  "notes": "Corvette front cleaned up; Shift+W runs in walk mode",
   "page": "rt6.html",
-  "sha256": "f6786bfd14deb6a9cd6912dc688bf7dc866e9999b709ef6fcff3fe2ddba01724",
+  "sha256": "5fe215ff5e3cfea246be8982ae4a8f3c097a33b737d383588f3c32689919aee5",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T21:47:27.430Z"
+  "published": "2026-11-22T21:51:07.035Z"
 }
