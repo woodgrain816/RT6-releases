@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1551";</script>
+<script>window.RT6_VERSION = "2026.1122.1555";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -1963,7 +1963,7 @@ function buildTown() {
   const walls = [], roofs = [], glass = [], doors = [], concrete = [], lines = [], poles = [], lamps = [];
   const WALLC = [0xd9c9a8, 0xa9bfd0, 0xe8e6e0, 0xa7b59a, 0xc8ad8a, 0xb7b9bc, 0xd6b8a0], ROOFC = [0x4a4a4e, 0x6b4a3a, 0x3d4650, 0x5b5a55];
   const TT = treeTemplates(), treeAt = TT.map(() => []);
-  const tree = (x, z, s = 1) => { const t = rnd() < 0.72 ? Math.floor(rnd() * 5) : 5 + Math.floor(rnd() * 3); treeAt[t].push([x, z, s, rnd() * TAU]); RM.circles.push({ x, z, r: 0.3 * s }); };
+  const tree = (x, z, s = 1) => { const t = rnd() < 0.72 ? Math.floor(rnd() * 5) : 5 + Math.floor(rnd() * 3); treeAt[t].push([x, z, s, rnd() * TAU]); RM.circles.push({ x, z, r: 0.3 * s, tree: 1 }); };
   const SHOPC = [0xc9b79c, 0x9fb1a8, 0xb5a28f, 0xd4cfc4, 0xa89a8c, 0xbfc6cc], AWN = [0xb8352a, 0x2e7d5b, 0x2b5d9b, 0xd88a1c, 0x6d4c8d, 0x1f7a8c, 0x9a3b52, 0x3c6e3a], signs = [];
   function shop(cx, cz, face, w, k) {   // storefront: big window, door, transom, awning, sign board, flat roof with a cap, a plaza out front
     const d = 13, h = 4.6 + rnd() * 3.4, ry = face > 0 ? 0 : PI;
@@ -1991,7 +1991,7 @@ function buildTown() {
       doors.push(placed(colored(new THREE.BoxGeometry(1.8, 0.07, 0.45), 0x7a5536), bx, 0.45, bz, r));
       doors.push(placed(colored(new THREE.BoxGeometry(1.8, 0.4, 0.06), 0x7a5536), bx + ox, 0.75, bz + oz, r));
       for (const sd of [-0.8, 0.8]) poles.push(placed(colored(new THREE.BoxGeometry(0.06, 0.45, 0.45), 0x2f3236), bx + Math.cos(r) * sd, 0.22, bz - Math.sin(r) * sd, r));
-      RM.circles.push({ x: bx, z: bz, r: 0.7 }); } }
+      RM.circles.push({ x: bx, z: bz, r: 0.7 }); (RM.benches = RM.benches || []).push({ x: bx, z: bz, r }); } }
   function house(cx, cz, face) {   // face = +1: front looks toward +z, -1: toward -z
     const w = 11 + rnd() * 3, d = 9 + rnd() * 2, two = rnd() < 0.45, h = two ? 5.8 : 3.1, rh = 2 + rnd() * 0.6, ry = face > 0 ? 0 : PI;
     const wc = WALLC[Math.floor(rnd() * WALLC.length)], rc = ROOFC[Math.floor(rnd() * ROOFC.length)];
@@ -2392,7 +2392,9 @@ function segAt(sg, u) { if (!sg.curve) return [sg.ax + (sg.bx - sg.ax) * u, sg.a
   const a = (1 - u) * (1 - u), b = 2 * u * (1 - u), c = u * u; return [a * sg.ax + b * sg.cx + c * sg.bx, a * sg.az + b * sg.cz + c * sg.bz]; }
 function planTurn(c) {   // at the stop line: pick straight / right / left (never off the map), queue the turn and the next block
   const opts = []; for (const [dx, dz, w] of [[c.dx, c.dz, 5], [-c.dz, c.dx, 2], [c.dz, -c.dx, 2]]) if (Math.abs(c.i + dx) <= NB && Math.abs(c.j + dz) <= NB) for (let k = 0; k < w; k++) opts.push([dx, dz]);
-  const [dx, dz] = opts.length ? opts[Math.floor(Math.random() * opts.length)] : [-c.dx, -c.dz];
+  let pick = opts.length ? opts[Math.floor(Math.random() * opts.length)] : [-c.dx, -c.dz];
+  if (c.police && RM.wanted === c && opts.length) { let bd = 1e18; for (const o of opts) { const dd = Math.hypot((c.i + o[0]) * BLK - scooter.position.x, (c.j + o[1]) * BLK - scooter.position.z); if (dd < bd) { bd = dd; pick = o; } } }
+  const [dx, dz] = pick;
   const nx = c.i * BLK, nz = c.j * BLK, r1x = -c.dz, r1z = c.dx, r2x = -dz, r2z = dx;
   const ex = nx - c.dx * STOPC + r1x * LANE, ez = nz - c.dz * STOPC + r1z * LANE, xx = nx + dx * STOPC + r2x * LANE, xz = nz + dz * STOPC + r2z * LANE;
   c.segs.push(dx === c.dx && dz === c.dz ? mkSeg(ex, ez, null, null, xx, xz, false) : mkSeg(ex, ez, nx + r1x * LANE + r2x * LANE, nz + r1z * LANE + r2z * LANE, xx, xz, false));
@@ -2405,14 +2407,8 @@ function trafficStep(dt) {
   const tNow = performance.now() / 1000;
   for (const c of RM.cars) {
     if (c.police) { const L = c.g.userData.lights, on = RM.wanted === c; L.red.emissiveIntensity = on ? 1.2 + 1.2 * Math.sin(tNow * 4) : 0; L.blue.emissiveIntensity = on ? 1.2 - 1.2 * Math.sin(tNow * 4) : 0;   // soft alternating glow, no strobe
-      if (on || c.back) { let tx, tz, stopAt;
-        if (on) { tx = sp.x; tz = sp.z; stopAt = 5; } else { const [hx, hz] = segAt(c.segs[0], Math.min(1, c.s / c.segs[0].len)); tx = hx; tz = hz; stopAt = 0.6; }
-        const dx = tx - c.x, dz = tz - c.z, d = Math.hypot(dx, dz), want = d > stopAt ? Math.min(on ? 15 : 9, (d - stopAt) * 1.2) : 0;
-        c.v += Math.max(-9 * dt, Math.min(5 * dt, want - c.v)); if (d > 0.3) { const ta = Math.atan2(-dz, dx); let da2 = Math.atan2(Math.sin(ta - c.a), Math.cos(ta - c.a)); c.a += Math.max(-2.2 * dt, Math.min(2.2 * dt, da2)); }
-        c.x += Math.cos(c.a) * c.v * dt; c.z -= Math.sin(c.a) * c.v * dt; c.g.position.set(c.x, 0, c.z); c.g.rotation.y = c.a;
-        c.wheels.forEach(w => { w.rotation.z -= c.v * dt / c.T.r; });
-        if (!on && d < 0.8) c.back = false; continue; } }
-    let sg = c.segs[0], vmax = sg.curve ? (c.fast ? 8 : 6.5) : (c.fast ? 22 : 11);   // Corvettes run ~50 mph between lights
+    }
+    const hot = c.fast || (c.police && RM.wanted === c); let sg = c.segs[0], vmax = sg.curve ? (hot ? 8 : 6.5) : (hot ? 20 : 11);   // Corvettes run ~50 mph between lights
     if (sg.approach) { const rem = sg.len - c.s, st = sigState((c.i + c.j) & 1, c.dx ? 'x' : 'z');
       if (st === 'r' || (st === 'y' && rem > 16)) vmax = Math.min(vmax, Math.sqrt(2 * 3.5 * Math.max(0, rem - 0.2)));
       if (rem < 22) vmax = Math.min(vmax, 6.5 + rem * 0.25); }
@@ -2421,7 +2417,8 @@ function trafficStep(dt) {
       if (Math.abs(-rx * fz + rz * fx) > 2.1) continue; if (Math.cos(o.a - c.a) < -0.3 && c.id < o.id) continue; gap = Math.min(gap, al - (c.len + o.len) / 2); }
     { const rx = sp.x - c.x, rz = sp.z - c.z, al = rx * fx + rz * fz; if (al > 0 && al < 32 && Math.abs(-rx * fz + rz * fx) < 2.0) gap = Math.min(gap, al - c.len / 2 - 0.8); }
     if (gap < 1e9) vmax = Math.min(vmax, Math.sqrt(2 * 4.5 * Math.max(0, gap - 1.8)));
-    c.v += Math.max(-8 * dt, Math.min((c.fast ? 6.5 : 2.6) * dt, vmax - c.v)); c.v = Math.max(0, c.v);
+    if (c.police && RM.wanted === c && Math.hypot(sp.x - c.x, sp.z - c.z) < 14) vmax = 0;
+    c.v += Math.max(-8 * dt, Math.min((hot ? 6.5 : 2.6) * dt, vmax - c.v)); c.v = Math.max(0, c.v);
     c.s += c.v * dt;
     while (c.s >= sg.len) { c.s -= sg.len; c.segs.shift(); if (!c.segs.length) planTurn(c); sg = c.segs[0]; }
     const u = Math.min(1, c.s / sg.len), [x, z] = segAt(sg, u), [x2, z2] = segAt(sg, Math.min(1, u + 0.02));
@@ -2505,14 +2502,16 @@ function poseRider() {
   const P = RM.rider.userData.P, sb = RM.sit;   // sb: 1 = seated, 0 = standing (blended)
   let gL = scLocal(RM.gripL, V(0, 0.06, 0)), gR = scLocal(RM.gripR, V(0, 0.06, 0));
   if (RM.walk && RM.walkQ) { gL.applyQuaternion(RM.walkQ); gR.applyQuaternion(RM.walkQ); gR = gL.clone().lerp(gR, 0.42); }
+  if (RM.free) { gL = V(0, 0.55, -0.24); gR = V(0, 0.55, 0.24); if (RM.free.sit) { gL = V(0.28, RM.free.sit.h + 0.12, -0.2); gR = V(0.28, RM.free.sit.h + 0.12, 0.2); } }
   const gMid = gL.clone().add(gR).multiplyScalar(0.5);
   const Hsit = RM.saddleTop.clone().add(V(-0.01, 0.075, 0)), Hstand = V(-0.06, DECK_TOP + RIDER.hipStand, 0);
-  const H = RM.walk ? V(gL.x - 0.32, 0.87 + (RM.walkG || 0) + 0.015 * Math.abs(Math.sin(RM.walk.ph)), gL.z - 0.24) : Hstand.clone().lerp(Hsit, sb);
+  const H = RM.free ? V(0, RM.free.sit ? RM.free.sit.h : 0.9 + 0.015 * Math.abs(Math.sin(RM.walk.ph)) * RM.free.amp, 0) : RM.walk ? V(gL.x - 0.32, 0.87 + (RM.walkG || 0) + 0.015 * Math.abs(Math.sin(RM.walk.ph)), gL.z - 0.24) : Hstand.clone().lerp(Hsit, sb);
   const deckY = DECK_TOP + 0.075;
   const ank = { L: V(0.07, deckY, -0.08).lerp(V(0.04, deckY, -0.075), sb), R: V(-0.17, deckY, 0.08).lerp(V(-0.01, deckY, 0.075), sb) };
   ank.L.lerp(V(0.06, 0.085 + 0.05 * RM.lean, -0.24), RM.footDown || 0);   // stopped: left foot down on the ground
   if (RM.walk) { const ph = RM.walk.ph, s1 = Math.sin(ph), c1 = Math.cos(ph), y0 = 0.085 + (RM.walkG || 0);   // walking stride
-    ank.L = V(H.x + 0.2 * s1, y0 + 0.07 * Math.max(0, c1), H.z - 0.09); ank.R = V(H.x - 0.2 * s1, y0 + 0.07 * Math.max(0, -c1), H.z + 0.09); }
+    const am = RM.free ? RM.free.amp : 1; ank.L = V(H.x + 0.2 * am * s1, y0 + 0.07 * am * Math.max(0, c1), H.z - 0.09); ank.R = V(H.x - 0.2 * am * s1, y0 + 0.07 * am * Math.max(0, -c1), H.z + 0.09); }
+  if (RM.free && RM.free.sit) { ank.L = V(RM.free.sit.fx, 0.085, -0.13); ank.R = V(RM.free.sit.fx, 0.085, 0.13); }
   const tdir = V((gMid.x - H.x) * (0.4 + 0.22 * sb) - RM.acc * 0.035, 1, 0).normalize(), S = H.clone().add(tdir.clone().multiplyScalar(RIDER.torso));
   P.pelvis.position.copy(H); P.belt.position.copy(H).add(V(0, 0.07, 0)); P.belt.visible = false;
   P.hem.position.copy(H).add(V(0.0, 0.06, 0)); P.hem.quaternion.setFromUnitVectors(UP, tdir);
@@ -2590,6 +2589,7 @@ function setNight(on) {
   RM.nightBits.stars.visible = RM.nightBits.pools.visible = on; RM.nightBits.garage.intensity = on ? 9 : 0; if (RM.lampMesh) RM.lampMesh.material.emissiveIntensity = on ? 3 : 0.6;
   spot.distance = on ? 30 : 6; }
 function exitRide() {
+  if (RM.free) endFree();
   RM.crash = RM.walk = null; RM.body = null; setSusp(0, 0); if (RM.rider) RM.rider.quaternion.identity();
   RM.on = false; sim.riding = false; RM.town.visible = false; RM.rider.visible = false; setKick(false); ground.visible = true; contact.visible = true;
   scooter.position.set(0, 0, 0); scooter.rotation.set(0, 0, 0); steer.rotation.y = 0; sim.v = 0;
@@ -2614,7 +2614,7 @@ function wheelGround(px, pz, fx, fz) {   // the tyre rolls over edges: highest g
 const SUS = { kF: 42000, kR: 60000, dF: 2400, dR: 2900, tF: 0.045, tR: 0.032, m: 86, I: 7.5, xF: 0.46, xR: -0.445, hcg: 0.62 };
 function crash(why) { if (RM.crash || RM.walk || !RM.on) return; RM.crash = { t: 0 }; RM.jolt = 1; toast(why + '. Down you go'); }
 function toggleWalk() {
-  if (RM.crash) return;
+  if (RM.crash) return; if (RM.free) { toast('Walk back to the scooter and press X first'); return; }
   if (RM.walk) { if (Math.abs(RM.lean) > 0.15) return; if (sim.fold > 0.05 || sim.foldTarget) { toast('Unfold the stem and tighten the knob first'); return; } RM.walk = null; RM.rider.quaternion.identity(); toast('Back on'); }
   else if (sim.v < 2.5) { RM.walk = { ph: 0 }; toast('Off: walking it. W push, A/D steer, F hop back on'); } else toast('Slow down first'); }
 function suspStep(dt) {
@@ -2644,7 +2644,40 @@ function suspStep(dt) {
   }
   B.cF = Math.min(SUS.tF + 0.004, Math.max(0, cF)); B.cR = Math.min(SUS.tR + 0.004, Math.max(0, cR));
   setSusp(B.cF / Math.cos(RAKE), B.cR); }
+function freeBlocked(x, z) { const lim = (NB + 0.95) * BLK;
+  return RM.boxes.some(b => x > b.x0 - 0.3 && x < b.x1 + 0.3 && z > b.z0 - 0.3 && z < b.z1 + 0.3) || RM.circles.some(c => (x - c.x) ** 2 + (z - c.z) ** 2 < (c.r + 0.35) ** 2) || Math.abs(x) > lim || Math.abs(z) > lim
+    || (RM.water || []).some(w => (x - w.x) ** 2 + (z - w.z) ** 2 < w.r * w.r) || (x - scooter.position.x) ** 2 + (z - scooter.position.z) ** 2 < 0.45 * 0.45; }
+function startFree() {
+  if (RM.free || RM.crash || !RM.walk) { if (!RM.walk && !RM.crash) toast('Get off first (F), put the kickstand down (J), then X'); return; }
+  if (sim.kickTarget) { toast('Put the kickstand down first (J), then X to let go'); return; }
+  RM.wanted = null; sim.v = 0; RM.sit = 0; RM.walk = { ph: 0 }; RM.walkG = 0; RM.lean = -0.06; scooter.rotation.set(-0.06, RM.yaw, 0);
+  const left = V(-Math.sin(RM.yaw), 0, -Math.cos(RM.yaw)), pos = scooter.position.clone().add(left.multiplyScalar(0.9));
+  RM.free = { pos, yaw: RM.yaw, v: 0, amp: 0, sit: null }; scooter.remove(RM.rider); scene.add(RM.rider); RM.rider.quaternion.identity(); RM.cam = 'chase'; RM.camPos = null;
+  toast('On foot: W/S walk, A/D turn, Shift+W run, Z sit on a bench or by a tree, X by the scooter to pick it up'); }
+function endFree() { if (!RM.free) return; RM.free = null; scene.remove(RM.rider); scooter.add(RM.rider); RM.rider.position.set(0, 0, 0); RM.rider.quaternion.identity(); RM.walk = { ph: 0 }; RM.camPos = null; }
+function trySit() { const F = RM.free; if (!F) return;
+  if (F.sit) { F.pos.copy(F.sit.stand); F.sit = null; toast('Stood up'); return; }
+  let best = null, bd = 2.0;
+  for (const b of RM.benches || []) { const d = Math.hypot(b.x - F.pos.x, b.z - F.pos.z); if (d < bd) { bd = d; best = b; } }
+  if (best) { const yaw = best.r + PI / 2, f = V(Math.cos(yaw), 0, -Math.sin(yaw)); F.sit = { h: 0.5, fx: 0.36, stand: V(best.x, 0, best.z).add(f.multiplyScalar(0.75)) }; F.pos.set(best.x, 0, best.z); F.yaw = yaw; toast('Sitting on the bench (Z to stand)'); return; }
+  for (const c of RM.circles) if (c.tree) { const d = Math.hypot(c.x - F.pos.x, c.z - F.pos.z); if (d < c.r + 1.6 && d < bd + 1.6) { bd = d - 1.6; best = c; } }
+  if (best) { const dir = V(F.pos.x - best.x, 0, F.pos.z - best.z).normalize(), p0 = V(best.x, 0, best.z).add(dir.clone().multiplyScalar(best.r + 0.32));
+    F.sit = { h: 0.2, fx: 0.45, stand: p0.clone().add(dir.clone().multiplyScalar(0.7)) }; F.pos.copy(p0); F.yaw = Math.atan2(-dir.z, dir.x); toast('Sitting against the tree (Z to stand)'); return; }
+  toast('Nothing to sit on here: stand next to a bench or a tree'); }
+function freeStep(dt) {
+  const F = RM.free, k = RM.keys, fwd = input.throttleKey, back = input.backKey || k.arrowdown, run = input.brakeHard;
+  sim.v = 0; RM.acc = 0; RM.walkG = 0; trafficStep(dt);
+  if (F.sit) { if (fwd || back) { trySit(); } F.v = 0; }
+  else { F.yaw += ((k.a || k.arrowleft ? 1 : 0) - (k.d || k.arrowright ? 1 : 0)) * 2.2 * dt;
+    const tgt = fwd ? (run ? 3.4 : 1.45) : back ? -1.0 : 0; F.v += (tgt - F.v) * Math.min(1, dt * 5);
+    const nx = F.pos.x + Math.cos(F.yaw) * F.v * dt, nz = F.pos.z - Math.sin(F.yaw) * F.v * dt;
+    if (!freeBlocked(nx, nz)) { F.pos.x = nx; F.pos.z = nz; } else F.v = 0; }
+  F.amp += ((F.sit ? 0 : Math.min(1, Math.abs(F.v) / 1.2)) - F.amp) * Math.min(1, dt * 8);
+  RM.walk.ph += F.v * dt / 0.72 * PI;
+  RM.rider.position.set(F.pos.x, groundAt(F.pos.x, F.pos.z), F.pos.z); RM.rider.rotation.set(0, F.yaw, 0);
+  poseRider(); }
 function rideStep(dt, omega) {
+  if (RM.free) { freeStep(dt); return; }
   if (RM.crash) { RM.crash.t += dt; sim.v = Math.max(0, sim.v - 9 * dt);
     if (RM.crash.t > 1.4) { RM.crash = null; RM.walk = { ph: 0 }; toast('Picked it back up. W walks it, A/D steer, F hops back on'); } }
   else if (RM.walk) { const back = input.backKey || RM.keys.arrowdown, want = back ? -0.8 : (input.throttleKey || RM.keys.arrowup || input.throttleUI > 0.15) && !input.brakeUI ? (input.brakeHard ? 3.4 : 1.35) : 0; sim.v += (want - sim.v) * Math.min(1, dt * 2.5); RM.walk.ph += sim.v * dt / 0.72 * PI; }   // S walks it backwards
@@ -2653,7 +2686,7 @@ function rideStep(dt, omega) {
     if (RM.heat > 1.2 && !RM.wanted) { let best = null, bd = 900; for (const c of RM.cars) if (c.police) { const d = Math.hypot(c.x - scooter.position.x, c.z - scooter.position.z); if (d < bd) { bd = d; best = c; } }
       if (best) { RM.wanted = best; RM.stopT = 0; toast('Police lights behind you: pull over and stop'); } }
     if (RM.wanted) { const c = RM.wanted, d = Math.hypot(c.x - scooter.position.x, c.z - scooter.position.z);
-      if (d < 8 && sim.v < 0.6) { RM.stopT = (RM.stopT || 0) + dt; if (RM.stopT > 2) { toast('Officer: "Easy on the wheelies and the speed. That\'s a warning - ride safe."'); c.back = true; RM.wanted = null; RM.heat = 0; } }
+      if (d < 18 && sim.v < 0.6) { RM.stopT = (RM.stopT || 0) + dt; if (RM.stopT > 2) { toast('Officer: "Easy on the wheelies and the speed. That\'s a warning - ride safe."'); c.back = true; RM.wanted = null; RM.heat = 0; } }
       else RM.stopT = 0; } }
   const k = RM.keys, steerIn = (k.a || k.arrowleft ? 1 : 0) - (k.d || k.arrowright ? 1 : 0), v = sim.v;
   const wantSit = seat.visible && !RM.stand && !RM.walk ? 1 : 0; RM.sit += (wantSit - RM.sit) * Math.min(1, dt * 3.5);
@@ -2704,8 +2737,8 @@ function shakeOffset(scale) {   // smooth road buzz growing with speed + a short
   return V(Math.sin(t * 23.1) * 0.6 + Math.sin(t * 37.7) * 0.4, Math.sin(t * 29.3) * 0.7 + Math.sin(t * 13.9) * 0.3, Math.sin(t * 19.7) * 0.5 + Math.sin(t * 41.3) * 0.5).multiplyScalar(amp);
 }
 function rideCamera(dt) {
-  const p = scooter.position, f = V(Math.cos(RM.yaw), 0, -Math.sin(RM.yaw));
-  if (RM.cam === 'fp') {
+  const yw = RM.free ? RM.free.yaw : RM.yaw, p = RM.free ? RM.free.pos : scooter.position, f = V(Math.cos(yw), 0, -Math.sin(yw));
+  if (RM.cam === 'fp' && !RM.free) {
     scooter.updateMatrixWorld(true);
     const head = scooter.localToWorld(RM.headPos.clone().add(V(0.05, 0.03, 0)));
     { const fov = 70 + 14 * Math.min(1, sim.v / 14); if (Math.abs(camera.fov - fov) > 0.1) { camera.fov += (fov - camera.fov) * Math.min(1, dt * 3); camera.updateProjectionMatrix(); } }
@@ -2717,11 +2750,16 @@ function rideCamera(dt) {
   const sp = Math.min(1, sim.v / 14);   // more sense of speed: lower, closer chase and a wider view as you go faster
   const fov = 62 + 16 * sp; if (Math.abs(camera.fov - fov) > 0.1) { camera.fov += (fov - camera.fov) * Math.min(1, dt * 3); camera.updateProjectionMatrix(); }
   if (!RM.orbitHeld) { RM.oy = (RM.oy || 0) * Math.max(0, 1 - dt * 1.5); RM.op = (RM.op || 0) * Math.max(0, 1 - dt * 1.5); }
-  const dist = 2.5 - 0.4 * sp, ay = RM.yaw + (RM.oy || 0) + PI, pt = Math.min(1.2, Math.max(-0.2, 0.5 + (RM.op || 0)));
+  const dist = 2.5 - 0.4 * sp, ay = yw + (RM.oy || 0) + PI, pt = Math.min(1.2, Math.max(-0.2, 0.5 + (RM.op || 0)));
   const want = p.clone().add(V(Math.cos(ay) * Math.cos(pt) * dist, 0.25 + Math.sin(pt) * dist * 0.9 - 0.2 * sp, -Math.sin(ay) * Math.cos(pt) * dist));
   if (!RM.camPos) RM.camPos = want.clone(); RM.camPos.lerp(want, Math.min(1, dt * (RM.orbitHeld ? 14 : 4)));
   camera.position.copy(RM.camPos).add(shakeOffset(1.4)); camera.lookAt(p.clone().add(f.clone().multiplyScalar(1.6)).add(V(0, 0.85, 0)));
 }
+{ const rows = [['W / Space', 'go / brake'], ['S, Shift+S', 'brake, hard brake'], ['A / D', 'steer (or turn on foot)'], ['G + W', 'lean back for a wheelie'], ['F', 'get off / on the scooter'], ['J', 'kickstand down / up'], ['X', 'leave the scooter (kickstand down) / pick it up'], ['Shift+W', 'run (on foot)'], ['Z', 'sit on a bench or against a tree'], ['T', 'sit / stand on the scooter'], ['K, hold P', 'key, power on / off'], ['tap P', 'speed mode (5 taps: P settings)'], ['L, H', 'lights, horn'], ['Q / E', 'left / right signal'], ['N', 'day / night'], ['C, V', 'camera, shake'], ['R', 'back to the garage'], ['Esc', 'leave ride mode'], ['Y', 'show / hide this list']];
+  const hp = document.createElement('div'); hp.id = 'helpY'; hp.style.cssText = 'position:fixed;inset:0;z-index:60;display:none;place-items:center;background:rgba(5,8,14,.78);color:#e8f0ff;font:14px/1.5 system-ui,sans-serif';
+  hp.innerHTML = '<div style="max-width:720px;max-height:86vh;overflow:auto;padding:18px 24px;background:#0f1622;border:1px solid #2c3d56;border-radius:14px"><div style="font-weight:700;font-size:16px;margin-bottom:8px">Controls (Y to close)</div><div style="display:grid;grid-template-columns:auto 1fr;gap:3px 20px">' + rows.map(r => '<b style="color:#9cc4ff">' + r[0] + '</b><span>' + r[1] + '</span>').join('') + '</div></div>';
+  document.body.appendChild(hp); hp.onclick = () => { hp.style.display = 'none'; };
+  addEventListener('keydown', e => { if (e.target.closest?.('input,textarea')) return; const kk = e.key.toLowerCase(); if (kk === 'y' && !e.repeat) hp.style.display = hp.style.display === 'grid' ? 'none' : 'grid'; else if (kk === 'escape') hp.style.display = 'none'; }); }
 $('bRide').textContent = 'Ride';
 $('bRide').title = 'Ride around a small town with the on-road speeds';
 $('bRide').onclick = () => RM.on ? exitRide() : enterRide();
@@ -2738,7 +2776,9 @@ addEventListener('keydown', e => { const k = e.key.toLowerCase(); if (!RM.on) re
   if (k === 'f' && !e.repeat) toggleWalk();
   if (k === 'n' && !e.repeat) setNight(!RM.night);
   if (k === 'v' && !e.repeat) { RM.shake = !RM.shake; toast(RM.shake ? 'Camera shake on' : 'Camera shake off'); }
-  if (k === 'r' && !e.repeat) { scooter.position.set(SPAWN.x, 0, SPAWN.z); RM.yaw = SPAWN.yaw; sim.v = 0; RM.camPos = null; RM.body = null; RM.crash = RM.walk = null; RM.lean = 0; RM.rider.quaternion.identity(); }
+  if (k === 'r' && !e.repeat) { if (RM.free) endFree(); scooter.position.set(SPAWN.x, 0, SPAWN.z); RM.yaw = SPAWN.yaw; sim.v = 0; RM.camPos = null; RM.body = null; RM.crash = RM.walk = null; RM.lean = 0; RM.rider.quaternion.identity(); }
+  if (k === 'x' && !e.repeat) { if (!RM.free) startFree(); else if (Math.hypot(RM.free.pos.x - scooter.position.x, RM.free.pos.z - scooter.position.z) < 2.6) { endFree(); setKick(true); toast('Picked the scooter back up (F to hop on)'); } else toast('Walk back to the scooter first'); }
+  if (k === 'z' && !e.repeat) trySit();
   if (k === 'escape') exitRide(); });
 addEventListener('keyup', e => { const k = e.key.toLowerCase(); RM.keys[k] = false;
   if (k === 'arrowup') input.throttleKey = false; if (k === 'arrowdown') input.brakeKey = false; });

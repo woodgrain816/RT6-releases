@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1551",
-  "notes": "Corvette front cleaned up; Shift+W runs in walk mode",
+  "version": "2026.1122.1555",
+  "notes": "Free walking: kickstand down (J) then X leaves the scooter; walk, Shift+W run, Z sit on benches or against trees, X by the scooter picks it up; police stay on the roads; Y shows all controls",
   "page": "rt6.html",
-  "sha256": "5fe215ff5e3cfea246be8982ae4a8f3c097a33b737d383588f3c32689919aee5",
+  "sha256": "a839b6dc79f48cdca280fea0480d1a9607d711389850033a1cf0779a438c31ad",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T21:51:07.035Z"
+  "published": "2026-11-22T21:55:39.587Z"
 }
