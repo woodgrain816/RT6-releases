@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1512";</script>
+<script>window.RT6_VERSION = "2026.1122.1513";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -215,7 +215,7 @@ await Promise.race([
 // ---------------------------------------------------------------- renderer / scene
 const stage = document.getElementById('stage');
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.25));   // 4K / high-DPI screens were rendering 4x the pixels and maxing the GPU
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
@@ -2566,7 +2566,9 @@ function resize() { const w = stage.clientWidth || innerWidth || 800, h = stage.
 addEventListener('resize', resize); resize(); goView('three', true);
 const clock = new THREE.Clock(); let lcdTimer = 0, lastShown = '';
 const R = 0.131;
+let lastFrameT = 0;
 function tick(fixed) {   // fixed: test hook steps the sim without animation frames
+  if (!(fixed && fixed.dt)) { const t = performance.now(); if (t - lastFrameT < 15.5) { requestAnimationFrame(tick); return; } lastFrameT = t; }   // cap at 60 fps: 144-240 Hz monitors ran it 2-4x as often
   const dt = fixed && fixed.dt ? fixed.dt : Math.min(0.05, clock.getDelta());
   // inputs
   const thrIn = Math.max(input.throttleUI, input.throttleKey ? 1 : 0, input.throttle3D);

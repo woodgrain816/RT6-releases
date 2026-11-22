@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1512",
-  "notes": "Stem lights: real LED dots like the videos; two taps only turn them on/off (effects cycle by themselves); horn button shaped like the power button",
+  "version": "2026.1122.1513",
+  "notes": "Much lighter on the GPU: 60 fps cap and fewer pixels on high-DPI screens",
   "page": "rt6.html",
-  "sha256": "996726e428ecb98b532c11ae34ac0487f99442d86078c4ad392422c682bb29b1",
+  "sha256": "5d592cbaae3b470e783f2260e34fbf710718d6e208d1c5775c599440529417d3",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T21:12:38.884Z"
+  "published": "2026-11-22T21:13:55.026Z"
 }
