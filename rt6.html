@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1129";</script>
+<script>window.RT6_VERSION = "2026.1122.1138";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -106,6 +106,16 @@ body.riding .card, body.riding .views{display:none}
 
 <div id="stage" aria-label="3D model of the Ruitoo RT6 scooter"></div>
 <div id="loading">Building RT6…</div>
+<script>(function () {
+  var show = function (msg) { var el = document.getElementById('loading'); if (!el) return;
+    el.style.cssText += ';padding:0 24px;text-align:center;text-transform:none;letter-spacing:0;line-height:1.5';
+    el.textContent = 'Could not start: ' + msg + '. Close the app and open it again; if it keeps happening, send a screenshot of this.'; };
+  window.addEventListener('error', function (e) { var t = e.target;
+    if (t && t !== window && (t.src || t.href)) { if (/three|jsm/.test(t.src || '')) show('a file did not load (' + (t.src || t.href).split('/').pop() + ')'); return; }
+    show(e.message || 'script error'); }, true);
+  window.addEventListener('unhandledrejection', function (e) { var r = e.reason; show(r && r.message ? r.message : String(r)); });
+  setTimeout(function () { var el = document.getElementById('loading'); if (el && !/Could not/.test(el.textContent)) el.textContent = 'Still building RT6… (slow device)'; }, 15000);
+})();</script>
 
 <section class="card" aria-labelledby="t">
   <div class="eyebrow">Garage stand · 1:1 scale</div>
