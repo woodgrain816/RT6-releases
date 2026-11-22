@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1403";</script>
+<script>window.RT6_VERSION = "2026.1122.1404";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -562,7 +562,10 @@ function makeWheel(rear) {
     const cut = (ph, w, soft) => { const f = ph - Math.floor(ph), d = Math.min(f, 1 - f); return 1 - sm(w, w + soft, d); };   // 1 inside a groove of half-width w (in pitch units)
     const fr = x => x - Math.floor(x);
     const xh = (a, z) => (Math.abs(Math.sin(a * 260 + z * 900)) < 0.25 || Math.abs(Math.sin(a * 260 - z * 900)) < 0.25) ? 0.1 : 0;   // fine cross-hatch on the shoulders
-    const groove = (a, z) => { const az = Math.abs(z), ph = a / TAU * NB, edge = 0.0148 + 0.0022 * fr(ph + az * 5);   // centre block widens along its length (slanted side groove, photo)
+    const grooveRear = (a, z) => { const az = Math.abs(z), ph = a / TAU * 34;   // rear street tire (owner photos): shoulder blocks split by V notches, fine diamond texture
+      const notch = az > 0.019 ? cut(ph + (az - 0.019) * 18, 0.035 + (az - 0.019) * 3, 0.01) : 0, cen = (1 - sm(0.0005, 0.001, az)) * 0.6, dia = xh(a * 1.4, z * 1.4) * 0.6;
+      return Math.max(notch, cen, dia); };
+    const groove = (a, z) => { if (rear) return grooveRear(a, z); const az = Math.abs(z), ph = a / TAU * NB, edge = 0.0148 + 0.0022 * fr(ph + az * 5);   // centre block widens along its length (slanted side groove, photo)
       if (az < edge) return Math.max(cut(ph + az * 5, 0.035, 0.012), (1 - sm(0.00015, 0.0004, az)) * 0.9);   // big V blocks, narrow cross grooves, hairline sipe
       if (az < edge + 0.0019) return 1;                                                                    // narrow side groove
       if (az < 0.0285) return cut(ph + 0.5, 0.04, 0.012);                                                  // outer blocks, half a pitch offset
@@ -1053,7 +1056,7 @@ const sadPt = (t, th) => { const { w, c } = sadPlan(t), h = sadH(t), cs = Math.c
 // --- steering assembly (raked, yaws about its own axis)
 const steerAxis = new THREE.Group(); steerAxis.position.set(FX, AX, 0); steerAxis.rotation.z = RAKE; scooter.add(steerAxis);
 const steer = new THREE.Group(); steer.name = 'Steering'; steerAxis.add(steer);
-const frontWheel = makeWheel(false); frontWheel.scale.setScalar(0.96); frontWheel.rotation.z = -RAKE; steer.add(frontWheel);
+const frontWheel = makeWheel(false); frontWheel.scale.setScalar(1.0); frontWheel.rotation.z = -RAKE; steer.add(frontWheel);   // 10 in tire (owner)
 mesh(new THREE.CylinderGeometry(0.0055, 0.0055, 0.18, 12).rotateX(PI / 2), M.steel, steer);
 for (const sz of [1, -1]) {
   rod([0, -0.012, sz * 0.068], [0, 0.118, sz * 0.068], 0.02, M.frame, steer, 24);          // lower legs

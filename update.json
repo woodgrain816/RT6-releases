@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1403",
-  "notes": "Head tube is a 2 x 1 3/8 in block fixed to the frame, like the real one",
+  "version": "2026.1122.1404",
+  "notes": "Front wheel 10 in; rear tire gets its own street tread with V-notched shoulders",
   "page": "rt6.html",
-  "sha256": "58c1a87c685b30d946afb035c2fc2a74252caaaf3c54b418743f1ab7a023592f",
+  "sha256": "9c07543d68978c6530997c564e478dbe9623eb2e50e617a3c8e506073672df50",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T20:03:17.704Z"
+  "published": "2026-11-22T20:04:17.868Z"
 }
