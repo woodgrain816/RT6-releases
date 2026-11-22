@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1320",
-  "notes": "Rear fender fully smooth: removed the line down the middle",
+  "version": "2026.1122.1323",
+  "notes": "Key ring threads through the key's hole instead of clipping through it; removed the made-up fender strut",
   "page": "rt6.html",
-  "sha256": "91ba9682096a845fb72b44eb81f5672a05af845ed626c47fad7b2184c1b31ce1",
+  "sha256": "6f41f3127367c4fe273128536073e2bb71e05c85a07c32c97628f39fc5ecf21b",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T19:20:33.278Z"
+  "published": "2026-11-22T19:23:20.441Z"
 }

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1320";</script>
+<script>window.RT6_VERSION = "2026.1122.1323";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -917,13 +917,11 @@ const tail = mesh(new THREE.ExtrudeGeometry(ovalShape(0.04, 0.018), { depth: 0.0
 const rp = onFender(170 * D2R, 0.0122);
 const refl = new THREE.Group(); refl.position.set(rp.x, rp.y, 0); refl.rotation.z = rp.n - PI / 2; swingG.add(refl);
 mesh(new THREE.ShapeGeometry(ovalShape(0.03, 0.018), 24).rotateX(-PI / 2), M.reflector, refl, [0, 0.0006, 0]);
-for (const sz of [1, -1]) {   // fender mounts on the swingarm: tab at the front end, strut from behind the axle to the fender's inner edge
+for (const sz of [1, -1]) {   // fender mount on the swingarm: tab at the front end
   const f = onFender(48 * D2R, -0.03);
   mesh(new RoundedBoxGeometry(0.016, Math.max(0.02, f.y - 0.19), 0.005, 2, 0.0015), M.frame, swingG, [f.x - 0.004, (f.y + 0.19) / 2, sz * 0.051]);
   mesh(new THREE.CylinderGeometry(0.0032, 0.0032, 0.003, 16).rotateX(PI / 2), M.zinc, swingG, [f.x - 0.004, f.y - 0.004, sz * 0.0545]);
-  const r = onFender(150 * D2R, -0.03), A = V(RX - 0.028, AX + 0.012, sz * 0.052), B = V(r.x + 0.006, r.y, sz * 0.05), d = B.clone().sub(A);
-  const st = mesh(new RoundedBoxGeometry(0.01, d.length(), 0.004, 2, 0.0015), M.frame, swingG, A.clone().add(B).multiplyScalar(0.5).toArray()); st.rotation.z = Math.atan2(-d.x, d.y);
-  mesh(new THREE.CylinderGeometry(0.0032, 0.0032, 0.003, 16).rotateX(PI / 2), M.zinc, swingG, [B.x, B.y, sz * 0.0535]); }
+}
 
 queueMicrotask(() => {   // spiralWrap is defined further down
   spiralWrap(new THREE.CatmullRomCurve3([V(-0.285, 0.197, -0.05), V(-0.302, 0.196, -0.052), V(-0.33, 0.178, -0.066), V(-0.37, 0.15, -0.066), V(-0.405, 0.13, -0.066), V(-0.43, 0.126, -0.058), V(-0.44, 0.127, -0.045)]), frame, 0.0048);
@@ -1444,13 +1442,14 @@ const fobTex = canvasTex(128, 384, (g, W, Hh) => {   // owner's 3D-printed tag: 
   g.save(); g.translate(W / 2 + 4, 92); g.rotate(PI / 2); g.fillStyle = '#e8a12a'; g.font = '800 46px "Chakra Petch", sans-serif'; g.textBaseline = 'middle';
   g.fillText('Ruitoo', 0, 0); g.fillText('RT6', 186, 0); g.restore(); });
 const fob = new THREE.Group(); fob.name = 'Keychain'; scene.add(fob);   // lives in world space so it can swing freely
-{ const ring = mesh(new THREE.TorusGeometry(0.0105, 0.0011, 8, 36), M.steel, fob, [0, -0.0105, 0], [0, PI / 2, 0]);
+const keyRing = mesh(new THREE.TorusGeometry(0.0105, 0.0011, 8, 36), M.steel, keyBlade); keyRing.castShadow = false;   // threaded through the head's hole, posed every frame
+{
   const ts = new THREE.Shape(), w = 0.012, h = 0.066; ts.moveTo(-w, -h); ts.lineTo(w, -h); ts.lineTo(w, -0.008); ts.lineTo(0.005, 0); ts.lineTo(-0.005, 0); ts.lineTo(-w, -0.008); ts.closePath();
   const th = new THREE.Path(); th.absarc(0, -0.0045, 0.0022, 0, TAU, true); ts.holes.push(th);
   const tg = new THREE.ExtrudeGeometry(ts, { depth: 0.003, bevelEnabled: true, bevelThickness: 0.0006, bevelSize: 0.0006, bevelSegments: 2, curveSegments: 16 }).translate(0, 0, -0.0015);
   mapUV(tg, (x, y) => [(x + w) / (2 * w), 1 + y / (h * 1.03)]);
-  mesh(tg, std(0xaeb3b8, 0.55, 0), fob, [0, -0.0185, 0]);   // printed body (grey rim colour)
-  for (const sd of [1, -1]) { const pg = new THREE.PlaneGeometry(2 * w * 0.98, h * 0.9).translate(0, -h * 0.5, 0); const pm = mesh(pg, std(0xffffff, 0.55, 0, { map: fobTex, bumpMap: fobTex, bumpScale: 2.5 }), fob, [0, -0.0185 - h * 0.03, sd * 0.0022], [0, sd > 0 ? 0 : PI, 0]); pm.castShadow = false; } }   // printed faces, readable from both sides
+  mesh(tg, std(0xaeb3b8, 0.55, 0), fob, [0, 0.0015, 0]);   // printed body (grey rim colour)
+  for (const sd of [1, -1]) { const pg = new THREE.PlaneGeometry(2 * w * 0.98, h * 0.9).translate(0, -h * 0.5, 0); const pm = mesh(pg, std(0xffffff, 0.55, 0, { map: fobTex, bumpMap: fobTex, bumpScale: 2.5 }), fob, [0, 0.0015 - h * 0.03, sd * 0.0022], [0, sd > 0 ? 0 : PI, 0]); pm.castShadow = false; } }   // printed faces, readable from both sides
 const fobSim = { p: null, pp: null, L: 0.05, twist: 0 };
 
 tag(keyG, 'key');
@@ -2570,7 +2569,19 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
   if (sim.charging) { const was = sim.batt; sim.batt = Math.min(100, sim.batt + dt * (sim.batt > 85 ? 0.7 : 2.2)); if (was < 100 && sim.batt >= 100) toast('Fully charged'); }
   { const u = kick.userData; u.swing.quaternion.slerpQuaternions(u.Q0, u.Qup, sim.kick); }
   { // keychain pendulum: verlet point under the key hole, pulled by gravity, the hole's own motion, and the wind when riding
-    scene.updateMatrixWorld(); const piv = keyHole.getWorldPosition(V(0, 0, 0)), f = fobSim;
+    scene.updateMatrixWorld(); const f = fobSim, RRg = 0.0105, H = keyHole.position;
+    { // ring direction d (key-local, in the head's plane): toward the fob, but its far side must clear the head (x -0.0395..-0.0095, y +-0.0135) and the blue clip
+      const qk = keyBlade.getWorldQuaternion(new THREE.Quaternion()), hw = keyBlade.localToWorld(H.clone());
+      const pull = (f.p ? f.p.clone().sub(hw) : V(0, -1, 0)).applyQuaternion(qk.clone().invert()), want = Math.atan2(pull.y, pull.x);
+      const ok = g => { const bx = H.x + 2 * RRg * Math.cos(g), by = H.y + 2 * RRg * Math.sin(g), cx = H.x + RRg * Math.cos(g), cy = H.y + RRg * Math.sin(g);
+        const inHead = (x, y, m) => x > -0.0395 - m && x < -0.0095 + m && Math.abs(y) < 0.0135 + m;
+        return !inHead(bx, by, 0.004) && !inHead(cx, cy, -0.001) && bx < -0.004; };
+      let best = f.ringA ?? PI * 0.75, bd = 9; for (let k = 0; k < 144; k++) { const g = -PI + TAU * k / 144; if (!ok(g)) continue; const dd = Math.abs(Math.atan2(Math.sin(g - want), Math.cos(g - want))); if (dd < bd) { bd = dd; best = g; } }
+      f.ringA = f.ringA === undefined ? best : f.ringA + Math.atan2(Math.sin(best - f.ringA), Math.cos(best - f.ringA)) * Math.min(1, dt * 12);
+      const dx = Math.cos(f.ringA), dy = Math.sin(f.ringA);
+      keyRing.position.set(H.x + dx * RRg, H.y + dy * RRg, 0); keyRing.quaternion.setFromUnitVectors(V(0, 0, 1), V(-dy, dx, 0));
+      f.keyZ = V(0, 0, 1).applyQuaternion(qk); f.ringB = keyBlade.localToWorld(V(H.x + 2 * dx * RRg, H.y + 2 * dy * RRg, 0)); }
+    const piv = f.ringB.clone();
     if (!f.p) { f.p = piv.clone().add(V(0, -f.L, 0)); f.pp = f.p.clone(); }
     const h = Math.min(dt, 0.033), acc = V(0, -9.81, 0);
     if (RM.on && sim.v > 0.3) { const fw = V(Math.cos(RM.yaw), 0, -Math.sin(RM.yaw)); acc.add(fw.multiplyScalar(-0.9 * sim.v * sim.v * 0.06)); acc.y += Math.sin(performance.now() / 70) * sim.v * 0.12; }
@@ -2587,7 +2598,10 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
         dl.copy(E.sub(pl).normalize()); dv.copy(dl.applyQuaternion(q)); } }
     f.p = piv.clone().add(dv.clone().multiplyScalar(f.L));
     f.twist += ((RM.on ? Math.sin(performance.now() / 230) * Math.min(1, sim.v / 6) * 0.9 : 0) - f.twist) * Math.min(1, h * 4);
-    fob.position.copy(piv); fob.quaternion.setFromUnitVectors(V(0, -1, 0), dv.normalize()); fob.rotateY(f.twist + (RM.on ? RM.yaw : 0)); fob.visible = scooter.visible; }
+    { // fob hangs along dv; its tag faces the key's axis (the ring passes through the tag hole there), with a little play on the ring
+      const yv = dv.clone().normalize().negate(), zv = f.keyZ.clone().sub(yv.clone().multiplyScalar(f.keyZ.dot(yv))); if (zv.lengthSq() < 1e-6) zv.set(1, 0, 0); zv.normalize();
+      const xv = V(0, 0, 0).crossVectors(yv, zv); fob.position.copy(piv); fob.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(xv, yv, zv)); fob.rotateY(f.twist * 0.35); }
+    fob.visible = scooter.visible; }
   const lit = sim.power && sim.lights;
   for (const m of M.podIcons) m.emissiveIntensity = sim.power ? 1.3 : 0;   // warm switch backlight while on
   M.head.emissiveIntensity = lit ? 3.2 : 0; spot.intensity = lit ? 7 : 0; if (M.headLens) M.headLens.emissiveIntensity = lit ? 2.6 : 0;   // whole lens glows bright white when on (owner photo)   // lens lights up when the lights are on
