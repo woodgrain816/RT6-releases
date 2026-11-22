@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1159";</script>
+<script>window.RT6_VERSION = "2026.1122.1203";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -851,10 +851,27 @@ const kick = new THREE.Group(); kick.name = 'Kickstand'; swingG.add(kick);   // 
 const RR = 0.145, RW = 0.048, FK = 1.15, RA0 = -6 * D2R, RA1 = 173 * D2R;   // back end stops just above axle height
 const FAI = 0.11 / FK, FBI = 0.07;                                                   // hub cut-out: low ellipse
 const rIn = a => Math.min(RR - 0.014, 1 / Math.sqrt((Math.cos(a) / FAI) ** 2 + (Math.sin(a) / FBI) ** 2));
-const rTop = (z, a) => { const d = a / D2R; return 0.005 * (1 - (z / RW) ** 2)
-  + 0.006 * smooth(0.024, 0.018, Math.abs(z)) * smooth(14, 26, d) * smooth(108, 96, d); };   // ridge on the front half
+const rTop = (z, a) => 0.005 * (1 - (z / RW) ** 2);   // plain crown (the old 6 mm ridge read as a mohawk)
 const rfGeo = fenderGeo(0, 0, RR, RW, RA0, RA1, rIn, rTop, 140, 0.034, 0.03, 0.017); rfGeo.scale(FK, 1, 1); rfGeo.translate(RX, AX, 0); rfGeo.computeVertexNormals();   // soft arch in section (owner)
 const rFender = mesh(rfGeo, M.fender, frame, [0, 0, 0], [0, 0, 0], 'RearFender');
+{ // raised pad on the front half (owner photo): wide, barely raised (~2 mm), rounded front end with a screw, follows the fender's curve
+  const Wc = 0.034, Cr = 0.03, w = 0.031, hP = 0.0017, A0 = 7, A1 = 104, NA = 70, NZ = 22;
+  const surfR = (z, a) => { const az = Math.abs(z); if (az <= RW - Wc) return RR + rTop(z, a); const u = Math.min(1, (az - (RW - Wc)) / Wc); return RR - Cr + Cr * Math.sqrt(1 - u * u); };
+  const P = (a, z, h) => { const r = surfR(z, a) + h; return [RX + FK * r * Math.cos(a), AX + r * Math.sin(a), z]; };
+  const pos = [], idx = [], rows = [];
+  for (let i = 0; i <= NA; i++) { const d = A0 + (A1 - A0) * i / NA, a = d * D2R, sArc = (d - A0) * D2R * RR, eArc = (A1 - d) * D2R * RR;
+    const hw = sArc < w ? Math.sqrt(Math.max(0, w * w - (w - sArc) ** 2)) : w;                  // round front end
+    const h = hP * Math.min(1, eArc / 0.03);                                                     // fades out at the far end
+    const row = []; for (let j = 0; j <= NZ; j++) { const z = -hw + 2 * hw * j / NZ; row.push(pos.length / 3); pos.push(...P(a, z, h)); }
+    row.push(pos.length / 3); pos.push(...P(a, -hw - 0.0006, -0.0004)); row.push(pos.length / 3); pos.push(...P(a, hw + 0.0006, -0.0004)); rows.push(row); }
+  for (let i = 0; i < NA; i++) { const r0 = rows[i], r1 = rows[i + 1];
+    for (let j = 0; j < NZ; j++) idx.push(r0[j], r0[j + 1], r1[j], r0[j + 1], r1[j + 1], r1[j]);
+    idx.push(r0[NZ + 1], r0[0], r1[NZ + 1], r0[0], r1[0], r1[NZ + 1]);                              // lip down to the fender, one side
+    idx.push(r0[NZ], r0[NZ + 2], r1[NZ], r0[NZ + 2], r1[NZ + 2], r1[NZ]); }                         // and the other
+  const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); pg.setIndex(idx); pg.computeVertexNormals();
+  mesh(pg, M.fender, frame);
+  const a = (A0 + 3.2) * D2R, sp = P(a, 0, hP), sn = P(a, 0, hP + 0.01); const nv = V(sn[0] - sp[0], sn[1] - sp[1], 0).normalize();
+  const sc = mesh(new THREE.CylinderGeometry(0.0034, 0.0034, 0.0012, 20), std(0x1a1b1e, 0.5, 0.2), frame, sp); sc.quaternion.setFromUnitVectors(V(0, 1, 0), nv); }   // screw at the front of the pad
 const onFender = (a, off) => { const r = RR + off; const nx = Math.cos(a) / FK, ny = Math.sin(a);   // point + outward normal angle
   return { x: RX + FK * r * Math.cos(a), y: AX + r * Math.sin(a), n: Math.atan2(ny, nx) }; };
 for (const sz of [1, -1]) {                                                          // front mounting tabs + bolts
@@ -943,7 +960,7 @@ for (const sz of [1, -1]) {
   const c = new THREE.CatmullRomCurve3([V(0.1, 0.476, sz * 0.02), V(0.05, 0.47, sz * 0.02), V(0.012, 0.462, sz * 0.02), V(-0.03, 0.458, sz * 0.03),
     V(-0.09, 0.452, sz * 0.055), V(-0.135, 0.452, sz * 0.07), V(-0.15, 0.458, sz * 0.06)]);
   mesh(new THREE.TubeGeometry(c, 60, 0.0035, 10), M.frame, post);
-  const spr = mesh(new THREE.TubeGeometry(new Helix(0.021, 0.024, 2.5), 90, 0.003, 8), M.frame, post, [-0.13, 0.448, sz * 0.068]);   // big double-coil springs (photo)
+  const spr = mesh(new THREE.TubeGeometry(new Helix(0.021, 0.024, 2.5), 90, 0.003, 8), M.frame, post, [-0.13, 0.448, sz * 0.068]); (M.seatSprings || (M.seatSprings = [])).push(spr);   // big double-coil springs (photo)
   mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.03, 8), M.frame, post, [-0.13, 0.463, sz * 0.068]);
 }
 // saddle lofted from the 2026-11-22 photos. Top view: broad rounded back, sides taper almost straight to a rounded nose (L/W ~1.45).
@@ -1505,14 +1522,14 @@ contact.rotation.x = -PI / 2; contact.position.set(0, 0.001, 0); scene.add(conta
 document.getElementById('loading').remove();
 
 // ---------------------------------------------------------------- sound (silent until the rider turns it on)
-const SOUND_V = 13;   // bump when a sound file changes so browsers fetch the new one
+const SOUND_V = 14;   // bump when a sound file changes so browsers fetch the new one
 const Sound = {
   ctx: null, on: false, buf: {}, nodes: null, hornNodes: null,
   async enable() {
     if (!this.ctx) {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
       // recordings cut from the real scooter's videos (make_sounds.js): motor loop at ~35 mph, horn buzzer, key-on beep
-      for (const n of ['motor', 'motor2', 'motor1', 'm1_a', 'm1_b', 'm1_c', 'm2_a', 'm2_c', 'm3_b', 'm3_c', 'horn', 'hornloop', 'start', 'sigclick1', 'sigclick2', 'sigclick3', 'seat', 'bounce1', 'bounce2', 'bounce3', 'pwrclick', 'hornclick1', 'hornclick2', 'lightclick1', 'lightclick2', 'brakein', 'brakein2', 'brakeout']) for (const ext of ['wav', 'mp3', 'ogg']) {
+      for (const n of ['motor', 'motor2', 'motor1', 'm1_a', 'm1_b', 'm1_c', 'm2_a', 'm2_c', 'm3_b', 'm3_c', 'horn', 'hornloop', 'start', 'sigclick1', 'sigclick2', 'sigclick3', 'seat', 'bounce1', 'bounce2', 'bounce3', 'pwrclick', 'hornclick1', 'hornclick2', 'lightclick1', 'lightclick2', 'brakein', 'brakein2', 'brakeout', 'springs']) for (const ext of ['wav', 'mp3', 'ogg']) {
         try { const r = await fetch(`${n}.${ext}?v=${SOUND_V}`); if (!r.ok) continue; this.buf[n] = await this.ctx.decodeAudioData(await r.arrayBuffer()); break; } catch {}
       }
       this.build();
@@ -1605,6 +1622,18 @@ const Sound = {
   },
   shot(name, vol = 0.8, rate = 1) {   // one-shot recording from the owner's scooter (signal-switch clicks, sitting down)
     if (!this.on || !this.buf[name] || !this.out) return; const s = this.ctx.createBufferSource(), g = this.ctx.createGain(); g.gain.value = vol; s.buffer = this.buf[name]; s.playbackRate.value = rate; s.connect(g); g.connect(this.out); s.start(); },
+  layer(name, o) {   // one layer of a built-up sound: delay, start point, length, pitch, brightness, fade-out
+    if (!this.on || !this.buf[name] || !this.out) return; const c = this.ctx, bf = this.buf[name], t = c.currentTime + (o.delay || 0);
+    const s = c.createBufferSource(), g = c.createGain(), lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = o.lp || 8000;
+    s.buffer = bf; s.playbackRate.value = o.rate || 1; s.connect(lp); lp.connect(g); g.connect(this.out);
+    const off = Math.min(bf.duration - 0.05, o.offset || 0), dur = Math.min(bf.duration - off, o.dur || bf.duration) / (o.rate || 1), v = o.vol || 0.8;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + 0.004); g.gain.setValueAtTime(v, t + Math.max(0.005, dur - 0.06)); g.gain.linearRampToValueAtTime(0, t + dur);
+    s.start(t, off, dur * (o.rate || 1) + 0.01); },
+  sitDown() {   // never the same twice: seat thump + the rear springs (louder the further back you land), each with its own pitch/start/timing
+    const r = (a, b) => a + Math.random() * (b - a), back = Math.min(1, Math.max(0, r(0, 1) ** 1.2 + r(-0.1, 0.1))); this.sitBack = back;
+    this.layer('seat', { vol: r(0.55, 0.85) * (1 - 0.35 * back), rate: r(0.92, 1.08), lp: r(1800, 4000), dur: r(0.18, 0.37) });
+    this.layer('springs', { vol: (0.08 + 0.85 * back * back) * r(0.8, 1.1), rate: r(0.9, 1.12), offset: r(0, 0.3), dur: r(0.22, 0.45), delay: r(0.02, 0.08), lp: r(1400, 2800) });
+    if (Math.random() < 0.4) this.layer('springs', { vol: 0.35 * back * r(0.6, 1), rate: r(0.95, 1.15), offset: r(0.3, 0.6), dur: r(0.1, 0.18), delay: r(0.18, 0.3), lp: r(1200, 2200) }); },
   beep() { if (!this.on || !this.buf.start || !this.out) return; const s = this.ctx.createBufferSource(), g = this.ctx.createGain(); g.gain.value = 0.9; s.buffer = this.buf.start; s.connect(g); g.connect(this.out); s.start(); }
 };
 
@@ -2512,11 +2541,16 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
     if (E.br !== undefined && br !== E.br) Sound.shot(br ? pick(['brakein', 'brakein2']) : 'brakeout', 0.65, vr());
     Object.assign(E, { pw, hn, lt, br }); }
   if (sim.signal !== Sound.lastSig) { if (Sound.lastSig !== undefined) Sound.shot('sigclick' + (1 + Math.floor(Math.random() * 3)), 0.75, 0.96 + Math.random() * 0.08); Sound.lastSig = sim.signal; }
-  { const seated = !!(RM.on && !RM.walk && !RM.crash && !RM.stand && seat.visible); if (seated && Sound.wasSeated === false) Sound.shot('seat', 0.85); Sound.wasSeated = seated;
+  { const seated = !!(RM.on && !RM.walk && !RM.crash && !RM.stand && seat.visible); if (seated && Sound.wasSeated === false) { Sound.sitDown(); RM.sprV = (RM.sprV || 0) + 0.9; } Sound.wasSeated = seated;
     // seat springs: a hit through the suspension while sitting (vertical body acceleration), at most every 0.22 s
     const B = RM.body; Sound.bCool = Math.max(0, (Sound.bCool || 0) - dt);
     if (B && seated) { const acc = Sound.lastVy === undefined ? 0 : (B.vy - Sound.lastVy) / Math.max(dt, 1e-3); Sound.lastVy = B.vy; Sound.peakAcc = acc;
-      if (acc > 9 && Sound.bCool === 0) { Sound.shot('bounce' + (1 + Math.floor(Math.random() * 3)), Math.min(0.9, 0.25 + acc / 40), 0.95 + Math.random() * 0.1); Sound.bCool = 0.22; } } else Sound.lastVy = undefined; }
+      if (acc > 9 && Sound.bCool === 0) { Sound.shot('bounce' + (1 + Math.floor(Math.random() * 3)), Math.min(0.9, 0.25 + acc / 40), 0.95 + Math.random() * 0.1); Sound.bCool = 0.22;
+        RM.sprV = (RM.sprV || 0) + Math.min(1.2, acc / 25);
+        Sound.layer('springs', { vol: Math.min(0.8, acc / 30) * (0.2 + 0.8 * (Sound.sitBack ?? 0.4)) * (0.7 + Math.random() * 0.4), rate: 0.92 + Math.random() * 0.18, offset: Math.random() * 0.5, dur: 0.12 + Math.random() * 0.15, delay: 0.01 + Math.random() * 0.04, lp: 1500 + Math.random() * 1200 }); } } else Sound.lastVy = undefined; }
+  if (M.seatSprings) { const seated2 = !!(RM.on && !RM.walk && !RM.crash && !RM.stand && seat.visible), tgt = seated2 ? 0.12 + 0.1 * (Sound.sitBack ?? 0.4) : 0;
+    RM.sprX = RM.sprX || 0; RM.sprV = RM.sprV || 0; RM.sprV += (-(RM.sprX - tgt) * 260 - RM.sprV * 9) * dt; RM.sprX = Math.max(-0.08, Math.min(0.32, RM.sprX + RM.sprV * dt));
+    for (const sp of M.seatSprings) sp.scale.y = 1 - RM.sprX; }
   Sound.update(omega, sim.throttle);
   // UI
   $('tFill').style.width = (sim.throttle * 100).toFixed(1) + '%'; $('tVal').textContent = Math.round(sim.throttle * 100) + '%';

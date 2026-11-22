@@ -4,4 +4,4 @@ Update files for the fan-made Ruitoo RT6 scooter sim (non-commercial; Ruitoo, RT
 The Android app reads `update.json` on launch and downloads `rt6.html` when it is newer (checked against its SHA-256).
 To install the app: download `RT6Sim.apk`.
 
-Current version: **2026.1122.1159** - Switch pod matches your photos, headlight on the fork crown, rounder rear fender, real recorded switch, brake and seat sounds
+Current version: **2026.1122.1203** - Sitting down sounds different every time (rear springs louder the further back you sit), seat springs flex, flat pad on the rear fender
