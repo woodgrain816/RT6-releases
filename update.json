@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1457",
-  "notes": "P settings: 5 quick taps of power opens P01; taps step P01/P03/P04/P05/P06/PC; hold 1 s to edit (value flashes), tap to change, hold 1 s to save; 8.5 s idle returns. P01 km/mph, P05 cruise, P06 zero start, PC clears ODO. Only a single tap changes speed mode",
+  "version": "2026.1122.1459",
+  "notes": "Display turn arrow blinks like the real one (0.31 s on / 0.31 s off); NON shows on the display when P06 = 1 (non-zero start)",
   "page": "rt6.html",
-  "sha256": "1e0e602874ce343b092bb1e97d9a52d8dff2974377ccdaa0063b298690e043af",
+  "sha256": "44ed10a0530c55ce1a3b8a5cfcd7d5ba95784d628527ba33c879aa474c6f2303",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T20:57:55.341Z"
+  "published": "2026-11-22T20:59:13.891Z"
 }
