@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1323";</script>
+<script>window.RT6_VERSION = "2026.1122.1324";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -876,7 +876,7 @@ const kick = new THREE.Group(); kick.name = 'Kickstand'; swingG.add(kick);   // 
   kick.userData = { swing, Qup, Q0: new THREE.Quaternion() }; tag(kick, 'kick'); }
 
 // rear fender (owner photos): mounted on the swingarm, so everything here hangs off swingG (its rest frame = frame coords)
-const RR = 0.145, RW = 0.048, FK = 1.15, RA0 = 44 * D2R, RA1 = 182 * D2R;   // front stops behind the deck end, back drops to axle height
+const RR = 0.145, RW = 0.043, FK = 1.15, RA0 = 44 * D2R, RA1 = 199 * D2R;   // narrower, and the rear drop runs well below the axle (owner's rear photo)   // front stops behind the deck end, back drops to axle height
 const FAI = 0.11 / FK, FBI = 0.07;
 const rIn = a => Math.min(RR - 0.014, 1 / Math.sqrt((Math.cos(a) / FAI) ** 2 + (Math.sin(a) / FBI) ** 2));
 const rTop = (z, a) => 0;   // no crown: it stepped 4.6 mm into the side corners and read as a line down the middle (owner)
@@ -908,15 +908,15 @@ const hump = new THREE.Group(); swingG.add(hump);
   const pf = sp(130), top = pf.y + 0.001, xr = onFender(154 * D2R, 0).x - 0.002, ybot = onFender(157 * D2R, 0).y;   // small: barely proud of the fender (owner)   // barely sticks out past the fender (owner)
   const sh = new THREE.Shape(); sh.moveTo(pf.x, top); sh.lineTo(xr + 0.004, top); sh.lineTo(xr, top - 0.004); sh.lineTo(xr, ybot + 0.004); sh.lineTo(xr + 0.006, ybot);
   for (let d = 157; d >= 130; d -= 3) { const p = sp(d); sh.lineTo(p.x, p.y); } sh.closePath();
-  const g = new THREE.ExtrudeGeometry(sh, { depth: 0.046, bevelEnabled: true, bevelThickness: 0.005, bevelSize: 0.0025, bevelSegments: 5, curveSegments: 8 }).translate(0, 0, -0.023);
+  const g = new THREE.ExtrudeGeometry(sh, { depth: 0.04, bevelEnabled: true, bevelThickness: 0.005, bevelSize: 0.0025, bevelSegments: 5, curveSegments: 8 }).translate(0, 0, -0.02);
   
   g.computeVertexNormals(); mesh(g, M.fender, hump);
   hump.userData.rear = new THREE.Vector3(xr - 0.004, (top + ybot) / 2, 0); }
 const tail = mesh(new THREE.ExtrudeGeometry(ovalShape(0.04, 0.018), { depth: 0.004, bevelEnabled: true, bevelThickness: 0.0015, bevelSize: 0.0015, bevelSegments: 4, curveSegments: 24 }).rotateY(-PI / 2), M.tail, hump, hump.userData.rear.toArray(), [0, 0, 0], 'TailLight');   // oval lamp on the flat rear face
 // reflector on the rear drop, below the light box
-const rp = onFender(170 * D2R, 0.0122);
+const rp = onFender(184 * D2R, 0.0005);   // sits ON the fender (it floated 12 mm off)
 const refl = new THREE.Group(); refl.position.set(rp.x, rp.y, 0); refl.rotation.z = rp.n - PI / 2; swingG.add(refl);
-mesh(new THREE.ShapeGeometry(ovalShape(0.03, 0.018), 24).rotateX(-PI / 2), M.reflector, refl, [0, 0.0006, 0]);
+mesh(new THREE.ShapeGeometry(ovalShape(0.038, 0.018), 24).rotateX(-PI / 2), M.reflector, refl, [0, 0.0004, 0]);   // tall oval, low on the drop
 for (const sz of [1, -1]) {   // fender mount on the swingarm: tab at the front end
   const f = onFender(48 * D2R, -0.03);
   mesh(new RoundedBoxGeometry(0.016, Math.max(0.02, f.y - 0.19), 0.005, 2, 0.0015), M.frame, swingG, [f.x - 0.004, (f.y + 0.19) / 2, sz * 0.051]);

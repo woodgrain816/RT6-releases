@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1323",
-  "notes": "Key ring threads through the key's hole instead of clipping through it; removed the made-up fender strut",
+  "version": "2026.1122.1324",
+  "notes": "Rear fender: longer drop, narrower, reflector sits on the fender (was floating)",
   "page": "rt6.html",
-  "sha256": "6f41f3127367c4fe273128536073e2bb71e05c85a07c32c97628f39fc5ecf21b",
+  "sha256": "676775ca10e8763a89ed7e3d78ba1979a16752f35e66a128ed3923353bc33a84",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T19:23:20.441Z"
+  "published": "2026-11-22T19:24:31.925Z"
 }
