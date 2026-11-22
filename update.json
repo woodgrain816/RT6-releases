@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1413",
-  "notes": "Display rebuilt from the product photo (one body, one rim, smaller badge logo); real startup (splash, empty bar, quick fill); neck has only two square spacers; wrap goes round the stem; fob can't swing into the screen; lights start off; horn needs power; ignition text dark and engraved; throttle paddle centred and smaller",
+  "version": "2026.1122.1419",
+  "notes": "Old display back with raised arrow triangles in its side corners; ignition lock and key smaller and much flatter",
   "page": "rt6.html",
-  "sha256": "488cca004aebda888b4c123633230154416aa265b8ba021cb761f812fdf0986c",
+  "sha256": "0b261bbb1f738de9a1543fd016d7ad9ec839c0816f8a8168be751c2a5ae7ac29",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T20:13:46.087Z"
+  "published": "2026-11-22T20:19:29.769Z"
 }

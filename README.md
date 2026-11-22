@@ -4,4 +4,4 @@ Update files for the fan-made Ruitoo RT6 scooter sim (non-commercial; Ruitoo, RT
 The Android app reads `update.json` on launch and downloads `rt6.html` when it is newer (checked against its SHA-256).
 To install the app: download `RT6Sim.apk`.
 
-Current version: **2026.1122.1413** - Display rebuilt from the product photo (one body, one rim, smaller badge logo); real startup (splash, empty bar, quick fill); neck has only two square spacers; wrap goes round the stem; fob can't swing into the screen; lights start off; horn needs power; ignition text dark and engraved; throttle paddle centred and smaller
+Current version: **2026.1122.1419** - Old display back with raised arrow triangles in its side corners; ignition lock and key smaller and much flatter
