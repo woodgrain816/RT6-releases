@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1245",
-  "notes": "Real neck proportions: deck front shortened 6 cm, full-size Ruitoo plate reaching the deck, bigger lettering",
+  "version": "2026.1122.1249",
+  "notes": "Ruitoo plate: big curved inner corner, grey outline, deeper red, glossy face",
   "page": "rt6.html",
-  "sha256": "6a36d03eaf3c9e616c9a5618590b8807f58ea0e6e4992c32a116241432233931",
+  "sha256": "1d54d13748a58013255fdcf43ba20d5dbcc75e682672cbe9ffd518a3c3222085",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T18:45:59.772Z"
+  "published": "2026-11-22T18:49:07.334Z"
 }

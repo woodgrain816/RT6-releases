@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1245";</script>
+<script>window.RT6_VERSION = "2026.1122.1249";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -321,7 +321,7 @@ const deckTex = canvasTex(1536, 540, (g, W, H) => {
 });
 const deckBump = canvasTex(1536, 540, (g, W, H) => { deckPattern(g, W, H, '#000', '#fff'); }, false);   // band is flush with the pill tops
 
-const PL = { x0: 0.22, x1: 0.405, y0: 0.154, y1: 0.41 };   // plate bounds (frame metres); canvas = 4096 px per metre
+const PL = { x0: 0.22, x1: 0.405, y0: 0.154, y1: 0.41, outline: [[0.3905,0.405],[0.303,0.405],[0.2959,0.4038],[0.2896,0.4005],[0.2847,0.3952],[0.2817,0.3887],[0.224,0.178],[0.224,0.165],[0.231,0.158],[0.27,0.158],[0.277,0.165],[0.334,0.3],[0.3347,0.307],[0.3367,0.3138],[0.3401,0.32],[0.3445,0.3255],[0.35,0.3299],[0.3562,0.3333],[0.363,0.3353],[0.37,0.336],[0.4013,0.336]] };   // inverted L: big concave inner corner, rounded top-back (owner photos)   // plate bounds (frame metres); canvas = 4096 px per metre
 function plateTex(right) {   // owner's photos: black plate, big salmon-red band down the leg with darker edges, grey edge lines, red circuit traces with dots, white "Ruitoo" up the leg
   const S = 4096, W = Math.round((PL.x1 - PL.x0) * S), H = Math.round((PL.y1 - PL.y0) * S);
   return canvasTex(W, H, (g) => {
@@ -331,7 +331,7 @@ function plateTex(right) {   // owner's photos: black plate, big salmon-red band
     const ax = X(A[0]), ay = Y(A[1]), bx = X(B[0]), by = Y(B[1]), ang = Math.atan2(by - ay, bx - ax), len = Math.hypot(bx - ax, by - ay);
     g.save(); g.translate(ax, ay); g.rotate(ang);   // leg frame: +x up the leg, +y across it
     const band = (c, y, h) => { g.fillStyle = c; g.fillRect(-400, y, len + 800, h); };
-    band('#7d1712', -58, 116); band('#e04434', -44, 88); band('#ff6a52', -18, 36);              // the big red band
+    band('#5e0f0c', -60, 120); band('#c8291f', -46, 92); band('#e2412f', -16, 32);              // the big red band
     g.fillStyle = '#121318'; for (let k = 0; k < 7; k++) { const t = 40 + k * 120; g.beginPath(); g.moveTo(t, -60); g.lineTo(t + 60, -60); g.lineTo(t + 20, 60); g.lineTo(t - 40, 60); g.closePath(); g.globalAlpha = 0.35; g.fill(); } g.globalAlpha = 1;
     g.strokeStyle = '#9ba1ad'; g.lineWidth = 7;   // grey edge lines with a jog
     for (const [yy, j] of [[-92, 1], [92, -1]]) { g.beginPath(); g.moveTo(-400, yy); g.lineTo(len * 0.35, yy); g.lineTo(len * 0.35 + 30, yy + j * 30); g.lineTo(len + 400, yy + j * 30); g.stroke(); }
@@ -347,6 +347,8 @@ function plateTex(right) {   // owner's photos: black plate, big salmon-red band
     g.font = '700 170px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; try { g.letterSpacing = '6px'; } catch {}
     g.lineWidth = 16; g.strokeStyle = '#121318'; g.strokeText('Ruitoo', 0, 0); g.fillStyle = '#e9ecf1'; g.fillText('Ruitoo', 0, 0);
     g.restore();
+    g.beginPath(); PL.outline.forEach(([x, y], k) => k ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y))); g.closePath();   // light-grey line inset round the whole plate
+    g.lineJoin = 'round'; g.strokeStyle = '#a7adb8'; g.lineWidth = 50; g.stroke(); g.strokeStyle = '#121318'; g.lineWidth = 34; g.stroke();
   });
 }
 // stem light-bar decal: canvas y = along the stem (0 = top), letters' tops toward canvas +x. Owner's photo: top line ~25 %,
@@ -430,7 +432,7 @@ const M = {
   head: new THREE.MeshPhysicalMaterial({ color: 0xf4f6f8, roughness: 0.05, clearcoat: 1, emissive: 0xffffff, emissiveIntensity: 0 }),
   phoneRed: std(0xd01822, 0.55, 0.0),
 };
-const plateMats = [false, true].map(r => std(0xffffff, 0.45, 0.25, { map: plateTex(r), side: THREE.DoubleSide }));
+const plateMats = [false, true].map(r => new THREE.MeshPhysicalMaterial({ map: plateTex(r), roughness: 0.35, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.06, side: THREE.DoubleSide }));   // glossy clear acrylic face over the print
 
 // ---------------------------------------------------------------- LCD (shared by the HUD and the model's display)
 const sim = { key: false, power: false, boot: 0, fill: 1, mode: 1, signal: 0, lights: true, throttle: 0, brake: 0, horn: false, v: 0, odo: 212.0, batt: 100, volts: 54.6, fold: 0, foldTarget: 0, seat: true, kick: 0, kickTarget: 0, bar: 0, tapAt: 0, capOpen: false, cap: 0, charging: false };
@@ -795,7 +797,7 @@ const chargerSet = new THREE.Group(); chargerSet.name = 'ChargerBrick'; chargerS
   mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([acEnd, acDir, W(V(0.05, 0.004, -0.3)), W(V(0.25, 0.004, -0.45))]), 60, 0.003, 8), cab, chargerSet); }
 
 // neck plates with the red "Ruitoo" graphic
-const plateP = [[0.3905, 0.405], [0.297, 0.405], [0.285, 0.399], [0.28, 0.388], [0.224, 0.178], [0.224, 0.165], [0.231, 0.158], [0.27, 0.158], [0.277, 0.165], [0.33, 0.3], [0.337, 0.319], [0.349, 0.331], [0.363, 0.336], [0.4013, 0.336]];   // inverted L at full size: arm along the head tube, leg back to the deck's front face (owner photos)
+const plateP = PL.outline;
 const pminX = PL.x0, pW = PL.x1 - PL.x0, pminY = PL.y0, pH = PL.y1 - PL.y0;
 for (const [i, sz] of [[0, -1], [1, 1]]) {
   ext(poly(plateP), 0.005, M.frame, frame, sz * 0.033, 0.001);
