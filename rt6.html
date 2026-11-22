@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1349";</script>
+<script>window.RT6_VERSION = "2026.1122.1352";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -337,13 +337,13 @@ const deckTex = canvasTex(1536, 540, (g, W, H) => {
 });
 const deckBump = canvasTex(1536, 540, (g, W, H) => { deckPattern(g, W, H, '#000', '#fff'); }, false);   // band is flush with the pill tops
 
-const PL = { x0: 0.25, x1: 0.405, y0: 0.175, y1: 0.41, outline: [[0.3888,0.405],[0.33,0.405],[0.322,0.402],[0.318,0.396],[0.316,0.39],[0.2548,0.2457],[0.256,0.19],[0.262,0.18],[0.282,0.18],[0.288,0.186],[0.354,0.316],[0.359,0.323],[0.367,0.33],[0.378,0.336],[0.39,0.341],[0.4003,0.345]] };   // traced from the owner's straight side photo: slanted band leaning forward from the deck front up to a short top along the head tube, curved corner under it
+const PL = { x0: 0.25, x1: 0.405, y0: 0.17, y1: 0.41, outline: [[0.3888,0.405],[0.318,0.405],[0.3155,0.4047],[0.3132,0.4037],[0.3111,0.4023],[0.3095,0.4003],[0.2585,0.262],[0.2555,0.25],[0.2555,0.182],[0.2595,0.175],[0.302,0.2],[0.306,0.208],[0.344,0.294],[0.3431,0.2901],[0.3449,0.2949],[0.3475,0.2993],[0.3508,0.3032],[0.3547,0.3065],[0.3591,0.3091],[0.3639,0.3109],[0.3689,0.3118],[0.4018,0.3125]] };   // traced from the owner's straight side photo (v82): deep arm down the head tube, slanted back edge, leg to below the deck nose, slanted bottom
 function plateTex(right) {   // owner's photos: black plate, big salmon-red band down the leg with darker edges, grey edge lines, red circuit traces with dots, white "Ruitoo" up the leg
   const S = 4096, W = Math.round((PL.x1 - PL.x0) * S), H = Math.round((PL.y1 - PL.y0) * S);
   return canvasTex(W, H, (g) => {
     const X = x => (right ? x - PL.x0 : PL.x1 - x) * S, Y = y => (PL.y1 - y) * S;
     g.fillStyle = '#121318'; g.fillRect(0, 0, W, H);
-    const A = [0.272, 0.182], B = [0.335, 0.388];   // leg centre line, bottom to top
+    const A = [0.279, 0.19], B = [0.333, 0.385];   // leg centre line, bottom to top
     const ax = X(A[0]), ay = Y(A[1]), bx = X(B[0]), by = Y(B[1]), ang = Math.atan2(by - ay, bx - ax), len = Math.hypot(bx - ax, by - ay);
     g.save(); g.translate(ax, ay); g.rotate(ang);   // leg frame: +x up the leg, +y across it
     const band = (c, y, h) => { g.fillStyle = c; g.fillRect(-400, y, len + 800, h); };
@@ -581,7 +581,7 @@ function makeWheel(rear) {
     const face = new THREE.Shape(); face.absarc(0, 0, 0.0748, 0, TAU, false);
     for (let i = 0; i < 3; i++) { const a0 = i / 3 * TAU + 0.5, a1 = a0 + TAU / 3, h = new THREE.Path(), ri = 0.034, ro = 0.0685, wi = 0.0085 / ri, wo = 0.0105 / ro;
       h.absarc(0, 0, ri, a0 + wi, a1 - wi, false); h.absarc(0, 0, ro, a1 - wo, a0 + wo, true); h.closePath(); face.holes.push(h); }
-    for (const sz of [1, -1]) ext(face, 0.006, M.plastic, g, sz * 0.024, 0.0015);
+    ext(face, 0.012, M.plastic, g, 0, 0.0015);   // ONE set of three spokes in the middle of the rim (owner)
     mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.07, 32).rotateX(PI / 2), M.plastic, g);
   } else {
     // hub motor drum with cover bolts
@@ -838,17 +838,17 @@ for (const [i, sz] of [[0, -1], [1, 1]]) {
   mesh(dg, plateMats[i], frame, [0, 0, sz * 0.0331]);   // just proud of the plate bevel (was z-fighting)
 }
 // lattice across the rear face between the plates (open windows, graphic behind), top cap, foot block
-{ const lat = new THREE.Group(); lat.position.set(0.302, 0.285, 0); lat.rotation.z = 1.265; frame.add(lat);
+{ const lat = new THREE.Group(); lat.position.set(0.3, 0.29, 0); lat.rotation.z = 1.2; frame.add(lat);
   for (const x of [0.006, -0.047]) mesh(new THREE.CylinderGeometry(0.0065, 0.0065, 0.056, 8).rotateX(PI / 2).scale(0.8, 1, 1), M.frame, lat, [x, 0, 0]);   // two faceted round bars (owner)   // flat rungs, as seen from above
 }   // windows left open; frame + plate insides are black
 mesh(new RoundedBoxGeometry(0.07, 0.008, 0.06, 4, 0.003), M.frame, frame, [0.357, 0.401, 0]);
-{ const lug = mesh(new RoundedBoxGeometry(0.03, 0.074, 0.056, 3, 0.004), M.frame, frame, [0.391, 0.37, 0]); lug.rotation.z = RAKE; }   // head-tube lug the plates bolt to (they were floating beside the tube)   // top cap
+{ const lug = mesh(new RoundedBoxGeometry(0.03, 0.094, 0.056, 3, 0.004), M.frame, frame, [0.392, 0.36, 0]); lug.rotation.z = RAKE; }   // head-tube lug the plates bolt to (they were floating beside the tube)   // top cap
 mesh(new RoundedBoxGeometry(0.026, 0.04, 0.06, 4, 0.005), M.frame, frame, [0.27, 0.205, 0]);   // deck nose block the leg bolts to
 for (const sz of [1, -1]) {
-  for (const [x, y] of [[0.38, 0.358], [0.377, 0.376], [0.3743, 0.394]]) {   // three big countersunk bolts into the head tube
+  for (const [x, y] of [[0.383, 0.332], [0.38, 0.357], [0.3765, 0.382]]) {   // three big countersunk bolts into the head tube
     mesh(new THREE.CylinderGeometry(0.0068, 0.0068, 0.0012, 28).rotateX(PI / 2), M.chrome, frame, [x, y, sz * 0.0335]);
     mesh(new THREE.CylinderGeometry(0.0024, 0.0024, 0.0006, 6).rotateX(PI / 2), std(0x050506, 0.9, 0), frame, [x, y, sz * 0.0342]); }
-  for (const [x, y] of [[0.327, 0.388], [0.374, 0.338], [0.282, 0.311], [0.272, 0.19]])   // small domed button bolts
+  for (const [x, y] of [[0.322, 0.392], [0.36, 0.322], [0.275, 0.268], [0.267, 0.188]])   // small domed button bolts
     mesh(new THREE.SphereGeometry(0.0038, 16, 8, 0, TAU, 0, PI / 2).scale(1, 0.55, 1).rotateX(sz * PI / 2), M.chrome, frame, [x, y, sz * 0.0334]); }
 // rear swingarm, shocks, kickstand
 const SWP = V(-0.31, 0.195, 0), swingG = new THREE.Group(); swingG.name = 'Swingarm'; frame.add(swingG);

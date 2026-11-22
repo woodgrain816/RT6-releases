@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1349",
-  "notes": "Serial number moved beside the plate edge like the real one",
+  "version": "2026.1122.1352",
+  "notes": "Neck plate traced from your side photo (deep arm, slanted back); front wheel has one centred set of three spokes",
   "page": "rt6.html",
-  "sha256": "b41b1e3455354ec1651cc211b729fdd0d491f6a5a7987cc814811f8d6c0db7f4",
+  "sha256": "1283ba3127305e7f13997af42074a8cdc024ff4bacf40eeef84771deb41310fe",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T19:49:08.940Z"
+  "published": "2026-11-22T19:52:39.182Z"
 }
