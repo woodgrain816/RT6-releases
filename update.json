@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1243",
-  "notes": "Neck plate reshaped and redrawn with the real bolt pattern, round headlight, rear bracket joins shocks and swingarm, floating tabs removed, rear brake cable grommet",
+  "version": "2026.1122.1245",
+  "notes": "Real neck proportions: deck front shortened 6 cm, full-size Ruitoo plate reaching the deck, bigger lettering",
   "page": "rt6.html",
-  "sha256": "c33301f1510d3e3893785af4b4b550f95623101ffd0769a7d21e7c1684bf1b85",
+  "sha256": "6a36d03eaf3c9e616c9a5618590b8807f58ea0e6e4992c32a116241432233931",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T18:43:54.895Z"
+  "published": "2026-11-22T18:45:59.772Z"
 }
