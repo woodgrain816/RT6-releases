@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1254",
-  "notes": "Ruitoo plate reshaped like yours: full-width top, straight back edge, leg straight down to the deck, big curved cut-out at the front",
+  "version": "2026.1122.1256",
+  "notes": "Deck side trim angles out then in, constant thickness; rear brackets flush on the deck end with shock and swingarm pivot; motor cable along the swingarm",
   "page": "rt6.html",
-  "sha256": "0b84c9b639f5ad44fb742b5e3b604fdbfe60452b380191593b5d917f02362d2d",
+  "sha256": "1334993b9e804340d37773717326017b7df65047f17b637949473692a71af6d2",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T18:54:18.806Z"
+  "published": "2026-11-22T18:56:58.670Z"
 }

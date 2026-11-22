@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1254";</script>
+<script>window.RT6_VERSION = "2026.1122.1256";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -667,22 +667,24 @@ function deckOutline(inset = 0) {
   side.forEach(p => s.lineTo(p.x, p.y)); side.slice().reverse().forEach(p => s.lineTo(p.x, -p.y)); s.closePath(); return s;
 }
 const DECK_TOP = 0.257, DX0 = -0.302, DX1 = 0.223;
-const deckBottom = x => 0.179                                                   // flat underside: ~8.2 in off the ground, deck ~2 in thick (owner measured 8 in on carpet)
-  + 0.042 * Math.pow(Math.max(0, (-0.13 - x) / 0.17), 1.8)                     // rear underside sweeps up
-  + 0.02 * Math.pow(Math.max(0, (x - 0.15) / 0.073), 2);                      // front end-cap tapers
-// rounded cross-section: superellipse, sharper at the top edge, softer at the bottom
-function deckSection(x, nS = 56) {
-  const w = wAt(x), yb = deckBottom(x), yt = DECK_TOP, cy = (yt + yb) / 2, hh = (yt - yb) / 2, pts = [];
-  for (let k = 0; k < nS; k++) { const t = k / nS * TAU, c = Math.cos(t), sn = Math.sin(t);
-    const e = sn > 0 ? 0.16 : 0.32;                                              // superellipse exponent: top edge crisper
-    pts.push([w * Math.sign(c) * Math.pow(Math.abs(c), e), cy + hh * Math.sign(sn) * Math.pow(Math.abs(sn), e)]); }
+const deckBottom = x => 0.179;   // one constant-thickness block end to end (owner)
+// side trim (owner photos): from the top edge the side angles OUT to a ridge at mid height, then back IN to the bottom
+function deckProf(x) { const w = wAt(x), yb = deckBottom(x), yt = DECK_TOP, yr = yb + 0.5 * (yt - yb);
+  return { w, yb, yt, yr, zU: y => w - 0.008 * (y - yr) / (yt - yr), zL: y => w - 0.03 * (yr - y) / (yr - yb) }; }
+function deckSection(x) {   // 56 points, counter-clockwise from the right-side ridge
+  const P = deckProf(x), { yb, yt, yr } = P, r = 0.003, pts = [], zt = P.zU(yt), zb = P.zL(yb);
+  for (let i = 0; i < 9; i++) { const y = yr + (yt - r - yr) * i / 9; pts.push([P.zU(y), y]); }
+  for (let k = 0; k < 14; k++) { const u = k / 13, z = (zt - r) * (1 - 2 * u), e = Math.abs(1 - 2 * u) > 0.97 ? r * 0.4 : 0; pts.push([z + Math.sign(z) * (e ? r * 0.6 : 0), yt - e]); }
+  for (let i = 0; i < 9; i++) { const y = yt - r - (yt - r - yr) * i / 9; pts.push([-P.zU(y), y]); }
+  for (let i = 0; i < 8; i++) { const y = yr - (yr - yb) * i / 7; pts.push([-P.zL(y), y]); }
+  for (let k = 1; k <= 8; k++) pts.push([-zb + 2 * zb * k / 9, yb]);
+  for (let i = 0; i < 8; i++) { const y = yb + (yr - yb) * i / 8; pts.push([P.zL(y), y]); }
   return pts; }
-const sideZ = (x, y) => { const w = wAt(x), yb = deckBottom(x), cy = (DECK_TOP + yb) / 2, hh = (DECK_TOP - yb) / 2, t = (y - cy) / hh, e = t > 0 ? 0.16 : 0.32;
-  const sn = Math.min(1, Math.pow(Math.abs(t), 1 / e)); return w * Math.pow(Math.sqrt(Math.max(0, 1 - sn * sn)), e); };
+const sideZ = (x, y) => { const P = deckProf(x), yy = Math.min(P.yt, Math.max(P.yb, y)); return yy >= P.yr ? P.zU(yy) : P.zL(yy); };
 M.glass = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.03, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.02, transparent: true, opacity: 0.16, envMapIntensity: 1.6, depthWrite: false, side: THREE.DoubleSide });
 {
   const nL = 140, nS = 56, pos = [], idx = [];
-  for (let a = 0; a <= nL; a++) { const x = DX0 + (DX1 - DX0) * a / nL; deckSection(x, nS).forEach(([z, y]) => pos.push(x, y, z)); }
+  for (let a = 0; a <= nL; a++) { const x = DX0 + (DX1 - DX0) * a / nL; deckSection(x).forEach(([z, y]) => pos.push(x, y, z)); }
   for (let a = 0; a < nL; a++) for (let b = 0; b < nS; b++) { const p = a * nS + b, q = a * nS + (b + 1) % nS;
     idx.push(p, p + nS, q, q, p + nS, q + nS); }   // outward-facing winding
   for (const [a, flip] of [[0, true], [nL, false]]) {                            // end caps (fan from the centre)
@@ -817,17 +819,17 @@ for (const sz of [1, -1]) {
   for (const [x, y] of [[0.246, 0.392], [0.392, 0.343], [0.236, 0.29], [0.24, 0.18]])   // small domed button bolts
     mesh(new THREE.SphereGeometry(0.0038, 16, 8, 0, TAU, 0, PI / 2).scale(1, 0.55, 1).rotateX(sz * PI / 2), M.chrome, frame, [x, y, sz * 0.0377]); }
 // rear swingarm, shocks, kickstand
-const SWP = V(-0.28, 0.165, 0), swingG = new THREE.Group(); swingG.name = 'Swingarm'; frame.add(swingG);
+const SWP = V(-0.318, 0.191, 0), swingG = new THREE.Group(); swingG.name = 'Swingarm'; frame.add(swingG);
 const shockG = new THREE.Group(); shockG.name = 'Shocks'; shockG.matrixAutoUpdate = false; frame.add(shockG);
 for (const sz of [1, -1]) {
-  { const pts = [[-0.27, 0.205], [-0.27, 0.15], [-0.36, 0.116], [-0.425, 0.098]];
+  { const pts = [[-0.304, 0.203], [-0.31, 0.176], [-0.36, 0.124], [-0.425, 0.098]];
     for (let d = -60; d >= -200; d -= 10) pts.push([RX + Math.cos(d * D2R) * 0.031, AX + Math.sin(d * D2R) * 0.031]);   // rounded dropout behind the axle
-    pts.push([-0.45, 0.165], [-0.42, 0.19], [-0.398, 0.195], [-0.385, 0.176], [-0.33, 0.19], [-0.29, 0.212]);
+    pts.push([-0.45, 0.165], [-0.42, 0.19], [-0.398, 0.195], [-0.385, 0.18], [-0.34, 0.206], [-0.312, 0.21]);
     ext(poly(pts), 0.006, M.frame, swingG, sz * 0.055, 0.001); }
-  mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.01, 16).rotateX(PI / 2), M.zinc, frame, [-0.28, 0.165, sz * 0.061]);
+  mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.01, 16).rotateX(PI / 2), M.zinc, frame, [SWP.x, SWP.y, sz * 0.061]);
   // shock: eye on a tab above the axle, angled up to the frame end beside the deck light. Short end piece, fat body,
   // stepped collar, slimmer front tube; silver button-head bolts through both eyes
-  const zS = sz * 0.074, b = V(-0.415, 0.176, zS), a = V(-0.318, 0.216, zS), at = t => b.clone().lerp(a, t).toArray();
+  const zS = sz * 0.076, b = V(-0.425, 0.186, zS), a = V(-0.322, 0.236, zS), at = t => b.clone().lerp(a, t).toArray();
   rod(at(0.08), at(0.2), 0.0095, M.frame, shockG, 24);
   rod(at(0.2), at(0.6), 0.0178, M.frame, shockG, 32);
   rod(at(0.6), at(0.7), 0.0186, M.frame, shockG, 32);
@@ -836,10 +838,11 @@ for (const sz of [1, -1]) {
     mesh(new THREE.CylinderGeometry(0.0115, 0.0115, 0.02, 24).rotateX(PI / 2), M.frame, shockG, e.toArray());
     mesh(new THREE.SphereGeometry(0.0072, 16, 8, 0, TAU, 0, PI / 2).scale(1, 0.55, 1).rotateX(sz * PI / 2), M.chrome, shockG, [e.x, e.y, e.z + sz * 0.01]);
     mesh(new THREE.CylinderGeometry(0.0075, 0.0075, 0.012, 16).rotateX(PI / 2), M.frame, shockG, [e.x, e.y, sz * 0.062]); }
-  { // rear bracket (owner photos): plate hanging under the deck's rear end, shock eye bolted to its top through a spacer, swingarm pivot through its bottom
-    ext(roundPoly([[-0.305, 0.236], [-0.33, 0.236], [-0.337, 0.212], [-0.3, 0.152], [-0.27, 0.152], [-0.262, 0.168], [-0.27, 0.206], [-0.305, 0.21]], 0.006), 0.006, M.frame, frame, sz * 0.062, 0.0008);
-    mesh(new THREE.CylinderGeometry(0.0085, 0.0085, 0.008, 20).rotateX(PI / 2), M.frame, frame, [-0.318, 0.216, sz * 0.069]);   // spacer between the bracket and the shock eye
-    mesh(new THREE.CylinderGeometry(0.0072, 0.0072, 0.004, 6).rotateX(PI / 2), M.frame, frame, [-0.28, 0.165, sz * 0.067]); }   // swingarm pivot bolt head   // frame tab at the deck end
+  { // rear bracket (owner photos): small plate flush against the deck's rear end, in line with its side; shock eye bolted at the top, swingarm pivot at the bottom
+    ext(roundPoly([[-0.299, 0.256], [-0.322, 0.256], [-0.338, 0.24], [-0.338, 0.186], [-0.326, 0.176], [-0.299, 0.18]], 0.004), 0.006, M.frame, frame, sz * 0.059, 0.0008);
+    mesh(new THREE.CylinderGeometry(0.0085, 0.0085, 0.008, 20).rotateX(PI / 2), M.frame, frame, [-0.322, 0.236, sz * 0.068]);   // spacer between the bracket and the shock eye
+    mesh(new THREE.CylinderGeometry(0.0095, 0.0095, 0.003, 24).rotateX(PI / 2), M.zinc, frame, [SWP.x, SWP.y, sz * 0.0635]);   // flanged pivot nut
+    mesh(new THREE.CylinderGeometry(0.0068, 0.0068, 0.006, 6).rotateX(PI / 2), M.zinc, frame, [SWP.x, SWP.y, sz * 0.067]); }
   // axle: steel rod through the hub with spacers between the motor and the swingarm plates
   if (sz > 0) mesh(new THREE.CylinderGeometry(0.0062, 0.0062, 0.15, 16).rotateX(PI / 2), M.steel, swingG, [RX, AX, 0]);
   mesh(new THREE.CylinderGeometry(0.0105, 0.0105, 0.021, 20).rotateX(PI / 2), M.zinc, swingG, [RX, AX, sz * 0.0415]);
@@ -912,7 +915,7 @@ const refl = new THREE.Group(); refl.position.set(rp.x, rp.y, 0); refl.rotation.
 mesh(new THREE.ShapeGeometry(ovalShape(0.034, 0.02), 24).rotateX(-PI / 2), M.reflector, refl, [0, 0.0006, 0]);   // small upright oval reflector
 
 queueMicrotask(() => {   // spiralWrap is defined further down
-  spiralWrap(new THREE.CatmullRomCurve3([V(-0.27, 0.19, -0.062), V(-0.31, 0.15, -0.064), V(-0.36, 0.118, -0.064), V(-0.405, 0.112, -0.064), V(-0.43, 0.118, -0.058), V(-0.44, 0.124, -0.045)]), frame, 0.0048);
+  spiralWrap(new THREE.CatmullRomCurve3([V(-0.285, 0.197, -0.05), V(-0.302, 0.196, -0.052), V(-0.33, 0.178, -0.066), V(-0.37, 0.15, -0.066), V(-0.405, 0.13, -0.066), V(-0.43, 0.126, -0.058), V(-0.44, 0.127, -0.045)]), frame, 0.0048);
   mesh(new THREE.CircleGeometry(0.0035, 16), std(0x030303, 1, 0), frame, [-0.36, 0.131, -0.0587], [0, PI, 0]);   // hole in the plate
   const zt = new THREE.Group(); zt.position.set(-0.36, 0.122, -0.064); frame.add(zt);
   mesh(new THREE.TorusGeometry(0.0062, 0.0011, 6, 20), std(0x1a1a1c, 0.5, 0), zt, [0, 0, 0], [0, PI / 2, 0]);
@@ -1335,7 +1338,7 @@ const paddle = new THREE.Group(); paddle.position.set(0, 0, -0.003); thr.add(pad
 tag(paddle, 'throttle');
 const throttleCable = new THREE.CatmullRomCurve3([V(0.01, -0.02, 0.19), V(0.03, -0.05, 0.15), V(0.035, -0.07, 0.06), V(0.03, -0.08, 0.02)]);
 // cables left off for now
-const ZAX = V(0, 0, 1), SHK_A = V(-0.318, 0.216, 0), SHK_B = V(-0.415, 0.176, 0);
+const ZAX = V(0, 0, 1), SHK_A = V(-0.322, 0.236, 0), SHK_B = V(-0.425, 0.186, 0);
 function setSusp(cF, cR) {   // cF: fork compression along the stanchions, cR: rear axle rise (m)
   forkLow.position.y = cF;
   const th = -cR / 0.169; swingG.rotation.z = th; swingG.position.copy(SWP).sub(SWP.clone().applyAxisAngle(ZAX, th));

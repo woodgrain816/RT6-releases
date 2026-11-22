@@ -4,4 +4,4 @@ Update files for the fan-made Ruitoo RT6 scooter sim (non-commercial; Ruitoo, RT
 The Android app reads `update.json` on launch and downloads `rt6.html` when it is newer (checked against its SHA-256).
 To install the app: download `RT6Sim.apk`.
 
-Current version: **2026.1122.1254** - Ruitoo plate reshaped like yours: full-width top, straight back edge, leg straight down to the deck, big curved cut-out at the front
+Current version: **2026.1122.1256** - Deck side trim angles out then in, constant thickness; rear brackets flush on the deck end with shock and swingarm pivot; motor cable along the swingarm
