@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1233",
-  "notes": "Crown in front of the Ruitoo plates, light cable outside them, rounded front fender, cables go up inside the stem and into the deck, thicker deck, new jacket, floating fork bolts removed",
+  "version": "2026.1122.1237",
+  "notes": "Ruitoo neck plates now sit behind the head tube and lean back with the steering",
   "page": "rt6.html",
-  "sha256": "f4ffd4e0fb6047c8df4f7490f180704be9efa667b68a36aa275286817eb32ccb",
+  "sha256": "5d84f78c3733b1d106e1bead683e259eb5a21c3c38353dbc6d9661717947f46b",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T18:33:53.919Z"
+  "published": "2026-11-22T18:37:47.807Z"
 }

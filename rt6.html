@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1233";</script>
+<script>window.RT6_VERSION = "2026.1122.1237";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -786,20 +786,20 @@ const chargerSet = new THREE.Group(); chargerSet.name = 'ChargerBrick'; chargerS
   mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([acEnd, acDir, W(V(0.05, 0.004, -0.3)), W(V(0.25, 0.004, -0.45))]), 60, 0.003, 8), cab, chargerSet); }
 
 // neck plates with the red "Ruitoo" graphic
-const plateP = [[0.445, 0.407], [0.368, 0.407], [0.272, 0.268], [0.272, 0.206], [0.316, 0.206], [0.394, 0.316], [0.404, 0.339], [0.445, 0.339]];   // front edge up the head tube, corner cut back behind the crown (owner)
-const pminX = 0.272, pW = 0.173, pminY = 0.206, pH = 0.201;
+const plateP = [[0.3905, 0.407], [0.33, 0.407], [0.272, 0.30], [0.272, 0.206], [0.316, 0.206], [0.385, 0.30], [0.4035, 0.322]];   // whole plate BEHIND the head tube, front edge leaning back with the steering axis (owner)   // front edge up the head tube, corner cut back behind the crown (owner)
+const pminX = 0.272, pW = 0.1315, pminY = 0.206, pH = 0.201;
 for (const [i, sz] of [[0, -1], [1, 1]]) {
   ext(poly(plateP), 0.005, M.frame, frame, sz * 0.033, 0.001);
   const dg = mapUV(new THREE.ShapeGeometry(poly(plateP)), (x, y) => [sz < 0 ? (pminX + pW - x) / pW : (x - pminX) / pW, (y - pminY) / pH]);
   mesh(dg, plateMats[i], frame, [0, 0, sz * 0.0374]);   // just proud of the plate bevel (was z-fighting)
 }
 // lattice across the rear face between the plates (open windows, graphic behind), top cap, foot block
-{ const lat = new THREE.Group(); lat.position.set(0.32, 0.3375, 0); lat.rotation.z = 0.97; frame.add(lat);
+{ const lat = new THREE.Group(); lat.position.set(0.326, 0.335, 0); lat.rotation.z = 1.07; frame.add(lat);
   for (const x of [0.006, -0.047]) mesh(new THREE.CylinderGeometry(0.0065, 0.0065, 0.062, 8).rotateX(PI / 2).scale(0.8, 1, 1), M.frame, lat, [x, 0, 0]);   // two faceted round bars (owner)   // flat rungs, as seen from above
 }   // windows left open; frame + plate insides are black
-mesh(new RoundedBoxGeometry(0.05, 0.008, 0.066, 4, 0.003), M.frame, frame, [0.405, 0.403, 0]);   // top cap under the fold block
+mesh(new RoundedBoxGeometry(0.05, 0.008, 0.066, 4, 0.003), M.frame, frame, [0.36, 0.403, 0]);   // top cap
 mesh(new RoundedBoxGeometry(0.03, 0.05, 0.066, 4, 0.005), M.frame, frame, [0.29, 0.233, 0]);
-for (const sz of [1, -1]) for (const [x, y] of [[0.29, 0.225], [0.34, 0.25], [0.432, 0.352], [0.432, 0.373], [0.432, 0.394], [0.41, 0.343]])   // three bolts up the head tube (owner)
+for (const sz of [1, -1]) for (const [x, y] of [[0.29, 0.225], [0.34, 0.25], [0.39, 0.35], [0.3866, 0.373], [0.383, 0.394], [0.35, 0.385]])   // three bolts up the head tube (owner)
   mesh(new THREE.CylinderGeometry(0.0048, 0.0042, 0.002, 20).rotateX(PI / 2), M.chrome, frame, [x, y, sz * 0.0377]);
 // rear swingarm, shocks, kickstand
 const SWP = V(-0.28, 0.165, 0), swingG = new THREE.Group(); swingG.name = 'Swingarm'; frame.add(swingG);
