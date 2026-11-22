@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1337",
-  "notes": "Tire tread redone to match your photo: big split centre blocks, offset outer and shoulder blocks",
+  "version": "2026.1122.1338",
+  "notes": "Tire tread: narrow cuts and big blocks like the real tire",
   "page": "rt6.html",
-  "sha256": "df7f612789e8fc6f81398ffe20140ec8721706d68c3cee6427c0f1eb297f6da6",
+  "sha256": "1e89919c1b7c80fc40849c548b5303383932b2e1df963cb57bf0db44baf3d1ff",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T19:37:24.839Z"
+  "published": "2026-11-22T19:38:36.687Z"
 }
