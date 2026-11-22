@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1258";</script>
+<script>window.RT6_VERSION = "2026.1122.1301";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -1118,10 +1118,6 @@ for (const sz of [1, -1]) {
   const o = roundPoly([[-0.044, -0.018], [-0.032, -0.034], [0.018, -0.034], [0.03, -0.022], [0.03, 0.022], [0.018, 0.034], [-0.032, 0.034], [-0.044, 0.018]], 0.004);
   o.holes.push(roundPoly([[-0.037, -0.024], [0.02, -0.024], [0.02, 0.024], [-0.037, 0.024]], 0.004));
   mesh(smoothExt(o, 0.0075, 0.0028, 5).rotateX(-PI / 2), M.orange, stemPivot, [SX, 0.5055, 0]);   // thin low spacer ring (owner photos)
-  { // on the cable (rider) side the spacer juts out with a chamfered top the wrap runs past
-    const n = new THREE.Shape(); n.moveTo(0, 0); n.lineTo(0.012, 0); n.lineTo(0.012, 0.004); n.lineTo(0.004, 0.012); n.lineTo(0, 0.012); n.closePath();
-    const ng = new THREE.ExtrudeGeometry(n, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.0015, bevelSize: 0.0012, bevelSegments: 3 }).translate(0, 0, -0.025).rotateY(PI);
-    mesh(ng, M.orange, stemPivot, [SX - 0.044, 0.5005, 0]); }
   mesh(octPrism(0.0165, 0.0245, 0.0075, 0.02), M.plastic, stemPivot, [SX, 0.524, 0]);            // black clamp sitting on the spacer, same chamfered shape as the tube
   mesh(new RoundedBoxGeometry(0.014, 0.018, 0.016, 3, 0.003), M.plastic, stemPivot, [SX + 0.008, 0.524, 0.027]);    // clamp lug
   mesh(new THREE.CylinderGeometry(0.0042, 0.0042, 0.006, 20).rotateZ(PI / 2), std(0x0c0d0f, 0.35, 0.4), stemPivot, [SX + 0.017, 0.524, 0.028]);   // socket-head bolt

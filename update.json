@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1258",
-  "notes": "Ruitoo plate traced from your straight side photo; deck front meets it",
+  "version": "2026.1122.1301",
+  "notes": "Removed the extra orange lip on the stem collar",
   "page": "rt6.html",
-  "sha256": "15a010545def1e0fa340c9138da51744e71d15e3ddc94d5e0cd33160c1f9596d",
+  "sha256": "1231d3ea39f24836f210ddf8b0ebb5ca889fb1224728149670e41ec11a4b2aff",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T18:58:43.802Z"
+  "published": "2026-11-22T19:01:29.139Z"
 }
