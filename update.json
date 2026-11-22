@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1338",
-  "notes": "Tire tread: narrow cuts and big blocks like the real tire",
+  "version": "2026.1122.1341",
+  "notes": "Charge cap sits over the socket with its strap on the body; neck plates joined to the head tube",
   "page": "rt6.html",
-  "sha256": "1e89919c1b7c80fc40849c548b5303383932b2e1df963cb57bf0db44baf3d1ff",
+  "sha256": "44a0220f16549e0fecd8a4c19b4f78e2ef362849c831f7a96a1d92ea471fe86b",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T19:38:36.687Z"
+  "published": "2026-11-22T19:42:03.179Z"
 }
