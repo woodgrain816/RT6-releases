@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1513",
-  "notes": "Much lighter on the GPU: 60 fps cap and fewer pixels on high-DPI screens",
+  "version": "2026.1122.1519",
+  "notes": "Corvette C8 convertible (white, black top + nacelles, high wing, side scoops, Z51 70th door badge, red-stripe wheels) in traffic; Day/Night switch (N key or Day button) with stars, streetlight pools, garage light",
   "page": "rt6.html",
-  "sha256": "5d592cbaae3b470e783f2260e34fbf710718d6e208d1c5775c599440529417d3",
+  "sha256": "fda9c5d7ccfa72e2fc9fdb72f75b89c8ace0c649612ff738d9248ad7296b1d6e",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T21:13:55.026Z"
+  "published": "2026-11-22T21:19:17.526Z"
 }
