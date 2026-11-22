@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1345";</script>
+<script>window.RT6_VERSION = "2026.1122.1348";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -337,7 +337,7 @@ const deckTex = canvasTex(1536, 540, (g, W, H) => {
 });
 const deckBump = canvasTex(1536, 540, (g, W, H) => { deckPattern(g, W, H, '#000', '#fff'); }, false);   // band is flush with the pill tops
 
-const PL = { x0: 0.25, x1: 0.405, y0: 0.175, y1: 0.41, outline: [[0.3905,0.405],[0.33,0.405],[0.322,0.402],[0.318,0.396],[0.316,0.39],[0.2548,0.2457],[0.256,0.19],[0.262,0.18],[0.282,0.18],[0.288,0.186],[0.354,0.316],[0.358,0.322],[0.364,0.327],[0.372,0.33],[0.3917,0.33]] };   // traced from the owner's straight side photo: slanted band leaning forward from the deck front up to a short top along the head tube, curved corner under it
+const PL = { x0: 0.25, x1: 0.405, y0: 0.175, y1: 0.41, outline: [[0.3888,0.405],[0.33,0.405],[0.322,0.402],[0.318,0.396],[0.316,0.39],[0.2548,0.2457],[0.256,0.19],[0.262,0.18],[0.282,0.18],[0.288,0.186],[0.354,0.316],[0.359,0.323],[0.367,0.33],[0.378,0.336],[0.39,0.341],[0.4003,0.345]] };   // traced from the owner's straight side photo: slanted band leaning forward from the deck front up to a short top along the head tube, curved corner under it
 function plateTex(right) {   // owner's photos: black plate, big salmon-red band down the leg with darker edges, grey edge lines, red circuit traces with dots, white "Ruitoo" up the leg
   const S = 4096, W = Math.round((PL.x1 - PL.x0) * S), H = Math.round((PL.y1 - PL.y0) * S);
   return canvasTex(W, H, (g) => {
@@ -791,7 +791,7 @@ for (const sz of [1, -1]) {
   const capG = new THREE.Group(); capG.name = 'ChargeCap'; capG.position.set(0, -0.0165, 0.0005); cp.add(capG);
   const capTex = canvasTex(128, 128, (g, W, H) => { g.fillStyle = '#26272a'; g.fillRect(0, 0, W, H); g.fillStyle = '#3a3b3f'; g.font = '700 26px Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
     g.save(); g.translate(W / 2, H / 2); g.rotate(-PI / 2); g.fillText('RUITER', 0, 0); g.restore(); });
-  mesh(new RoundedBoxGeometry(0.005, 0.017, 0.0016, 2, 0.0006), M.rubber, capG, [0, 0.0065, 0.0004]);   // strap, flat on the body
+  const strap = mesh(new THREE.BufferGeometry(), M.rubber, cp); strap.userData.last = -1;   // strap bends from the body stud to the cap (rebuilt when the cap moves)
   mesh(new THREE.CylinderGeometry(0.0028, 0.0028, 0.0016, 16).rotateX(PI / 2), M.rubber, cp, [0, -0.0165, 0.0008]);   // strap anchor stud on the body
   mesh(new THREE.CylinderGeometry(0.0104, 0.0104, 0.005, 32, 1, true).rotateX(PI / 2), M.rubber, capG, [0, 0.0165, 0.0027]);   // cap: a cup that slips over the socket
   mesh(new THREE.CylinderGeometry(0.0104, 0.0104, 0.0012, 32).rotateX(PI / 2), M.rubber, capG, [0, 0.0165, 0.0056]);
@@ -805,7 +805,7 @@ for (const sz of [1, -1]) {
     mesh(new THREE.CylinderGeometry(0.0098, 0.0094, 0.03, 24).rotateX(PI / 2), pk, plug, [0, 0, 0.025]);
     for (let i = 0; i < 5; i++) mesh(new THREE.TorusGeometry(0.0096, 0.0007, 6, 24), pk, plug, [0, 0, 0.02 + i * 0.0022]);   // grip rings
     for (let i = 0; i < 6; i++) mesh(new THREE.CylinderGeometry(0.0062 - i * 0.0004, 0.0062 - i * 0.0004, 0.0025, 16).rotateX(PI / 2), pk, plug, [0, 0, 0.042 + i * 0.0036]); }   // strain relief
-  tag(plug, 'charger'); tag(ring, 'chargePort'); cp.userData = { capG, plug }; frame.userData.chargePort = cp; }
+  tag(plug, 'charger'); tag(ring, 'chargePort'); cp.userData = { capG, plug, strap }; frame.userData.chargePort = cp; }
 // charger on the floor (photos): ribbed black brick, LED (red while charging, green when full), leads to the port and the wall
 const chargerSet = new THREE.Group(); chargerSet.name = 'ChargerBrick'; chargerSet.visible = false; frame.add(chargerSet); queueMicrotask(() => tag(chargerSet, 'charger'));
 { const ribT = canvasTex(256, 64, (g, W, H) => { g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.fillStyle = '#fff'; for (let x = 0; x < W; x += 6) g.fillRect(x, 0, 3, H); }, false);
@@ -908,7 +908,7 @@ const kick = new THREE.Group(); kick.name = 'Kickstand'; swingG.add(kick);   // 
   kick.userData = { swing, Qup, Q0: new THREE.Quaternion() }; tag(kick, 'kick'); }
 
 // rear fender (owner photos): mounted on the swingarm, so everything here hangs off swingG (its rest frame = frame coords)
-const RR = 0.145, RW = 0.043, FK = 1.15, RA0 = 44 * D2R, RA1 = 199 * D2R;   // narrower, and the rear drop runs well below the axle (owner's rear photo)   // front stops behind the deck end, back drops to axle height
+const RR = 0.145, RW = 0.043, FK = 1.15, RA0 = 44 * D2R, RA1 = 191 * D2R;   // narrower, and the rear drop runs well below the axle (owner's rear photo)   // front stops behind the deck end, back drops to axle height
 const FAI = 0.11 / FK, FBI = 0.07;
 const rIn = a => Math.min(RR - 0.014, 1 / Math.sqrt((Math.cos(a) / FAI) ** 2 + (Math.sin(a) / FBI) ** 2));
 const rTop = (z, a) => 0;   // no crown: it stepped 4.6 mm into the side corners and read as a line down the middle (owner)
@@ -946,7 +946,7 @@ const hump = new THREE.Group(); swingG.add(hump);
   hump.userData.rear = new THREE.Vector3(xr - 0.004, (top + ybot) / 2, 0); }
 const tail = mesh(new THREE.ExtrudeGeometry(ovalShape(0.04, 0.018), { depth: 0.004, bevelEnabled: true, bevelThickness: 0.0015, bevelSize: 0.0015, bevelSegments: 4, curveSegments: 24 }).rotateY(-PI / 2), M.tail, hump, hump.userData.rear.toArray(), [0, 0, 0], 'TailLight');   // oval lamp on the flat rear face
 // reflector on the rear drop, below the light box
-const rp = onFender(184 * D2R, 0.0005);   // sits ON the fender (it floated 12 mm off)
+const rp = onFender(178 * D2R, 0.0005);   // sits ON the fender (it floated 12 mm off)
 const refl = new THREE.Group(); refl.position.set(rp.x, rp.y, 0); refl.rotation.z = rp.n - PI / 2; swingG.add(refl);
 mesh(new THREE.ShapeGeometry(ovalShape(0.038, 0.018), 24).rotateX(-PI / 2), M.reflector, refl, [0, 0.0004, 0]);   // tall oval, low on the drop
 for (const sz of [1, -1]) {   // fender mount on the swingarm: tab at the front end
@@ -2604,7 +2604,10 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
   if (!RM.on) { const want = -0.06 * (1 - sim.kick); scooter.rotation.x += (want - scooter.rotation.x) * Math.min(1, dt * (reduce ? 30 : 5)); }   // ~5 deg lean onto the stand
   sim.cap += ((sim.capOpen ? 1 : 0) - sim.cap) * Math.min(1, dt * (reduce ? 30 : 8));
   { const cu = frame.userData.chargePort.userData, c = sim.cap * sim.cap * (3 - 2 * sim.cap);   // closed: cap over the socket; open: swung out and hanging on the strap
-    cu.capG.rotation.x = c * PI; cu.capG.position.z = 0.0003 + 0.0062 * c; }   // closed: seated on the washer over the socket
+    cu.capG.rotation.x = c * PI; cu.capG.position.z = 0.0003 + 0.0062 * c;
+    if (Math.abs(cu.strap.userData.last - c) > 1e-3) { cu.strap.userData.last = c; cu.capG.updateMatrix();
+      const a = V(0, -0.0165, 0.0009), e = V(0, 0.0058, 0.0006).applyMatrix4(cu.capG.matrix), m = a.clone().lerp(e, 0.5).add(V(0, 0, 0.0035 * Math.sin(c * PI)));
+      cu.strap.geometry.dispose(); cu.strap.geometry = new THREE.TubeGeometry(new THREE.QuadraticBezierCurve3(a, m, e), 16, 0.0011, 6).scale(2.2, 1, 1); } }   // closed: seated on the washer over the socket
   if (M.chargeLed) M.chargeLed.emissive.setHex(sim.batt >= 99.5 ? 0x2aff5a : 0xff2a1a);
   if (sim.charging) { const was = sim.batt; sim.batt = Math.min(100, sim.batt + dt * (sim.batt > 85 ? 0.7 : 2.2)); if (was < 100 && sim.batt >= 100) toast('Fully charged'); }
   { const u = kick.userData; u.swing.quaternion.slerpQuaternions(u.Q0, u.Qup, sim.kick); }

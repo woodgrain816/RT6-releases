@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1345",
-  "notes": "Wiring redone: display leads with connectors (one red), lamp cable from its gland with a connector, motor cable along the swingarm into its connector; bigger stem chamfers; display side facets",
+  "version": "2026.1122.1348",
+  "notes": "Rear fender bottom raised, charge cap strap stays attached when open, neck plate tilted back with a rising curve",
   "page": "rt6.html",
-  "sha256": "e537f7cdc9029507c40e125f2efea7eae1574c29d0a6a50cae2ca10f10a109bf",
+  "sha256": "ae3518a9f1abdd2d3d7c557d537feb8fb5d93da34f1682cfa28979d5fbe2f059",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T19:45:07.861Z"
+  "published": "2026-11-22T19:48:31.489Z"
 }
