@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1714",
-  "notes": "Mission distances in miles / feet, speeds in mph",
+  "version": "2026.1122.1722",
+  "notes": "Tap the display in the corner to hide / show it",
   "page": "rt6.html",
-  "sha256": "3cea0b10b14b8ce205a24861cb126932dbd0582603974df0275abf73da5dac2f",
+  "sha256": "12fa9495cb98af714fe8b8ae157687de9ee9f23cdd9e621167bfdb5d1fbddc12",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T23:14:07.865Z"
+  "published": "2026-11-22T23:22:39.103Z"
 }

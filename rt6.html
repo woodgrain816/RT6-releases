@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1714";</script>
+<script>window.RT6_VERSION = "2026.1122.1722";</script>
 <style>html,body{margin:0}</style>
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -45,7 +45,8 @@ dt{color:var(--muted)} dd{margin:0;font-family:var(--f-mono);font-size:12px;font
 .hint{margin:10px 0 0;font-size:12px;color:var(--muted);line-height:1.45}
 .hint kbd{font:600 11px var(--f-mono);background:var(--chip);border:1px solid var(--line);border-radius:4px;padding:0 4px}
 
-.lcdwrap{top:calc(14px + env(safe-area-inset-top,0px));right:max(14px,env(safe-area-inset-right,0px));padding:8px;background:#05080c;border-color:#262b31}
+.lcdwrap.off{opacity:0}
+.lcdwrap{z-index:14;cursor:pointer;transition:opacity .2s;top:calc(14px + env(safe-area-inset-top,0px));right:max(14px,env(safe-area-inset-right,0px));padding:8px;background:#05080c;border-color:#262b31}
 #lcd{display:block;width:256px;height:128px;border-radius:8px}
 
 .dock{left:50%;transform:translateX(-50%);bottom:calc(34px + env(safe-area-inset-bottom,0px));
@@ -2715,7 +2716,7 @@ function msNext(skip) { const m = RM.ms, c = MS[m.i]; if (!c) { m.i = 0; m.score
 function msStep(dt) {
   const m = RM.ms, c = MS[m.i], h = document.getElementById('msHud'); if (!h) return; if (!c) return; const P = document.getElementById('msP'), sp = scooter.position;
   const set = t => { if (P && P.textContent !== t) P.textContent = t; };
-  m.pk = (m.pk || 0) - dt; if (m.pk <= 0) { m.pk = 0.5; const lw = document.querySelector('.lcdwrap'); if (lw) h.style.top = Math.round(lw.getBoundingClientRect().bottom + 8) + 'px'; }
+  m.pk = (m.pk || 0) - dt; if (m.pk <= 0) { m.pk = 0.5; const lw = document.querySelector('.lcdwrap'); if (lw) { const r = lw.getBoundingClientRect(); h.style.top = Math.round(lw.classList.contains('off') ? r.top : r.bottom + 8) + 'px'; } }
   if (c.k === 'wheelie') { const up = RM.wh && RM.wh.a > 0.3 && !RM.crash; m.a = up ? m.a + dt : (m.b = (m.b || 0) + dt) > 0.3 ? 0 : m.a; if (up) m.b = 0; set(m.a.toFixed(1) + ' / ' + c.n + ' s'); if (m.a >= c.n) msNext(); }
   else if (c.k === 'carve') { const up = RM.wh && RM.wh.a > 0.3 && !RM.crash; if (up) { if (!m.on) { m.on = true; m.y0 = RM.yaw; m.c = 0; } const dy = Math.atan2(Math.sin(RM.yaw - (m.yl ?? RM.yaw)), Math.cos(RM.yaw - (m.yl ?? RM.yaw))); m.c += Math.abs(dy); m.yl = RM.yaw; } else if (!(RM.wh && RM.wh.a > 0.15)) { m.on = false; m.c = 0; m.yl = undefined; }
     set((m.c * 57.3).toFixed(0) + ' / ' + (c.n * 57.3).toFixed(0) + ' deg'); if (m.c >= c.n) { m.on = false; m.yl = undefined; msNext(); } }
@@ -2855,6 +2856,8 @@ function rideCamera(dt) {
   hp.innerHTML = '<div style="max-width:720px;max-height:86vh;overflow:auto;padding:18px 24px;background:#0f1622;border:1px solid #2c3d56;border-radius:14px"><div style="font-weight:700;font-size:16px;margin-bottom:8px">Controls (Y to close)</div><div style="display:grid;grid-template-columns:auto 1fr;gap:3px 20px">' + rows.map(r => '<b style="color:#9cc4ff">' + r[0] + '</b><span>' + r[1] + '</span>').join('') + '</div></div>';
   document.body.appendChild(hp); hp.onclick = () => { hp.style.display = 'none'; };
   addEventListener('keydown', e => { if (e.target.closest?.('input,textarea')) return; const kk = e.key.toLowerCase(); if (kk === 'y' && !e.repeat) hp.style.display = hp.style.display === 'grid' ? 'none' : 'grid'; else if (kk === 'escape') hp.style.display = 'none'; }); }
+{ const lw = document.querySelector('.lcdwrap'); let off = false; try { off = localStorage.getItem('rt6hud') === 'off'; } catch (e) { void e; } lw.classList.toggle('off', off);
+  lw.addEventListener('click', () => { off = !off; lw.classList.toggle('off', off); try { localStorage.setItem('rt6hud', off ? 'off' : 'on'); } catch (e) { void e; } if (off) toast('Display hidden: tap the top-right corner to bring it back'); }); }
 $('bRide').textContent = 'Ride';
 $('bRide').title = 'Ride around a small town with the on-road speeds';
 $('bRide').onclick = () => RM.on ? exitRide() : enterRide();
