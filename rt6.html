@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1341";</script>
+<script>window.RT6_VERSION = "2026.1122.1345";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -956,9 +956,12 @@ for (const sz of [1, -1]) {   // fender mount on the swingarm: tab at the front 
 }
 
 queueMicrotask(() => {   // spiralWrap is defined further down
-  spiralWrap(new THREE.CatmullRomCurve3([V(-0.285, 0.197, -0.05), V(-0.302, 0.196, -0.052), V(-0.33, 0.178, -0.066), V(-0.37, 0.15, -0.066), V(-0.405, 0.13, -0.066), V(-0.43, 0.126, -0.058), V(-0.44, 0.127, -0.045)]), frame, 0.0048);
+  spiralWrap(new THREE.CatmullRomCurve3([V(-0.285, 0.2, -0.05), V(-0.302, 0.198, -0.055), V(-0.322, 0.19, -0.066), V(-0.36, 0.165, -0.067), V(-0.395, 0.142, -0.067), V(-0.418, 0.112, -0.066)]), frame, 0.0048);
+  { const cb = std(0x121214, 0.5, 0.05), g = new THREE.Group(); g.position.set(-0.425, 0.104, -0.066); g.rotation.z = 0.75; swingG.add(g);   // connector at the dropout: boot with a spring strain relief
+    mesh(new THREE.CylinderGeometry(0.0055, 0.0055, 0.016, 16), cb, g); mesh(new THREE.TubeGeometry(new Helix(0.0058, 0.012, 6), 60, 0.0008, 5), cb, g, [0, -0.02, 0]);
+    mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(-0.42, 0.112, -0.066), V(-0.435, 0.118, -0.064), V(-0.445, 0.127, -0.06)]), 16, 0.003, 8), cb, swingG); }   // short lead into the axle
   mesh(new THREE.CircleGeometry(0.0035, 16), std(0x030303, 1, 0), frame, [-0.36, 0.131, -0.0587], [0, PI, 0]);   // hole in the plate
-  const zt = new THREE.Group(); zt.position.set(-0.36, 0.122, -0.064); frame.add(zt);
+  const zt = new THREE.Group(); zt.position.set(-0.375, 0.155, -0.067); frame.add(zt);
   mesh(new THREE.TorusGeometry(0.0062, 0.0011, 6, 20), std(0x1a1a1c, 0.5, 0), zt, [0, 0, 0], [0, PI / 2, 0]);
   mesh(new RoundedBoxGeometry(0.004, 0.006, 0.004, 2, 0.0008), std(0x1a1a1c, 0.5, 0), zt, [0, -0.007, -0.002]);   // zip-tie head
   mesh(new RoundedBoxGeometry(0.002, 0.009, 0.0012, 1, 0.0004), std(0x1a1a1c, 0.5, 0), zt, [0, -0.0125, -0.002]); });   // cut tail
@@ -1093,8 +1096,11 @@ let cableM2; const headG = new THREE.Group(); headG.name = 'Headlight'; headG.po
   mesh(new THREE.CylinderGeometry(0.0016, 0.0016, 0.001, 6).rotateZ(PI / 2), std(0x050506, 0.9, 0), steer, [0.0306, 0.189, 0]);   // its hex socket
   for (const z of [-0.012, 0.012]) mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.003, 6), M.chrome, steer, [0.064, 0.2005, z]);   // lamp screws from below
   // lamp cable: out of the back of the lamp, loops round the stem side to an inline plug, then joins the main wrap
-  const lc = new THREE.CatmullRomCurve3([V(0.031, 0.226, 0.006), V(0.024, 0.211, 0.01), V(0.01, 0.21, 0.028), V(-0.014, 0.213, 0.031), V(-0.027, 0.245, 0.034), V(-0.038, 0.29, 0.043), V(-0.045, 0.318, 0.044)]);   // tidy: under the lamp, along the crown, up the head tube   // ends inside the wrap: branches out of the harness (owner)
-  mesh(new THREE.TubeGeometry(lc, 60, 0.0018, 6), cableM2 = std(0x0c0c0d, 0.55, 0.05), steer);
+  mesh(new THREE.CylinderGeometry(0.0045, 0.0035, 0.007, 14).rotateZ(PI / 2), cableM2 = std(0x0c0c0d, 0.55, 0.05), steer, [0.0345, 0.2305, 0]);   // rubber gland on the lamp's back
+  const lc = new THREE.CatmullRomCurve3([V(0.0315, 0.2305, 0), V(0.026, 0.222, 0.004), V(0.022, 0.211, 0.01), V(0.01, 0.21, 0.028), V(-0.014, 0.213, 0.031), V(-0.027, 0.245, 0.034), V(-0.038, 0.29, 0.043), V(-0.045, 0.318, 0.044)]);   // tidy: under the lamp, along the crown, up the head tube   // ends inside the wrap: branches out of the harness (owner)
+  mesh(new THREE.TubeGeometry(lc, 60, 0.0018, 6), cableM2, steer);
+  { const pg = new THREE.Group(), t = 0.55; pg.position.copy(lc.getPointAt(t)); pg.quaternion.setFromUnitVectors(V(0, 1, 0), lc.getTangentAt(t)); steer.add(pg);   // inline connector
+    mesh(new THREE.CylinderGeometry(0.0038, 0.0032, 0.018, 14), cableM2, pg); for (const y of [-0.005, -0.002]) mesh(new THREE.TorusGeometry(0.0037, 0.0005, 5, 14).rotateX(PI / 2), cableM2, pg, [0, y, 0]); }
 }
 { // body (owner photos): round heatsink, fins running front-to-back all the way round, flat round back
   const finM = std(0x1b1c1f, 0.55, 0.35);
@@ -1146,7 +1152,7 @@ function octPrism(hx, hz, ch, h, bev = 0.0008) {   // stem tubes (owner): rectan
   const g = new THREE.ExtrudeGeometry(sh, { depth: h - 2 * bev, bevelEnabled: bev > 0, bevelThickness: bev, bevelSize: bev, bevelSegments: 1 }).translate(0, 0, -(h - 2 * bev) / 2);
   g.applyMatrix4(new THREE.Matrix4().set(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1)); g.computeVertexNormals(); return g; }
 const JD = 0.066;   // joint moved down: lower stem 16 in (owner)
-mesh(octPrism(0.0275, 0.024, 0.008, 0.414), M.frame, stemPivot, [SX - 0.0075, 0.227, 0]);   // lower stem: chamfered rectangle (owner photos)   // deeper on the rider side (owner: widen the whole stem like the collar)
+mesh(octPrism(0.0275, 0.024, 0.012, 0.414), M.frame, stemPivot, [SX - 0.0075, 0.227, 0]);   // lower stem: chamfered rectangle (owner photos)   // deeper on the rider side (owner: widen the whole stem like the collar)
 for (const sz of [1, -1]) {
   // flat side faces (the light-bar decal covers them)
 }
@@ -1172,7 +1178,7 @@ for (const sz of [1, -1]) {
 { stemPivot.updateMatrixWorld(true); const inv = stemPivot.matrixWorld.clone().invert(), b = new THREE.Box3();
   for (const o of stemPivot.children) { if (!o.isMesh) continue; b.setFromObject(o); b.applyMatrix4(inv); if (b.min.y > 0.485 && b.max.y < 0.55) o.position.y -= JD; } }
 // round upper tube up to the head
-{ const hz = 0.021, hx = 0.0125, ch = 0.0066, oct = new THREE.Shape([[-hz + ch, -hx], [hz - ch, -hx], [hz, -hx + ch], [hz, hx - ch], [hz - ch, hx], [-hz + ch, hx], [-hz, hx - ch], [-hz, -hx + ch]].map(([a, b]) => new THREE.Vector2(a, b)));
+{ const hz = 0.021, hx = 0.0125, ch = 0.009, oct = new THREE.Shape([[-hz + ch, -hx], [hz - ch, -hx], [hz, -hx + ch], [hz, hx - ch], [hz - ch, hx], [-hz + ch, hx], [-hz, hx - ch], [-hz, -hx + ch]].map(([a, b]) => new THREE.Vector2(a, b)));
   const og = new THREE.ExtrudeGeometry(oct, { depth: 0.2 + JD, bevelEnabled: false }).translate(0, 0, -(0.2 + JD) / 2); og.applyMatrix4(new THREE.Matrix4().set(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1)); og.computeVertexNormals();
   mesh(og, M.frame, stemPivot, [SX, 0.59 - JD / 2, 0]); }   // pole runs down through the collar into the square stem   // slimmer round pole out of the clamp (owner)   // longer, thicker upper tube (owner)   // round upper tube runs all the way up; the lock sits in its end
 for (const sz of [1, -1]) mesh(new THREE.PlaneGeometry(0.039, 0.394), M.stemDecal, stemPivot, [SX - 0.0075, 0.229, sz * 0.0253], [0, sz > 0 ? 0 : PI, 0]);   // light-bar decal, collar to base
@@ -1413,6 +1419,8 @@ const OUT = (() => { const arc = (cx, cy, r, a0, a1) => Array.from({ length: 9 }
   return [[-0.095, 0.004], [-0.095, -0.037], [-0.075, -0.057], [0.075, -0.057], [0.095, -0.037], [0.095, 0.004], [0.095, 0.013], [0.066, 0.057], [0.021, 0.057], [0.017, 0.053], [-0.017, 0.053], [-0.021, 0.057], [-0.066, 0.057], [-0.095, 0.013]]; })();   // round bottom corners (owner)
 const OUTS = OUT.map(([x, y]) => [x * 0.86, y * 0.9]);   // slimmer frame: ~1 cm border round the glass
 mesh(permute(smoothExt(roundPoly(OUTS, 0.0008), 0.01, 0.0011, 3), FACE_UP), M.plastic, disp, [0, 0.004, 0]);   // top bezel layer
+for (const sx of [1, -1]) { const t = new THREE.Shape([[sx * 0.0795, 0.004], [sx * 0.064, 0.03], [sx * 0.064, -0.029]].map(([x, y]) => new THREE.Vector2(x, y)));   // triangle facets on the side points (photo)
+  mesh(permute(smoothExt(t, 0.0012, 0.0005, 2), FACE_UP), std(0x1b1c1f, 0.5, 0.1), disp, [0, 0.0148, 0]); }
 mesh(permute(smoothExt(roundPoly(OUTS.map(([x, y]) => [x * 1.025, y * 1.03]), 0.0009), 0.009, 0.001, 3), FACE_UP), std(0x121315, 0.65, 0.05), disp, [0, -0.0085, 0]);   // lower body layer, slightly larger, with the seam between
 // (no separate back housing: the case is one thin shell)
 const SCR = [[-0.061, -0.026], [-0.05, -0.038], [0.05, -0.038], [0.0605, -0.026], [0.061, 0.017], [0.05, 0.036], [0.034, 0.036], [0.031, 0.030], [0.0, 0.0285], [-0.03, 0.030], [-0.0325, 0.035], [-0.055, 0.035], [-0.061, 0.022]];
@@ -1432,13 +1440,15 @@ tag(disp, 'mode');
 // ---- display harness (product photo): 5 short leads with ribbed plugs out of the display's back, gathered into the wrap,
 //      which dives into the front of the stem
 { const head = V(0.022, -0.048, 0), cb = std(0x121214, 0.5, 0.05);
-  for (let k = 0; k < 5; k++) { const z = (k - 2) * 0.017, st = V(0.05, 0.04, z * 1.1);
-    const c = new THREE.CatmullRomCurve3([st, V(0.075, 0.02, z * 1.25), V(0.07, -0.02, z * 0.8), V(0.045, -0.042, z * 0.3), head.clone().add(V(0, 0, z * 0.08))]);
-    mesh(new THREE.TubeGeometry(c, 40, 0.0019, 6), cb, bar);
-    const pg = new THREE.Group(), p = c.getPointAt(0.42), t = c.getTangentAt(0.42); pg.position.copy(p); pg.quaternion.setFromUnitVectors(V(0, 1, 0), t); bar.add(pg);
-    mesh(new THREE.CylinderGeometry(0.0042, 0.0034, 0.024, 14), cb, pg);
-    for (const y of [-0.008, -0.005, -0.002]) mesh(new THREE.TorusGeometry(0.0039, 0.0006, 5, 14).rotateX(PI / 2), cb, pg, [0, y, 0]);
-    if (k === 2) mesh(new THREE.CylinderGeometry(0.0036, 0.0036, 0.003, 14), std(0x1fa38a, 0.5, 0), pg, [0, 0.0135, 0]); }   // the green-capped one
+  disp.updateMatrix(); const D = (x, y, z) => V(x, y, z).applyMatrix4(disp.matrix);   // display-local -> bar
+  const plugAt = (c, t, red) => { const pg = new THREE.Group(); pg.position.copy(c.getPointAt(t)); pg.quaternion.setFromUnitVectors(V(0, 1, 0), c.getTangentAt(t)); bar.add(pg);
+    mesh(new THREE.CylinderGeometry(0.0042, 0.0036, 0.022, 16), cb, pg);
+    for (const y of [-0.008, -0.005, -0.002]) mesh(new THREE.TorusGeometry(0.0041, 0.0006, 5, 16).rotateX(PI / 2), cb, pg, [0, y, 0]);
+    if (red) mesh(new THREE.CylinderGeometry(0.0044, 0.0044, 0.004, 16), std(0xc81a22, 0.45, 0), pg, [0, 0.004, 0]); };
+  for (const [sz, dy, red] of [[-1, 0.006, false], [-1, -0.006, false], [1, 0, true]]) {   // out of the display's ends (photo): two on the left, one on the right
+    const st = D(0.0, 0.002 + dy * 0.2, sz * 0.079), out = D(-0.004, -0.004, sz * 0.096);
+    const c = new THREE.CatmullRomCurve3([st, out, V(out.x - 0.006, out.y - 0.025, out.z * 0.95), V(0.04, -0.05, sz * 0.04), V(0.03, -0.052, sz * 0.012), head.clone().add(V(0, 0, sz * 0.003))]);
+    mesh(new THREE.TubeGeometry(c, 60, 0.0019, 6), cb, bar); plugAt(c, 0.38, red); }
   // harness wrap: down the FRONT of the round pole and into the orange collar (owner's photos)
   spiralWrap(new THREE.CatmullRomCurve3([V(0.1, 0.612, 0.004), V(0.068, 0.604, 0.03), V(0.03, 0.594, 0.033), V(0.012, 0.578, 0.018), V(0.0105, 0.55, 0.008), V(0.0115, 0.505, 0.006), V(0.0125, 0.465, 0.006), V(0.0135, 0.44, 0.005), V(0.014, 0.419, 0.005)]), stemPivot, 0.0068); }   // round to the RIDER side of the pole, down into the collar
 // ---- ignition lock on the stem under the display ("OFF ON / IGNITION"), key + keyring

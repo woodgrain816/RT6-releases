@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1341",
-  "notes": "Charge cap sits over the socket with its strap on the body; neck plates joined to the head tube",
+  "version": "2026.1122.1345",
+  "notes": "Wiring redone: display leads with connectors (one red), lamp cable from its gland with a connector, motor cable along the swingarm into its connector; bigger stem chamfers; display side facets",
   "page": "rt6.html",
-  "sha256": "44a0220f16549e0fecd8a4c19b4f78e2ef362849c831f7a96a1d92ea471fe86b",
+  "sha256": "e537f7cdc9029507c40e125f2efea7eae1574c29d0a6a50cae2ca10f10a109bf",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T19:42:03.179Z"
+  "published": "2026-11-22T19:45:07.861Z"
 }
