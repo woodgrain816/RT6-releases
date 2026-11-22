@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1632";</script>
+<script>window.RT6_VERSION = "2026.1122.1704";</script>
 <style>html,body{margin:0}</style>
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -2693,6 +2693,44 @@ function suspStep(dt) {
   }
   B.cF = Math.min(SUS.tF + 0.004, Math.max(0, cF)); B.cR = Math.min(SUS.tR + 0.004, Math.max(0, cR));
   setSusp(B.cF / Math.cos(RAKE), B.cR); }
+// ---------------------------------------------------------------- missions
+const MS = [
+  { t: 'Hold a wheelie for 3 seconds', k: 'wheelie', n: 3, pts: 100, hint: 'Hold G and punch W' },
+  { t: 'Carve a turn on one wheel (45 degrees)', k: 'carve', n: 0.8, pts: 150, hint: 'Wheelie, then lean A or D' },
+  { t: 'Pizza run: reach the glowing marker in 75 s', k: 'goto', i: 2, j: -1, time: 75, pts: 150 },
+  { t: 'Hold a wheelie for 6 seconds', k: 'wheelie', n: 6, pts: 200 },
+  { t: 'Pizza run 2: marker across town in 90 s', k: 'goto', i: -3, j: 2, time: 90, pts: 200 },
+  { t: 'Highway: reach 28 mph', k: 'speed', n: 12.5, pts: 250, hint: 'East of town, mode 3' },
+  { t: 'Ride 1 km without a crash', k: 'dist', n: 1000, pts: 250 },
+  { t: 'Hold a wheelie for 10 seconds', k: 'wheelie', n: 10, pts: 400 },
+  { t: 'Take a break: sit on a park bench', k: 'sit', pts: 150, hint: 'F, J, X, walk to a bench, Z' },
+  { t: 'Pizza run 3: last order, 100 s', k: 'goto', i: 4, j: 3, time: 100, pts: 300 }];
+const MSS = (() => { try { return JSON.parse(localStorage.getItem('rt6ms') || '{}'); } catch (e) { return {}; } })();
+RM.ms = { i: Math.min(MS.length, MSS.i || 0), score: MSS.score || 0, t: 0, a: 0, b: 0, c: 0 };
+function msSave() { try { localStorage.setItem('rt6ms', JSON.stringify({ i: RM.ms.i, score: RM.ms.score })); } catch (e) { void e; } }
+function msHud() { const m = RM.ms, h = document.getElementById('msHud'); if (!h) return; const c = MS[m.i];
+  h.innerHTML = '<b>MISSION ' + Math.min(m.i + 1, MS.length) + '/' + MS.length + '</b> <span style="float:right">' + m.score + ' pts</span><br>' + (c ? c.t + (c.hint ? '<br><i>' + c.hint + '</i>' : '') + '<br><span id="msP"></span>' : 'All missions done! Free ride.<br><i>Tap to start over</i>'); }
+function msNext(skip) { const m = RM.ms, c = MS[m.i]; if (!c) { m.i = 0; m.score = 0; } else { if (!skip) { m.score += c.pts; toast('Mission complete! +' + c.pts + ' points'); } m.i++; }
+  m.t = m.a = m.b = m.c = 0; msSave(); msHud(); if (RM.beacon) RM.beacon.visible = false; }
+function msStep(dt) {
+  const m = RM.ms, c = MS[m.i], h = document.getElementById('msHud'); if (!h) return; if (!c) return; const P = document.getElementById('msP'), sp = scooter.position;
+  const set = t => { if (P && P.textContent !== t) P.textContent = t; };
+  m.pk = (m.pk || 0) - dt; if (m.pk <= 0) { m.pk = 0.5; const lw = document.querySelector('.lcdwrap'); if (lw) h.style.top = Math.round(lw.getBoundingClientRect().bottom + 8) + 'px'; }
+  if (c.k === 'wheelie') { const up = RM.wh && RM.wh.a > 0.3 && !RM.crash; m.a = up ? m.a + dt : (m.b = (m.b || 0) + dt) > 0.3 ? 0 : m.a; if (up) m.b = 0; set(m.a.toFixed(1) + ' / ' + c.n + ' s'); if (m.a >= c.n) msNext(); }
+  else if (c.k === 'carve') { const up = RM.wh && RM.wh.a > 0.3 && !RM.crash; if (up) { if (!m.on) { m.on = true; m.y0 = RM.yaw; m.c = 0; } const dy = Math.atan2(Math.sin(RM.yaw - (m.yl ?? RM.yaw)), Math.cos(RM.yaw - (m.yl ?? RM.yaw))); m.c += Math.abs(dy); m.yl = RM.yaw; } else if (!(RM.wh && RM.wh.a > 0.15)) { m.on = false; m.c = 0; m.yl = undefined; }
+    set((m.c * 57.3).toFixed(0) + ' / ' + (c.n * 57.3).toFixed(0) + ' deg'); if (m.c >= c.n) { m.on = false; m.yl = undefined; msNext(); } }
+  else if (c.k === 'goto') { const x = c.i * BLK, z = c.j * BLK; if (!RM.beacon) { const g = new THREE.Group(), mat = new THREE.MeshBasicMaterial({ color: 0xffd24a, transparent: true, opacity: 0.22, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+        g.add(new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 60, 24, 1, true), mat), new THREE.Mesh(new THREE.RingGeometry(2.6, 3.8, 32).rotateX(-PI / 2), new THREE.MeshBasicMaterial({ color: 0xffd24a, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide })));
+        g.children[0].position.y = 30; g.children[1].position.y = 0.08; RM.town.add(g); RM.beacon = g; }
+    RM.beacon.visible = true; RM.beacon.position.set(x, 0, z); if (!m.t) { m.t = c.time; toast('Order up! Get to the marker in ' + c.time + ' s'); } m.t -= dt;
+    const d = Math.hypot(sp.x - x, sp.z - z); set(Math.round(d) + ' m   ' + Math.max(0, m.t).toFixed(0) + ' s left');
+    if (d < 7) { msNext(); } else if (m.t <= 0) { m.t = c.time; toast('Too slow, the pizza went cold. Try again!'); } }
+  else if (c.k === 'speed') { set((sim.v / 0.44704).toFixed(0) + ' / ' + (c.n / 0.44704).toFixed(0) + ' mph (east of town)'); if (sim.v >= c.n && sp.x > 504) msNext(); }
+  else if (c.k === 'dist') { if (RM.crash) m.a = 0; else m.a += sim.v * dt; set(Math.round(m.a) + ' / ' + c.n + ' m'); if (m.a >= c.n) msNext(); }
+  else if (c.k === 'sit') { set(RM.free && RM.free.sit ? 'Nice and comfy...' : 'find a bench'); if (RM.free && RM.free.sit) { m.a += dt; if (m.a > 1.5) msNext(); } } }
+{ const st = document.createElement('style'); st.textContent = '#msHud{position:fixed;right:14px;top:132px;width:206px;z-index:13;padding:8px 10px;border-radius:12px;background:rgba(12,16,24,.62);color:#e8f0ff;font:12px/1.35 system-ui,sans-serif;cursor:pointer;border:1px solid rgba(255,255,255,.16)}#msHud i{color:#9cc4ff;font-style:normal}body:not(.riding) #msHud{display:none}';
+  document.head.appendChild(st); const h = document.createElement('div'); h.id = 'msHud'; document.body.appendChild(h); h.onclick = () => msNext(true); msHud(); }
+addEventListener('keydown', e => { if (e.key.toLowerCase() === 'u' && !e.repeat && RM.on && !e.target.closest?.('input,textarea')) msNext(true); });
 function freeBlocked(x, z) { const lim = (NB + 0.95) * BLK;
   return RM.boxes.some(b => x > b.x0 - 0.3 && x < b.x1 + 0.3 && z > b.z0 - 0.3 && z < b.z1 + 0.3) || RM.circles.some(c => (x - c.x) ** 2 + (z - c.z) ** 2 < (c.r + 0.35) ** 2) || !inBounds(x, z)
     || (RM.water || []).some(w => (x - w.x) ** 2 + (z - w.z) ** 2 < w.r * w.r) || (x - scooter.position.x) ** 2 + (z - scooter.position.z) ** 2 < 0.45 * 0.45; }
@@ -2715,7 +2753,7 @@ function trySit() { const F = RM.free; if (!F) return;
   toast('Nothing to sit on here: stand next to a bench or a tree'); }
 function freeStep(dt) {
   const F = RM.free, k = RM.keys, fwd = input.throttleKey, back = input.backKey || k.arrowdown, run = input.brakeHard;
-  sim.v = 0; RM.acc = 0; RM.walkG = 0; trafficStep(dt);
+  sim.v = 0; RM.acc = 0; RM.walkG = 0; trafficStep(dt); msStep(dt);
   if (F.sit) { if (fwd || back) { trySit(); } F.v = 0; }
   else { F.yaw += ((k.a || k.arrowleft ? 1 : 0) - (k.d || k.arrowright ? 1 : 0)) * 2.2 * dt;
     const tgt = fwd ? (run ? 3.4 : 1.45) : back ? -1.0 : 0; F.v += (tgt - F.v) * Math.min(1, dt * 5);
@@ -2731,7 +2769,7 @@ function rideStep(dt, omega) {
     if (RM.crash.t > 1.4) { RM.crash = null; RM.walk = { ph: 0 }; toast('Picked it back up. W walks it, A/D steer, F hops back on'); } }
   else if (RM.walk) { const back = input.backKey || RM.keys.arrowdown, want = back ? -0.8 : (input.throttleKey || RM.keys.arrowup || input.throttleUI > 0.15) && !input.brakeUI ? (input.brakeHard ? 3.4 : 1.35) : 0; sim.v += (want - sim.v) * Math.min(1, dt * 2.5); RM.walk.ph += sim.v * dt / 0.72 * PI; }   // S walks it backwards
   if (RM.cars && !RM.crash) {
-    const wheelieNow = !!(RM.wh && RM.wh.a > 0.2), bad = wheelieNow || sim.v > 12.5; if (bad) RM.offence = wheelieNow ? 'wheelie' : 'speed'; RM.heat = Math.max(0, Math.min(4, (RM.heat || 0) + (bad ? dt : -dt * 0.25)));
+    const wheelieNow = !!(RM.wh && RM.wh.a > 0.2), bad = wheelieNow || (sim.v > 12.5 && scooter.position.x < 500);   /* the highway is fine */ if (bad) RM.offence = wheelieNow ? 'wheelie' : 'speed'; RM.heat = Math.max(0, Math.min(4, (RM.heat || 0) + (bad ? dt : -dt * 0.25)));
     if (RM.heat > 1.2 && !RM.wanted) { let best = null, bd = 900; for (const c of RM.cars) if (c.police) { const d = Math.hypot(c.x - scooter.position.x, c.z - scooter.position.z); if (d < bd) { bd = d; best = c; } }
       if (best) { RM.wanted = best; RM.stopT = 0; RM.yellT = 0; toast(RM.strikes ? 'Not you again... pull over RIGHT NOW' : 'Police lights behind you: pull over and stop'); } }
     if (RM.wanted) { const c = RM.wanted, d = Math.hypot(c.x - scooter.position.x, c.z - scooter.position.z);
@@ -2752,7 +2790,7 @@ function rideStep(dt, omega) {
   const maxSteer = Math.min(0.55, Math.atan(0.905 * 4.5 / Math.max(v * v, 0.01)));   // keeps sideways grip ~4.5 m/s2 at speed
   RM.steer += (steerIn * maxSteer - RM.steer) * Math.min(1, dt * 4);
   steer.rotation.y = RM.steer;
-  const yawRate = v * Math.tan(RM.steer) / 0.905 * Math.max(0, 1 - (RM.wh ? RM.wh.a : 0) * 12);   // no steering with the front wheel in the air
+  const wA = RM.wh ? RM.wh.a : 0, wMix = Math.min(1, wA * 7), yawRate = v * Math.tan(RM.steer) / 0.905 * (1 - wMix) + steerIn * 1.05 * Math.min(1, v / 4) * wMix;   // on one wheel you carve by leaning
   const px = scooter.position.x, pz = scooter.position.z;
   RM.yaw += yawRate * dt;
   scooter.position.x += Math.cos(RM.yaw) * v * dt; scooter.position.z -= Math.sin(RM.yaw) * v * dt;
@@ -2775,7 +2813,7 @@ function rideStep(dt, omega) {
       W.v += (2.4 * lift - 14 * Math.sin(0.75 - W.a) - 4.5 * W.v) * dt; W.a += W.v * dt;   // gravity pulls it down below ~34 deg and over above it
       if (W.a <= 0) { if (W.v < -2.2) RM.jolt = Math.max(RM.jolt, Math.min(0.8, -W.v * 0.15)); W.a = 0; W.v = Math.max(0, W.v); }
       if (W.a > 1.1) { W.a = 0; W.v = 0; crash('Looped the wheelie'); } } }
-  suspStep(dt); trafficStep(dt);
+  suspStep(dt); trafficStep(dt); msStep(dt);
   const B = RM.body; scooter.position.y = B.y + 0.25 * Math.max(0, Math.abs(Math.sin(RM.lean)) - 0.5);   // lying on its side it rests on the deck edge
   scooter.rotation.set(RM.lean, RM.yaw, B.th + (RM.wh ? RM.wh.a : 0));
   { const a = RM.wh && RM.wh.a > 0 ? RM.wh.a : 0, lx = SUS.xR * (1 - Math.cos(a)), ox = Math.cos(RM.yaw) * lx, oz = -Math.sin(RM.yaw) * lx;   // pivot on the rear tyre: apply only the CHANGE in the offset each frame (it used to pile up and slide the scooter backwards)
@@ -2812,7 +2850,7 @@ function rideCamera(dt) {
   if (!RM.camPos) RM.camPos = want.clone(); RM.camPos.lerp(want, Math.min(1, dt * (RM.orbitHeld || RM.camHold ? 14 : 4)));
   camera.position.copy(RM.camPos).add(shakeOffset(1.4)); camera.lookAt(p.clone().add(f.clone().multiplyScalar(1.6)).add(V(0, 0.85, 0)));
 }
-{ const rows = [['W / Space', 'go / brake'], ['S, Shift+S', 'brake, hard brake'], ['A / D', 'steer (or turn on foot)'], ['G + W', 'lean back for a wheelie'], ['F', 'get off / on the scooter'], ['J', 'kickstand down / up'], ['X', 'leave the scooter (kickstand down) / pick it up'], ['Shift+W', 'run (on foot)'], ['Z', 'sit on a bench or against a tree'], ['T', 'sit / stand on the scooter'], ['K, hold P', 'key, power on / off'], ['tap P', 'speed mode (5 taps: P settings)'], ['L, H', 'lights, horn'], ['Q / E', 'left / right signal'], ['N', 'day / night'], ['C, V', 'camera, shake'], ['R', 'back to the garage'], ['Esc', 'leave ride mode'], ['Y', 'show / hide this list']];
+{ const rows = [['W / Space', 'go / brake'], ['S, Shift+S', 'brake, hard brake'], ['A / D', 'steer (or turn on foot)'], ['G + W', 'lean back for a wheelie'], ['F', 'get off / on the scooter'], ['J', 'kickstand down / up'], ['X', 'leave the scooter (kickstand down) / pick it up'], ['Shift+W', 'run (on foot)'], ['Z', 'sit on a bench or against a tree'], ['T', 'sit / stand on the scooter'], ['K, hold P', 'key, power on / off'], ['tap P', 'speed mode (5 taps: P settings)'], ['L, H', 'lights, horn'], ['Q / E', 'left / right signal'], ['N', 'day / night'], ['C, V', 'camera, shake'], ['R', 'back to the garage'], ['Esc', 'leave ride mode'], ['U or tap the card', 'skip the current mission'], ['A / D on one wheel', 'lean to turn during a wheelie'], ['Y', 'show / hide this list']];
   const hp = document.createElement('div'); hp.id = 'helpY'; hp.style.cssText = 'position:fixed;inset:0;z-index:60;display:none;place-items:center;background:rgba(5,8,14,.78);color:#e8f0ff;font:14px/1.5 system-ui,sans-serif';
   hp.innerHTML = '<div style="max-width:720px;max-height:86vh;overflow:auto;padding:18px 24px;background:#0f1622;border:1px solid #2c3d56;border-radius:14px"><div style="font-weight:700;font-size:16px;margin-bottom:8px">Controls (Y to close)</div><div style="display:grid;grid-template-columns:auto 1fr;gap:3px 20px">' + rows.map(r => '<b style="color:#9cc4ff">' + r[0] + '</b><span>' + r[1] + '</span>').join('') + '</div></div>';
   document.body.appendChild(hp); hp.onclick = () => { hp.style.display = 'none'; };

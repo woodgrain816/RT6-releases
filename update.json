@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1632",
-  "notes": "Phone: Mode and signal buttons, drag the right side to orbit the camera (it stays; tap to recentre), less flicker (depth precision, no frame skipping)",
+  "version": "2026.1122.1704",
+  "notes": "Missions (wheelie holds, wheelie carve, pizza runs, highway speed, distance, bench) + you can lean-turn during a wheelie",
   "page": "rt6.html",
-  "sha256": "44ee5ba2fae6a15db1a2eae092e35a73b2e922ac498f7372cec4cb473249971e",
+  "sha256": "f5b98a06444749158e315220f24d1155c1daef3bc86e3d5f882468eeda302e4f",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T22:32:09.428Z"
+  "published": "2026-11-22T23:04:39.709Z"
 }

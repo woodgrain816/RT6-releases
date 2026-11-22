@@ -4,4 +4,4 @@ Update files for the fan-made Ruitoo RT6 scooter sim (non-commercial; Ruitoo, RT
 The Android app reads `update.json` on launch and downloads `rt6.html` when it is newer (checked against its SHA-256).
 To install the app: download `RT6Sim.apk`.
 
-Current version: **2026.1122.1632** - Phone: Mode and signal buttons, drag the right side to orbit the camera (it stays; tap to recentre), less flicker (depth precision, no frame skipping)
+Current version: **2026.1122.1704** - Missions (wheelie holds, wheelie carve, pizza runs, highway speed, distance, bench) + you can lean-turn during a wheelie
