@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1332";</script>
+<script>window.RT6_VERSION = "2026.1122.1333";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -573,11 +573,10 @@ function makeWheel(rear) {
   mesh(new THREE.CylinderGeometry(0.083, 0.083, 0.056, 64, 1, true).rotateX(PI / 2), M.fender, g);
   for (const sz of [1, -1]) mesh(new THREE.RingGeometry(0.0745, 0.0828, 72), M.orangeDS, g, [0, 0, sz * 0.0285]);
   if (!rear) {
-    // 5-spoke front rim face
+    // 3-spoke plastic front rim face, same on both sides (owner photo): three straight spokes, big open windows between
     const face = new THREE.Shape(); face.absarc(0, 0, 0.0748, 0, TAU, false);
-    for (let i = 0; i < 5; i++) { const a = i / 5 * TAU + 0.3, h = new THREE.Path();
-      h.moveTo(Math.cos(a) * 0.036, Math.sin(a) * 0.036); h.lineTo(Math.cos(a - 0.36) * 0.067, Math.sin(a - 0.36) * 0.067);
-      h.absarc(0, 0, 0.067, a - 0.36, a + 0.36, false); h.lineTo(Math.cos(a) * 0.036, Math.sin(a) * 0.036); face.holes.push(h); }
+    for (let i = 0; i < 3; i++) { const a0 = i / 3 * TAU + 0.5, a1 = a0 + TAU / 3, h = new THREE.Path(), ri = 0.034, ro = 0.0685, wi = 0.0085 / ri, wo = 0.0105 / ro;
+      h.absarc(0, 0, ri, a0 + wi, a1 - wi, false); h.absarc(0, 0, ro, a1 - wo, a0 + wo, true); h.closePath(); face.holes.push(h); }
     for (const sz of [1, -1]) ext(face, 0.006, M.plastic, g, sz * 0.024, 0.0015);
     mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.07, 32).rotateX(PI / 2), M.plastic, g);
   } else {
