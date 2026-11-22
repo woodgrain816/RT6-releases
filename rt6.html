@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1319";</script>
+<script>window.RT6_VERSION = "2026.1122.1320";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -879,7 +879,7 @@ const kick = new THREE.Group(); kick.name = 'Kickstand'; swingG.add(kick);   // 
 const RR = 0.145, RW = 0.048, FK = 1.15, RA0 = 44 * D2R, RA1 = 182 * D2R;   // front stops behind the deck end, back drops to axle height
 const FAI = 0.11 / FK, FBI = 0.07;
 const rIn = a => Math.min(RR - 0.014, 1 / Math.sqrt((Math.cos(a) / FAI) ** 2 + (Math.sin(a) / FBI) ** 2));
-const rTop = (z, a) => 0.005 * (1 - (z / RW) ** 2);
+const rTop = (z, a) => 0;   // no crown: it stepped 4.6 mm into the side corners and read as a line down the middle (owner)
 const rfGeo = fenderGeo(0, 0, RR, RW, RA0, RA1, rIn, rTop, 140, 0.034, 0.03, 0.017); rfGeo.scale(FK, 1, 1); rfGeo.translate(RX, AX, 0); rfGeo.computeVertexNormals();
 const rFender = mesh(rfGeo, M.fender, swingG, [0, 0, 0], [0, 0, 0], 'RearFender');
 const onFender = (a, off) => { const r = RR + off; const nx = Math.cos(a) / FK, ny = Math.sin(a);   // point + outward normal angle

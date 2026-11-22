@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1319",
-  "notes": "Rear fender panel is now subtle bumps lying on the fender; smaller, straight-sided light bump",
+  "version": "2026.1122.1320",
+  "notes": "Rear fender fully smooth: removed the line down the middle",
   "page": "rt6.html",
-  "sha256": "aeed420295e13bbed73b972e908102e3e79a0f52973cbcb28a9e0aacc50c4954",
+  "sha256": "91ba9682096a845fb72b44eb81f5672a05af845ed626c47fad7b2184c1b31ce1",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T19:19:08.955Z"
+  "published": "2026-11-22T19:20:33.278Z"
 }
