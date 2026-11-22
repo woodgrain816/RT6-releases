@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1419",
-  "notes": "Old display back with raised arrow triangles in its side corners; ignition lock and key smaller and much flatter",
+  "version": "2026.1122.1426",
+  "notes": "Screen smaller, centred and flat on the frame; smaller Ruitoo badge; brake cables come out of the lever housing; battery bars only drop on a big sag; keychain tag removed (just the ring)",
   "page": "rt6.html",
-  "sha256": "0b261bbb1f738de9a1543fd016d7ad9ec839c0816f8a8168be751c2a5ae7ac29",
+  "sha256": "4b856efee519b58b0f0fe1e359573f6f20d929c3adc18bce861e395ba772f050",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T20:19:29.769Z"
+  "published": "2026-11-22T20:26:04.412Z"
 }

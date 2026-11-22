@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1419";</script>
+<script>window.RT6_VERSION = "2026.1122.1426";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -458,6 +458,7 @@ const BOOT_T = 1.4;   // seconds from the power beep to the full display (video 
 const RIDE = { 1: { max: 9, tau: 1.35 }, 2: { max: 17, tau: 2.3 }, 3: { max: 31, tau: 4.4 } };
 const BATT_WH = 720;   // assumed 48 V 15 Ah pack
 const OCV = [[0, 39.0], [5, 43.6], [10, 45.1], [20, 46.8], [30, 47.7], [40, 48.4], [50, 49.0], [60, 49.8], [70, 50.7], [80, 51.7], [90, 53.0], [100, 54.6]];
+const shownV = () => { const r = ocvOf(sim.batt), sag = r - sim.volts; return sim.volts >= r ? sim.volts : sag > 3 ? sim.volts + 3 : r; };   // bars only drop on a big sag (owner)
 const ocvOf = p => { for (let i = 1; i < OCV.length; i++) if (p <= OCV[i][0]) { const [a, va] = OCV[i - 1], [b, vb] = OCV[i]; return va + (vb - va) * (p - a) / (b - a); } return 54.6; };
 const pctOfV = v => { for (let i = 1; i < OCV.length; i++) if (v <= OCV[i][1]) { const [a, va] = OCV[i - 1], [b, vb] = OCV[i]; return Math.max(0, a + (b - a) * (v - va) / (vb - va)); } return 100; };
 const MODE_MAX ={ 1: 10, 2: 19, 3: 37 };   // full power on the stand, read off the owner's display videos   // mph; mode 3 = 36 mph seen on the stand in the video
@@ -505,7 +506,7 @@ function drawLCD(g, W, H, hud) {
   g.font = '700 13px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.fillText('V', 68, 163); g.textAlign = 'left';
   // battery under the box
   g.lineWidth = 2; roundRect(g, 53, 193, 156, 24, 3); g.stroke(); g.fillRect(209, 199, 4, 12);
-  const cells = Math.ceil(Math.min(100, pctOfV(sim.volts + 0.4)) / 10 * Math.min(1, Math.max(0, (sim.fill - 0.7) / 0.3)));   // the bars follow the loaded voltage: they dip under hard throttle
+  const cells = Math.ceil(Math.min(100, pctOfV(shownV())) / 10 * Math.min(1, Math.max(0, (sim.fill - 0.7) / 0.3)));   // the bars follow the loaded voltage: they dip under hard throttle
   for (let i = 0; i < 10; i++) if (i < cells) g.fillRect(57.5 + i * 15, 197, 12.5, 16);
   const showOdo = now < sim.odoUntil || Math.floor(now / 2500) % 2 === 1;
   g.font = '600 13px "Chakra Petch", sans-serif'; g.textAlign = 'right'; g.fillText(showOdo ? 'ODO' : 'Trip', 316, 205);
@@ -1226,10 +1227,11 @@ for (const sz of [1, -1]) {
   // brake lever clamp + housing + lever
   ringClamp(bar, sz * 0.112, 0.018, 0.018);
   { const cm = std(0x0c0c0d, 0.55, 0.05);
-    mesh(new THREE.CylinderGeometry(0.0042, 0.0042, 0.012, 12).rotateX(PI / 2), M.plastic, bar, [0.012, 0.016, sz * 0.1]);   // barrel adjuster
+    mesh(new THREE.CylinderGeometry(0.0042, 0.0042, 0.014, 12).rotateX(PI / 2), M.plastic, bar, [0.014, 0.003, sz * 0.093]);   // barrel adjuster, screwed into the housing
+    for (const k of [0, 1, 2]) mesh(new THREE.TorusGeometry(0.0043, 0.0005, 5, 14), M.plastic, bar, [0.014, 0.003, sz * (0.089 + k * 0.003)]);   // knurl rings
     const mouth = V(0.022, -0.046, sz * 0.003);   // lever cables join the display harness head
-    mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(0.012, 0.016, sz * 0.093), V(0.03, -0.004, sz * 0.07), V(0.022, -0.03, sz * 0.03), V(-0.012, -0.035, sz * 0.012), mouth.clone().add(V(0.004, -0.004, 0.0015 * sz)), V(0.006, -0.05, 0.0015 * sz)]), 60, 0.0024, 8), cm, bar);
-    const sw = new THREE.CatmullRomCurve3([V(0.004, 0.008, sz * 0.1), V(0.02, -0.008, sz * 0.08), V(0.016, -0.036, sz * 0.04), V(-0.014, -0.038, sz * 0.01), mouth.clone().add(V(0.002, -0.006, -0.0015 * sz)), V(0.006, -0.05, -0.0015 * sz)]);
+    mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(0.014, 0.003, sz * 0.087), V(0.022, -0.004, sz * 0.075), V(0.03, -0.01, sz * 0.065), V(0.022, -0.03, sz * 0.03), V(-0.012, -0.035, sz * 0.012), mouth.clone().add(V(0.004, -0.004, 0.0015 * sz)), V(0.006, -0.05, 0.0015 * sz)]), 60, 0.0024, 8), cm, bar);
+    const sw = new THREE.CatmullRomCurve3([V(0.008, -0.002, sz * 0.1), V(0.012, -0.008, sz * 0.09), V(0.02, -0.012, sz * 0.078), V(0.016, -0.036, sz * 0.04), V(-0.014, -0.038, sz * 0.01), mouth.clone().add(V(0.002, -0.006, -0.0015 * sz)), V(0.006, -0.05, -0.0015 * sz)]);
     mesh(new THREE.TubeGeometry(sw, 40, 0.0014, 6), cm, bar);
     { // waterproof inline connector on the brake cut-off wire (owner photos): two black ribbed halves pushed together, red pin insert hidden inside
       const c = new THREE.Group(), p = sw.getPointAt(0.5), t = sw.getTangentAt(0.5); c.position.copy(p); c.quaternion.setFromUnitVectors(V(0, 1, 0), t); bar.add(c);
@@ -1425,18 +1427,18 @@ const OUTS = OUT.map(([x, y]) => [x * 0.86, y * 0.9]);   // slimmer frame: ~1 cm
 mesh(permute(smoothExt(roundPoly(OUTS, 0.0008), 0.01, 0.0011, 3), FACE_UP), M.plastic, disp, [0, 0.004, 0]);   // top bezel layer
 mesh(permute(smoothExt(roundPoly(OUTS.map(([x, y]) => [x * 1.025, y * 1.03]), 0.0009), 0.009, 0.001, 3), FACE_UP), std(0x121315, 0.65, 0.05), disp, [0, -0.0085, 0]);   // lower body layer, slightly larger, with the seam between
 // (no separate back housing: the case is one thin shell)
-const SCR = [[-0.061, -0.026], [-0.05, -0.038], [0.05, -0.038], [0.0605, -0.026], [0.061, 0.017], [0.05, 0.036], [0.034, 0.036], [0.031, 0.030], [0.0, 0.0285], [-0.03, 0.030], [-0.0325, 0.035], [-0.055, 0.035], [-0.061, 0.022]];
+const SCR = [[-0.054, -0.024], [-0.044, -0.034], [0.044, -0.034], [0.054, -0.024], [0.054, 0.014], [0.042, 0.031], [0.026, 0.031], [0.022, 0.027], [-0.022, 0.027], [-0.026, 0.031], [-0.042, 0.031], [-0.054, 0.014]];   // smaller, mirror-symmetric, centred in the frame
 const BEZ = SCR.map(([x, y]) => [x * 1.07, y * 1.07 + 0.0005]);
-mesh(permute(new THREE.ShapeGeometry(roundPoly(BEZ, 0.0008), 24), FACE_UP), std(0x0b0c0e, 0.25, 0.2), disp, [0, 0.0135, 0]);
+mesh(permute(new THREE.ShapeGeometry(roundPoly(BEZ, 0.0008), 24), FACE_UP), std(0x0b0c0e, 0.25, 0.2), disp, [0, 0.01015, 0]);
 const scrGeo = new THREE.ShapeGeometry(roundPoly(SCR, 0.0007), 24);
 M.screen.map && (M.screen.map.wrapS = M.screen.map.wrapT = THREE.ClampToEdgeWrapping);
-mapUV(scrGeo, (x, y) => [(x + 0.061) / 0.122, (y + 0.0335) / 0.061]);   // true 2:1 aspect, ~4.5 mm clear above the bottom of the glass
-mesh(permute(scrGeo, FACE_UP), M.screen, disp, [0, 0.0142, 0], [0, 0, 0], 'Screen');
+mapUV(scrGeo, (x, y) => [(x + 0.054) / 0.108, (y + 0.034) / 0.054]);   // true 2:1 aspect, ~4.5 mm clear above the bottom of the glass
+mesh(permute(scrGeo, FACE_UP), M.screen, disp, [0, 0.0103, 0], [0, 0, 0], 'Screen');
 M.sigTri = {};   // turn-signal indicators: the little triangles in the side points of the display frame
 for (const sz of [1, -1]) { M.sigTri[sz] = new THREE.MeshStandardMaterial({ color: 0x1c1d20, roughness: 0.55 });   // raised arrows in the side corners, sitting on the frame
   mesh(permute(smoothExt(roundPoly([[sz * 0.0672, -0.0015], [sz * 0.0742, -0.006], [sz * 0.0672, -0.0105]], 0.0007), 0.0012, 0.0005, 2), FACE_UP), M.sigTri[sz], disp, [0, 0.0105, 0]); }
-mesh(permute(smoothExt(roundPoly([[-0.0295, 0], [-0.024, -0.0055], [0.024, -0.0055], [0.0295, 0], [0.024, 0.0055], [-0.024, 0.0055]], 0.0015), 0.002, 0.0012, 3), FACE_UP), std(0x0d0e10, 0.12, 0.3), disp, [0.042, 0.0145, 0]);
-mesh(permute(new THREE.PlaneGeometry(0.042, 0.0095), FACE_UP), M.logo, disp, [0.042, 0.0168, 0]);
+mesh(permute(smoothExt(roundPoly([[-0.022, 0], [-0.0178, -0.0042], [0.0178, -0.0042], [0.022, 0], [0.0178, 0.0042], [-0.0178, 0.0042]], 0.0012), 0.0016, 0.0008, 3), FACE_UP), std(0x0d0e10, 0.12, 0.3), disp, [0.041, 0.011, 0]);   // badge, sitting on the frame
+mesh(permute(new THREE.PlaneGeometry(0.03, 0.0068), FACE_UP), M.logo, disp, [0.041, 0.0127, 0]);
 tag(disp, 'mode');
 
 // ---- display harness (product photo): 5 short leads with ribbed plugs out of the display's back, gathered into the wrap,
@@ -2648,7 +2650,7 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
     { // fob hangs along dv; its tag faces the key's axis (the ring passes through the tag hole there), with a little play on the ring
       const yv = dv.clone().normalize().negate(), zv = f.keyZ.clone().sub(yv.clone().multiplyScalar(f.keyZ.dot(yv))); if (zv.lengthSq() < 1e-6) zv.set(1, 0, 0); zv.normalize();
       const xv = V(0, 0, 0).crossVectors(yv, zv); fob.position.copy(piv); fob.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(xv, yv, zv)); fob.rotateY(f.twist * 0.35); }
-    fob.visible = scooter.visible; }
+    fob.visible = false; }   // owner: no tag, just the split ring on the key
   const lit = sim.power && sim.lights;
   for (const m of M.podIcons) m.emissiveIntensity = sim.power ? 1.3 : 0;   // warm switch backlight while on
   M.head.emissiveIntensity = lit ? 3.2 : 0; spot.intensity = lit ? 7 : 0; if (M.headLens) M.headLens.emissiveIntensity = lit ? 2.6 : 0;   // whole lens glows bright white when on (owner photo)   // lens lights up when the lights are on
@@ -2678,7 +2680,7 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
   // UI
   $('tFill').style.width = (sim.throttle * 100).toFixed(1) + '%'; $('tVal').textContent = Math.round(sim.throttle * 100) + '%';
   tEl.setAttribute('aria-valuenow', Math.round(sim.throttle * 100));
-  lcdTimer += dt; const shown = `${sim.lights}|${Math.floor(performance.now() / 500) % 2}|${sim.blink}|${performance.now() < sim.odoUntil || Math.floor(performance.now() / 2500) % 2}|${Math.round(sim.v / 0.44704)}|${Math.floor(sim.odo)}|${Math.ceil(pctOfV(sim.volts + 0.4) / 10)}|${sim.brake > 0.05}|${sim.volts.toFixed(1)}`;
+  lcdTimer += dt; const shown = `${sim.lights}|${Math.floor(performance.now() / 500) % 2}|${sim.blink}|${performance.now() < sim.odoUntil || Math.floor(performance.now() / 2500) % 2}|${Math.round(sim.v / 0.44704)}|${Math.floor(sim.odo)}|${Math.ceil(pctOfV(shownV()) / 10)}|${sim.brake > 0.05}|${sim.volts.toFixed(1)}`;
   if (lcdTimer > 0.1 && shown !== lastShown) { refreshLCD(); lastShown = shown; lcdTimer = 0; }
   $('bBrake').classList.toggle('active', brkIn > 0); $('bHorn').classList.toggle('active', hornOn());
   if (tween) { const k = Math.min(1, (performance.now() - tween.s) / 850), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
