@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1430",
-  "notes": "Stem ends in a clamp block round the handlebar (no pole above it); ignition plate on the block's rider face; old lock tower removed; bigger signal triangles; Ruitoo badge lower",
+  "version": "2026.1122.1432",
+  "notes": "Handlebar back in front of the stem; key on top of the stem; lower stem 2 3/4 x 2 in, upper pole 1 1/2 in square",
   "page": "rt6.html",
-  "sha256": "d262aa3566109c42e531c6cc5ff256a3731a7f99e5eef4ee4f33ae1f7dfe1d4c",
+  "sha256": "b7a902a40252da7e683699d92d5b3409afbed25d2944f17da0368d8f5c730b9e",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T20:30:24.564Z"
+  "published": "2026-11-22T20:32:27.580Z"
 }
