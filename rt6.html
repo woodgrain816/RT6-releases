@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1328";</script>
+<script>window.RT6_VERSION = "2026.1122.1330";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -296,14 +296,14 @@ const roundRect = (g, x, y, w, h, r) => { g.beginPath(); g.roundRect(x, y, w, h,
 // ---------------------------------------------------------------- textures
 function deckPattern(g, W, H, groove, pill) {   // raised rounded pills (dark) in chevrons, dusty grooves between them
   g.fillStyle = groove; g.fillRect(0, 0, W, H);
-  const ch0 = H * 0.405, ch1 = H * 0.595, b0 = W * 0.2, b1 = W * 0.8;   // plain band round the logo only
+  const ch0 = H * 0.34, ch1 = H * 0.66, b0 = W * 0.22, b1 = W * 0.78;   // plain band round the logo only
   g.lineCap = 'round'; g.strokeStyle = pill; g.lineWidth = 40;
   const lane = (y0, y1, dir, xa, xb) => { const h = y1 - y0, tilt = h * 0.95, pad = 24;
     for (let x = -tilt; x < W + tilt; x += 60) { const xs = x, xe = x + tilt; if (xe < xa || xs > xb) continue;
       const ya = dir > 0 ? y1 - pad : y0 + pad, yb = dir > 0 ? y0 + pad : y1 - pad, k = (pad * 0.95) / h;
       g.beginPath(); g.moveTo(xs + tilt * k, ya); g.lineTo(xe - tilt * k, yb); g.stroke(); } };
   g.save(); g.beginPath(); g.rect(10, 0, W - 20, H); g.clip();
-  lane(H * 0.03, H * 0.215, 1, 0, W); lane(H * 0.785, H * 0.97, -1, 0, W);
+  lane(H * 0.03, H * 0.215, -1, 0, W); lane(H * 0.785, H * 0.97, 1, 0, W);   // outer lanes slant like their inner neighbours: nested chevrons
   g.save(); g.beginPath(); g.rect(0, 0, b0, H); g.rect(b1, 0, W - b1, H); g.clip();   // outside the band the inner lanes meet in the middle
   lane(H * 0.215, H * 0.5, -1, 0, W); lane(H * 0.5, H * 0.785, 1, 0, W); g.restore();
   g.save(); g.beginPath(); g.rect(b0, 0, b1 - b0, H); g.clip();
@@ -311,12 +311,28 @@ function deckPattern(g, W, H, groove, pill) {   // raised rounded pills (dark) i
   g.fillStyle = pill; g.beginPath(); g.roundRect(b0 + 10, ch0 + 8, b1 - b0 - 20, ch1 - ch0 - 16, 22); g.fill();   // plain band, flush with the pill tops
   g.restore();
 }
+function drawRuitoo(g, cx, cy, u) {   // the decal's square letters (owner photo): notched R, rounded-square o, tall i/t, x-height 0.72
+  const xh = 0.72, G = {
+    R: [0.8, [[0, 0, 0.2, 1], [0, 0.8, 0.68, 0.2], [0.6, 0.5, 0.2, 0.38], [0.3, 0.42, 0.5, 0.18], ['p', [0.42, 0.42], [0.62, 0.42], [0.8, 0], [0.6, 0]], ['c', 0.68, 0.88, 0.12]]],
+    u: [0.66, [[0, 0.12, 0.2, xh - 0.12], [0.46, 0, 0.2, xh], [0.12, 0, 0.42, 0.2], ['c', 0.12, 0.12, 0.12]]],
+    i: [0.2, [[0, 0, 0.2, xh], [0, 0.82, 0.2, 0.18]]],
+    t: [0.5, [[0, 0.12, 0.2, 0.88], [0.2, 0.52, 0.3, 0.2], [0.12, 0, 0.38, 0.18], ['c', 0.12, 0.12, 0.12]]],
+    o: [0.66, [['o', 0, 0, 0.66, xh, 0.14, 0.2]]],
+    T: [0.8, [[0, 0.8, 0.8, 0.2], [0.3, 0, 0.2, 0.8]]],
+    6: [0.7, [[0, 0.12, 0.2, 0.76], [0.12, 0.8, 0.58, 0.2], [0.2, 0.42, 0.38, 0.18], [0.12, 0, 0.46, 0.2], [0.5, 0.12, 0.2, 0.36], ['c', 0.12, 0.88, 0.12], ['c', 0.12, 0.12, 0.12], ['c', 0.58, 0.12, 0.12], ['c', 0.58, 0.48, 0.12]]] };
+  const text = 'Ruitoo RT6', gap = 0.14; let w = 0; for (const ch of text) w += ch === ' ' ? 0.45 : G[ch][0] + gap; w -= gap;
+  let x = cx - w * u / 2; const by = cy + u / 2;   // baseline (canvas y grows down)
+  for (const ch of text) { if (ch === ' ') { x += 0.45 * u; continue; } const [gw, parts] = G[ch];
+    for (const p of parts) { g.beginPath();
+      if (p[0] === 'p') { p.slice(1).forEach(([px, py], k) => k ? g.lineTo(x + px * u, by - py * u) : g.moveTo(x + px * u, by - py * u)); g.closePath(); g.fill(); }
+      else if (p[0] === 'c') { g.arc(x + p[1] * u, by - p[2] * u, p[3] * u, 0, TAU); g.fill(); }   // rounded outer corners
+      else if (p[0] === 'o') { const [, ox, oy, ow, oh, r, t] = p; g.roundRect(x + ox * u, by - (oy + oh) * u, ow * u, oh * u, r * u); g.roundRect(x + (ox + t) * u, by - (oy + oh - t) * u, (ow - 2 * t) * u, (oh - 2 * t) * u, r * 0.4 * u); g.fill('evenodd'); }
+      else { g.rect(x + p[0] * u, by - (p[1] + p[3]) * u, p[2] * u, p[3] * u); g.fill(); } }
+    x += (gw + gap) * u; } }
 const deckTex = canvasTex(1536, 540, (g, W, H) => {
   deckPattern(g, W, H, '#3c3d40', '#1a1b1e');
   g.save(); g.translate(W * 0.5, H / 2); g.rotate(PI);
-  g.font = '700 128px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-  try { g.letterSpacing = '10px'; } catch {}
-  g.fillStyle = '#ff6a13'; g.fillText('Ruitoo RT6', 0, 4); g.restore();
+  g.fillStyle = '#ff6a13'; drawRuitoo(g, 0, 4, 104); g.restore();
   g.fillStyle = '#e8b400'; g.fillRect(W - 70, 8, 52, 18);
 });
 const deckBump = canvasTex(1536, 540, (g, W, H) => { deckPattern(g, W, H, '#000', '#fff'); }, false);   // band is flush with the pill tops

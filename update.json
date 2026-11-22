@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1328",
-  "notes": "Charge port on the lower angled face of the deck with a threaded socket, slimmer neck plates, hairline cut lines",
+  "version": "2026.1122.1330",
+  "notes": "Deck top: nested chevron pattern, wider logo band, square Ruitoo RT6 lettering like the real decal",
   "page": "rt6.html",
-  "sha256": "8e54918668269a97ea27d4d1cfdbe24affb56d4484a6c6e0f215b654c2cc7233",
+  "sha256": "9a538ffe99d9c40af4afe61b38a5d6462091e96714ec16b8b6daf4578a79f29e",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T19:28:52.553Z"
+  "published": "2026-11-22T19:30:22.269Z"
 }
