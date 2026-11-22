@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1628";</script>
+<script>window.RT6_VERSION = "2026.1122.1632";</script>
 <style>html,body{margin:0}</style>
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -107,7 +107,13 @@ body.riding .card, body.riding .views{display:none}
 @media (orientation:landscape){ .tpad .acts{flex-direction:row;flex-wrap:wrap;max-width:calc(100% - 250px)} .tpad .steer{top:26%;height:84px} }
 .tpad .acts button{padding:8px 11px;min-height:38px}
 @media (pointer:coarse){ body.riding .tpad{display:block} }
-@media (pointer:coarse){ body.riding .dock, body.riding .lcdwrap + .dock{display:none}
+#camZone{position:fixed;left:52%;right:0;top:0;bottom:0;z-index:7;touch-action:none;display:none;-webkit-user-select:none;user-select:none}
+.tpad .rbtn,.tpad .steer{z-index:12}
+@media (pointer:coarse){ body.riding #camZone{display:block}
+  body.riding .tpad #tMode{right:max(188px,env(safe-area-inset-right,0px));bottom:118px;width:68px;height:68px;font-size:13px}
+  body.riding .tpad #tSigL{right:max(284px,env(safe-area-inset-right,0px));bottom:16px;width:58px;height:58px;font-size:20px}
+  body.riding .tpad #tSigR{right:max(220px,env(safe-area-inset-right,0px));bottom:16px;width:58px;height:58px;font-size:20px}
+  body.riding .dock, body.riding .lcdwrap + .dock{display:none}
   body.riding .tpad #tsLean{left:auto;top:auto;right:max(16px,env(safe-area-inset-right,0px));bottom:118px;width:84px;height:84px;border-radius:50%}
   body.riding .tpad #tBrake{right:max(112px,env(safe-area-inset-right,0px));bottom:16px;width:96px;height:96px}
   body.riding .tpad #tHorn{right:max(16px,env(safe-area-inset-right,0px));bottom:16px}
@@ -187,7 +193,7 @@ body.riding .card, body.riding .views{display:none}
     </div>
   </div>
 </section>
-<div id="joyZone"></div><div id="joyRing"></div><div id="joyKnob"></div>
+<div id="joyZone"></div><div id="camZone"></div><div id="joyRing"></div><div id="joyKnob"></div>
 <div class="tpad" id="tpad" aria-label="Touch ride controls">
   <button class="steer" id="tsL" aria-label="Steer left">&#9664;</button>
   <button class="steer" id="tsR" aria-label="Steer right">&#9654;</button>
@@ -195,6 +201,9 @@ body.riding .card, body.riding .views{display:none}
   <button class="rbtn" id="tBrake" aria-label="Brake">Brake</button>
   <button class="rbtn" id="tHorn" aria-label="Horn">Horn</button>
   <button class="rbtn" id="tLights" aria-label="Lights">Lights</button>
+  <button class="rbtn" id="tMode" aria-label="Speed mode">Mode 1</button>
+  <button class="rbtn" id="tSigL" aria-label="Left signal">&#9664;</button>
+  <button class="rbtn" id="tSigR" aria-label="Right signal">&#9654;</button>
   <div class="acts">
     <button id="tWalk">Get off / on</button>
     <button id="tCam">Camera</button>
@@ -1788,7 +1797,7 @@ $('bSigL').onclick = () => setSignal(sim.signal === -1 ? 0 : -1); $('bSigR').onc
 function setLights(on) { sim.lights = on; $('bLights').setAttribute('aria-pressed', on); refreshLCD(); }
 let lastModeChange = -1e9;
 function cycleMode() { const now = performance.now(); if (now - lastModeChange < 2000) return;   // controller needs ~2 s before it accepts the next mode change
-  lastModeChange = now; sim.mode = sim.mode % 3 + 1; $('modeNum').textContent = sim.mode; toast(`Mode ${sim.mode}: top speed ${MODE_MAX[sim.mode]} mph`); refreshLCD(); }
+  lastModeChange = now; sim.mode = sim.mode % 3 + 1; $('modeNum').textContent = sim.mode; if ($('tMode')) $('tMode').textContent = 'Mode ' + sim.mode; toast(`Mode ${sim.mode}: top speed ${MODE_MAX[sim.mode]} mph`); refreshLCD(); }
 $('bPower').onclick = () => setKey(!sim.key);
 $('bNight').onclick = () => { setNight(!RM.night); if (!RM.on) toast(RM.night ? 'Night: takes effect in ride mode' : 'Day'); };
 $('bLights').onclick = () => setLights(!sim.lights);
@@ -2784,22 +2793,23 @@ function shakeOffset(scale) {   // smooth road buzz growing with speed + a short
   return V(Math.sin(t * 23.1) * 0.6 + Math.sin(t * 37.7) * 0.4, Math.sin(t * 29.3) * 0.7 + Math.sin(t * 13.9) * 0.3, Math.sin(t * 19.7) * 0.5 + Math.sin(t * 41.3) * 0.5).multiplyScalar(amp);
 }
 function rideCamera(dt) {
+  { const nn = RM.cam === 'fp' ? 0.05 : 0.12; if (Math.abs(camera.near - nn) > 1e-4 || camera.far !== 450) { camera.near = nn; camera.far = 450; camera.updateProjectionMatrix(); } }   // far/near ratio down: distant road layers stopped z-fighting (flicker)
   const yw = RM.free ? RM.free.yaw : RM.yaw, p = RM.free ? RM.free.pos : scooter.position, f = V(Math.cos(yw), 0, -Math.sin(yw));
   if (RM.cam === 'fp') {
     scooter.updateMatrixWorld(true);
     const head = RM.free ? (RM.rider.updateMatrixWorld(true), RM.rider.localToWorld(RM.rider.userData.P.head.position.clone()).add(V(Math.cos(yw) * 0.1, 0.03, -Math.sin(yw) * 0.1))) : scooter.localToWorld(RM.headPos.clone().add(V(0.05, 0.03, 0)));
     { const fov = 70 + 14 * Math.min(1, sim.v / 14); if (Math.abs(camera.fov - fov) > 0.1) { camera.fov += (fov - camera.fov) * Math.min(1, dt * 3); camera.updateProjectionMatrix(); } }
     camera.position.copy(head).add(shakeOffset(1)); camera.up.set(0, 1, 0);
-    { const fl = f.clone().applyAxisAngle(V(0, 1, 0), RM.oy || 0); if (!RM.orbitHeld) { RM.oy = (RM.oy || 0) * Math.max(0, 1 - dt * 1.5); RM.op = (RM.op || 0) * Math.max(0, 1 - dt * 1.5); }
+    { const fl = f.clone().applyAxisAngle(V(0, 1, 0), RM.oy || 0); if (!RM.orbitHeld && !RM.camHold) { RM.oy = (RM.oy || 0) * Math.max(0, 1 - dt * 1.5); RM.op = (RM.op || 0) * Math.max(0, 1 - dt * 1.5); }
       camera.lookAt(head.clone().add(fl.multiplyScalar(4)).add(V(0, (RM.free ? -0.35 : -1.35) - (RM.op || 0) * 3, 0)).add(shakeOffset(2))); }
     return;
   }
   const sp = Math.min(1, sim.v / 14);   // more sense of speed: lower, closer chase and a wider view as you go faster
   const fov = 62 + 16 * sp; if (Math.abs(camera.fov - fov) > 0.1) { camera.fov += (fov - camera.fov) * Math.min(1, dt * 3); camera.updateProjectionMatrix(); }
-  if (!RM.orbitHeld) { RM.oy = (RM.oy || 0) * Math.max(0, 1 - dt * 1.5); RM.op = (RM.op || 0) * Math.max(0, 1 - dt * 1.5); }
+  if (!RM.orbitHeld && !RM.camHold) { RM.oy = (RM.oy || 0) * Math.max(0, 1 - dt * 1.5); RM.op = (RM.op || 0) * Math.max(0, 1 - dt * 1.5); }
   const dist = 2.5 - 0.4 * sp, ay = yw + (RM.oy || 0) + PI, pt = Math.min(1.2, Math.max(-0.2, 0.5 + (RM.op || 0)));
   const want = p.clone().add(V(Math.cos(ay) * Math.cos(pt) * dist, 0.25 + Math.sin(pt) * dist * 0.9 - 0.2 * sp, -Math.sin(ay) * Math.cos(pt) * dist));
-  if (!RM.camPos) RM.camPos = want.clone(); RM.camPos.lerp(want, Math.min(1, dt * (RM.orbitHeld ? 14 : 4)));
+  if (!RM.camPos) RM.camPos = want.clone(); RM.camPos.lerp(want, Math.min(1, dt * (RM.orbitHeld || RM.camHold ? 14 : 4)));
   camera.position.copy(RM.camPos).add(shakeOffset(1.4)); camera.lookAt(p.clone().add(f.clone().multiplyScalar(1.6)).add(V(0, 0.85, 0)));
 }
 { const rows = [['W / Space', 'go / brake'], ['S, Shift+S', 'brake, hard brake'], ['A / D', 'steer (or turn on foot)'], ['G + W', 'lean back for a wheelie'], ['F', 'get off / on the scooter'], ['J', 'kickstand down / up'], ['X', 'leave the scooter (kickstand down) / pick it up'], ['Shift+W', 'run (on foot)'], ['Z', 'sit on a bench or against a tree'], ['T', 'sit / stand on the scooter'], ['K, hold P', 'key, power on / off'], ['tap P', 'speed mode (5 taps: P settings)'], ['L, H', 'lights, horn'], ['Q / E', 'left / right signal'], ['N', 'day / night'], ['C, V', 'camera, shake'], ['R', 'back to the garage'], ['Esc', 'leave ride mode'], ['Y', 'show / hide this list']];
@@ -2852,7 +2862,14 @@ addEventListener('keyup', e => { const k = e.key.toLowerCase(); RM.keys[k] = fal
   const hold = (el, down, up) => { el.addEventListener('pointerdown', e => { e.preventDefault(); el.setPointerCapture(e.pointerId); el.classList.add('active'); down(); }); for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) el.addEventListener(ev, () => { if (el.classList.contains('active')) { el.classList.remove('active'); up(); } }); el.addEventListener('contextmenu', e => e.preventDefault()); };
   hold($('tBrake'), () => { input.brakeUI = true; }, () => { input.brakeUI = false; });
   hold($('tHorn'), () => dispatchEvent(new KeyboardEvent('keydown', { key: 'h' })), () => dispatchEvent(new KeyboardEvent('keyup', { key: 'h' })));
-  $('tLights').addEventListener('click', () => setLights(!sim.lights)); }
+  $('tLights').addEventListener('click', () => setLights(!sim.lights));
+  $('tMode').addEventListener('click', () => dispatchEvent(new KeyboardEvent('keydown', { key: 'm' })));
+  $('tSigL').addEventListener('click', () => setSignal(sim.signal === -1 ? 0 : -1)); $('tSigR').addEventListener('click', () => setSignal(sim.signal === 1 ? 0 : 1));
+  { const cz = $('camZone'); let cid = null, lx = 0, ly = 0, moved = 0;   // drag to orbit; the view stays where you leave it; a tap recentres
+    cz.addEventListener('pointerdown', e => { if (cid !== null) return; cid = e.pointerId; cz.setPointerCapture(cid); lx = e.clientX; ly = e.clientY; moved = 0; e.preventDefault(); });
+    cz.addEventListener('pointermove', e => { if (e.pointerId !== cid) return; const dx = e.clientX - lx, dy = e.clientY - ly; lx = e.clientX; ly = e.clientY; moved += Math.abs(dx) + Math.abs(dy);
+      if (moved > 8) { RM.camHold = true; RM.oy = (RM.oy || 0) - dx * 0.008; RM.op = Math.max(-0.7, Math.min(0.9, (RM.op || 0) + dy * 0.005)); } });
+    for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) cz.addEventListener(ev, e => { if (e.pointerId !== cid && ev !== 'lostpointercapture') return; if (ev === 'pointerup' && moved <= 8) { RM.camHold = false; toast('Camera recentred'); } cid = null; }); } }
 // Android app: back button leaves the ride first; update banner
 window.__rt6back = () => { if (RM.on) { exitRide(); return true; } return false; };
 window.grUpdate = (state, version, notes) => { const b = $('updbar'); if (!b) return;
@@ -2869,7 +2886,7 @@ const R = 0.131;
 let lastRaf = 0, rafAvg = 16.7, rafN = 0;
 function tick(fixed) {   // fixed: test hook steps the sim without animation frames
   if (!(fixed && fixed.dt)) { const t = performance.now(), d = t - lastRaf; lastRaf = t; if (d > 0 && d < 100) rafAvg += (d - rafAvg) * 0.05;   // ~60 fps on fast monitors by drawing every Nth refresh at an even rhythm (a time cap made uneven, juddery frames)
-    const skip = Math.max(1, Math.round(15.9 / rafAvg)); if (++rafN % skip) { requestAnimationFrame(tick); return; } }
+    const skip = matchMedia('(pointer:coarse)').matches ? 1 : Math.max(1, Math.round(15.9 / rafAvg)); if (++rafN % skip) { requestAnimationFrame(tick); return; } }
   const dt = fixed && fixed.dt ? fixed.dt : Math.min(0.05, clock.getDelta());
   // inputs
   const thrIn = Math.max(input.throttleUI, input.throttleKey ? 1 : 0, input.throttle3D);

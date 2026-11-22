@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1628",
-  "notes": "Fixed the stuck/overlapping controls on the phone: old control panel hidden while riding, buttons in the right place, small legal line",
+  "version": "2026.1122.1632",
+  "notes": "Phone: Mode and signal buttons, drag the right side to orbit the camera (it stays; tap to recentre), less flicker (depth precision, no frame skipping)",
   "page": "rt6.html",
-  "sha256": "d2e449adc5e42f2319a57b386c89abf7db26d6184966b3723f93d60410cdfb44",
+  "sha256": "44ee5ba2fae6a15db1a2eae092e35a73b2e922ac498f7372cec4cb473249971e",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T22:28:54.355Z"
+  "published": "2026-11-22T22:32:09.428Z"
 }
