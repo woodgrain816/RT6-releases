@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1532";</script>
+<script>window.RT6_VERSION = "2026.1122.1533";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -2301,7 +2301,7 @@ function buildCorvette() {
   { const plate = canvasTex(256, 128, (c, Wd, Hd) => { c.fillStyle = '#f2f2ee'; c.fillRect(0, 0, Wd, Hd); c.strokeStyle = '#9aa3b0'; c.lineWidth = 6; c.strokeRect(6, 6, Wd - 12, Hd - 12); });   // blank plate (owner: no text)
     add(new THREE.PlaneGeometry(0.3, 0.15).rotateY(-PI / 2), new THREE.MeshStandardMaterial({ map: plate, roughness: 0.5 }), XR - 0.01, 0.52, 0);
     const word = canvasTex(512, 64, (c, Wd, Hd) => { c.clearRect(0, 0, Wd, Hd); c.fillStyle = '#111'; c.font = '600 44px Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('C O R V E T T E', Wd / 2, Hd / 2); });
-    add(new THREE.PlaneGeometry(0.62, 0.08).rotateY(-PI / 2), new THREE.MeshBasicMaterial({ map: word, transparent: true }), XR - 0.008, 0.73, 0);
+    // (no CORVETTE lettering: owner says it is too small on the real car to show)
     const flags = canvasTex(256, 256, (c) => { c.clearRect(0, 0, 256, 256);   // 70th-anniversary crossed flags (owner image): chrome V, checkered left flag, red right flag with a silver 70 + fleur-de-lis
       const L = [[22, 24], [64, 54], [128, 176], [128, 240], [104, 196], [22, 84]], Rr = L.map(([x, y]) => [256 - x, y]);
       const path = P => { c.beginPath(); P.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.closePath(); };
