@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1501",
-  "notes": "Stem decals back; more time between taps for the 5-tap P settings (0.6 s)",
+  "version": "2026.1122.1507",
+  "notes": "Display turn arrow bigger, placed like the real one, and flashes in step with the speedometer icon",
   "page": "rt6.html",
-  "sha256": "ba2d1c1008f13510346c647edc26ecbb2f65d5ba31ef9681ca9eacf2aa7b6edd",
+  "sha256": "23feba9ddd265fda9bf9bb8fb3994245f755a03a85626827df390ba42596be0b",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T21:01:33.955Z"
+  "published": "2026-11-22T21:07:22.091Z"
 }

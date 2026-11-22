@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1501";</script>
+<script>window.RT6_VERSION = "2026.1122.1507";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -528,9 +528,9 @@ function drawLCD(g, W, H, hud) {
     for (const dy of [-6, 0, 6]) { g.beginPath(); g.moveTo(cx - 4, cy + dy); g.lineTo(cx - 15, cy + dy + 2); g.stroke(); } }
   // turn arrows (videos): small; left one above the top-left stub, right one between the speed digits and "Mode"
   if (!pm && pval('P06') === 1) { g.font = '600 15px "Chakra Petch", sans-serif'; g.textAlign = 'left'; g.fillText('NON', 52, 66); }   // non-zero start indicator (owner video 205744375)
-  if (sim.signal && now % 620 < 310) { const d = sim.signal > 0 ? 1 : -1, ax = d > 0 ? 384 : 66, ay = d > 0 ? 44 : 25;   // display arrow: its own 0.62 s blink, 50% (owner video)
-    g.beginPath(); g.moveTo(ax + d * 8, ay); g.lineTo(ax + d * 1, ay - 6); g.lineTo(ax + d * 1, ay - 2.5); g.lineTo(ax - d * 7, ay - 2.5);
-    g.lineTo(ax - d * 7, ay + 2.5); g.lineTo(ax + d * 1, ay + 2.5); g.lineTo(ax + d * 1, ay + 6); g.closePath(); g.fill(); }
+  if (sim.signal && now % 610 < 280) { const d = sim.signal > 0 ? 1 : -1, ax = d > 0 ? 386 : 88, ay = d > 0 ? 42 : 18, k = 1.7;   // display arrow: blinks in step with the speedometer icon, bigger, over the top-left stub (owner video)
+    g.beginPath(); g.moveTo(ax + d * 8 * k, ay); g.lineTo(ax + d * 1 * k, ay - 6 * k); g.lineTo(ax + d * 1 * k, ay - 2.5 * k); g.lineTo(ax - d * 7 * k, ay - 2.5 * k);
+    g.lineTo(ax - d * 7 * k, ay + 2.5 * k); g.lineTo(ax + d * 1 * k, ay + 2.5 * k); g.lineTo(ax + d * 1 * k, ay + 6 * k); g.closePath(); g.fill(); }
   g.shadowBlur = 0;
 }
 // 7-segment glyphs like the real LCD
@@ -2722,7 +2722,7 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
   // UI
   $('tFill').style.width = (sim.throttle * 100).toFixed(1) + '%'; $('tVal').textContent = Math.round(sim.throttle * 100) + '%';
   tEl.setAttribute('aria-valuenow', Math.round(sim.throttle * 100));
-  lcdTimer += dt; const shown = `${!!sim.signal && performance.now() % 620 < 310}|${sim.pMenu}|${sim.pIdx}|${sim.pEdit && performance.now() % 1000 < 500}|${sim.lights}|${performance.now() % 610 < 280}|${sim.blink}|${performance.now() < sim.odoUntil || Math.floor(performance.now() / 2500) % 2}|${Math.round(sim.v / 0.44704)}|${Math.floor(sim.odo)}|${Math.ceil(pctOfV(shownV()) / 10)}|${sim.brake > 0.05}|${sim.volts.toFixed(1)}`;
+  lcdTimer += dt; const shown = `${!!sim.signal && performance.now() % 610 < 280}|${sim.pMenu}|${sim.pIdx}|${sim.pEdit && performance.now() % 1000 < 500}|${sim.lights}|${performance.now() % 610 < 280}|${sim.blink}|${performance.now() < sim.odoUntil || Math.floor(performance.now() / 2500) % 2}|${Math.round(sim.v / 0.44704)}|${Math.floor(sim.odo)}|${Math.ceil(pctOfV(shownV()) / 10)}|${sim.brake > 0.05}|${sim.volts.toFixed(1)}`;
   if (lcdTimer > 0.1 && shown !== lastShown) { refreshLCD(); lastShown = shown; lcdTimer = 0; }
   $('bBrake').classList.toggle('active', brkIn > 0); $('bHorn').classList.toggle('active', hornOn());
   if (tween) { const k = Math.min(1, (performance.now() - tween.s) / 850), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;

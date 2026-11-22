@@ -4,4 +4,4 @@ Update files for the fan-made Ruitoo RT6 scooter sim (non-commercial; Ruitoo, RT
 The Android app reads `update.json` on launch and downloads `rt6.html` when it is newer (checked against its SHA-256).
 To install the app: download `RT6Sim.apk`.
 
-Current version: **2026.1122.1501** - Stem decals back; more time between taps for the 5-tap P settings (0.6 s)
+Current version: **2026.1122.1507** - Display turn arrow bigger, placed like the real one, and flashes in step with the speedometer icon
