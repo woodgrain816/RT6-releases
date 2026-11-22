@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1333";</script>
+<script>window.RT6_VERSION = "2026.1122.1336";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -555,20 +555,22 @@ function makeWheel(rear) {
   const g = new THREE.Group(); g.name = rear ? 'RearWheel' : 'FrontWheel';
   const prof = [[0.083, -0.029], [0.096, -0.035], [0.112, -0.0355], [0.122, -0.030], [0.1265, -0.017], [0.1275, 0], [0.1265, 0.017], [0.122, 0.030], [0.112, 0.0355], [0.096, 0.035], [0.083, 0.029]]
     .map(([r, y]) => new THREE.Vector2(r, y));
-  mesh(new THREE.LatheGeometry(prof, 80).rotateX(PI / 2), M.rubber, g, [0, 0, 0], [0, 0, 0], 'Tire');
-  // knobby tread: two staggered rows + shoulder lugs
-  const lug = new RoundedBoxGeometry(0.02, 0.0072, 0.019, 3, 0.0025), sh = new RoundedBoxGeometry(0.019, 0.0056, 0.011, 3, 0.002);
-  const N = 22, im = new THREE.InstancedMesh(lug, M.rubber, N * 2), im2 = new THREE.InstancedMesh(sh, M.rubber, N * 2), qa = new THREE.Quaternion(), yA = V(0, 1, 0);
-  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), s = V(1, 1, 1), p = V(0, 0, 0), zA = V(0, 0, 1);
-  let k = 0, k2 = 0;
-  for (let row = 0; row < 2; row++) for (let i = 0; i < N; i++) {
-    const a = (i + (row ? 0.5 : 0)) / N * TAU;
-    const ac = i / N * TAU; q.setFromAxisAngle(zA, ac - PI / 2); qa.setFromAxisAngle(yA, row ? 0.5 : -0.5); const qc = q.clone().multiply(qa);   // the two arms of a chevron
-    p.set(Math.cos(ac + 0.018) * 0.1285, Math.sin(ac + 0.018) * 0.1285, row ? 0.0085 : -0.0085); m4.compose(p, qc, s); im.setMatrixAt(k++, m4);
-    const ash = ac + (row ? 0.5 : 0) / N * TAU; q.setFromAxisAngle(zA, ash - PI / 2); q.multiply(new THREE.Quaternion().setFromAxisAngle(V(1, 0, 0), row ? 0.66 : -0.66));   // shoulder blocks lie on the shoulder curve
-    p.set(Math.cos(ash) * 0.1236, Math.sin(ash) * 0.1236, row ? 0.0282 : -0.0282); m4.compose(p, q, s); im2.setMatrixAt(k2++, m4);
-  }
-  [im, im2].forEach(o => { o.castShadow = o.receiveShadow = true; g.add(o); });
+  { // one tire with the tread CUT into it (owner photo): centre row of V-shaped blocks split by a thin sipe, a groove each side,
+    // offset outer blocks, shallow cross cuts on the shoulders. Grooves are depressions in the surface, nothing is stuck on.
+    const P = []; for (let i = 0; i < prof.length - 1; i++) { const p0 = prof[i], p1 = prof[i + 1], n = 7; for (let k = 0; k < n; k++) P.push(p0.clone().lerp(p1, k / n)); } P.push(prof[prof.length - 1]);
+    const NB = 22, NA = NB * 28, D = 0.0042, sm = (e0, e1, x) => { const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
+    const cut = (ph, w, soft) => { const f = ph - Math.floor(ph), d = Math.min(f, 1 - f); return 1 - sm(w, w + soft, d); };   // 1 inside a groove of half-width w (in pitch units)
+    const groove = (a, z) => { const az = Math.abs(z), ph = a / TAU * NB;
+      if (az < 0.0165) { const v = cut(ph + az * 9, 0.07, 0.03), sipe = (1 - sm(0.0004, 0.0009, az)) * 0.55; return Math.max(v, sipe); }   // V blocks + centre sipe
+      if (az < 0.0195) return 1;                                                                                                   // groove between rows
+      if (az < 0.0305) return cut(ph + 0.5 + (az - 0.0195) * 6, 0.09, 0.03);                                                       // outer blocks, offset half a pitch
+      return cut(ph * 3, 0.12, 0.05) * 0.35; };                                                                                    // fine shoulder cuts
+    const pos = [], idx = [], W = P.length;
+    for (let i = 0; i <= NA; i++) { const a = i / NA * TAU, c = Math.cos(a), sn = Math.sin(a);
+      for (const p of P) { const tread = sm(0.112, 0.12, p.x), r = p.x - D * groove(a, p.y) * tread; pos.push(c * r, sn * r, p.y); } }
+    for (let i = 0; i < NA; i++) for (let j = 0; j < W - 1; j++) { const q = i * W + j, n = q + W; idx.push(q, n, q + 1, q + 1, n, n + 1); }
+    const tg = new THREE.BufferGeometry(); tg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); tg.setIndex(idx); tg.computeVertexNormals();
+    mesh(tg, M.rubber, g, [0, 0, 0], [0, 0, 0], 'Tire'); }
   // rim barrel + orange flange stripes
   mesh(new THREE.CylinderGeometry(0.083, 0.083, 0.056, 64, 1, true).rotateX(PI / 2), M.fender, g);
   for (const sz of [1, -1]) mesh(new THREE.RingGeometry(0.0745, 0.0828, 72), M.orangeDS, g, [0, 0, sz * 0.0285]);
@@ -775,13 +777,14 @@ for (const sz of [1, -1]) {
     cp.position.set(x, y, -P.zL(Math.min(P.yr, y + 0.0125))); cp.rotation.y = PI; }
   const boss = new THREE.Shape(); boss.absarc(0, 0, 0.0125, -PI * 0.36, PI * 1.36, false); boss.lineTo(-0.004, -0.019); boss.lineTo(0.004, -0.019); boss.closePath();   // round boss, flange tapering down to the strap
   mesh(new THREE.ExtrudeGeometry(boss, { depth: 0.03, bevelEnabled: true, bevelThickness: 0.0006, bevelSize: 0.0006, bevelSegments: 2, curveSegments: 32 }), M.plastic, cp, [0, 0, -0.0306]);   // vertical flat cut for the port, running back into the angled face
-  mesh(new THREE.CircleGeometry(0.0108, 36), std(0x050506, 0.9, 0), cp, [0, 0, 0.0002]);                                    // the hole cut for it
-  const ring = mesh(new THREE.CylinderGeometry(0.0084, 0.0084, 0.0052, 40, 1, true).rotateX(PI / 2), M.chrome, cp, [0, 0, 0.0026]);   // threaded metal body
-  for (let k = 0; k < 4; k++) mesh(new THREE.TorusGeometry(0.0086, 0.00055, 6, 40), M.chrome, cp, [0, 0, 0.0008 + k * 0.0012]);      // thread ridges
-  mesh(new THREE.TorusGeometry(0.0082, 0.0008, 8, 40), M.chrome, cp, [0, 0, 0.0052]);                                       // rolled rim
-  mesh(new THREE.CircleGeometry(0.0078, 32), std(0xd9dadc, 0.35, 0.6), cp, [0, 0, 0.0016]);                                  // recessed insulator face
-  for (const [x, y] of [[-0.0026, 0.0018], [0.0026, 0.0018], [0, -0.0028]]) { mesh(new THREE.CylinderGeometry(0.0007, 0.0007, 0.0032, 10).rotateX(PI / 2), M.zinc, cp, [x, y, 0.0032]);
-    mesh(new THREE.SphereGeometry(0.0008, 10, 6), M.zinc, cp, [x, y, 0.0048]); }                                            // 3 pins
+  mesh(new THREE.CircleGeometry(0.0089, 36), std(0x050506, 0.9, 0), cp, [0, 0, 0.0002]);   // the hole into the body
+  mesh(new THREE.RingGeometry(0.0086, 0.0112, 40), std(0xc4c8cc, 0.35, 0.85), cp, [0, 0, 0.0004]);   // thin washer flush on the cut (photo)                                    // the hole cut for it
+  const ring = mesh(new THREE.CylinderGeometry(0.0084, 0.0084, 0.0052, 40, 1, true).rotateX(PI / 2), M.chrome, cp, [0, 0, -0.0002]);   // threaded metal body, mostly sunk in the hole
+  for (let k = 0; k < 4; k++) mesh(new THREE.TorusGeometry(0.0086, 0.00055, 6, 40), M.chrome, cp, [0, 0, -0.002 + k * 0.0012]);      // thread ridges
+  mesh(new THREE.TorusGeometry(0.0082, 0.0008, 8, 40), M.chrome, cp, [0, 0, 0.0024]);   // rolled rim, ~2.5 mm proud
+  mesh(new THREE.CircleGeometry(0.0078, 32), std(0xd9dadc, 0.35, 0.6), cp, [0, 0, -0.0012]);                                  // recessed insulator face
+  for (const [x, y] of [[-0.0026, 0.0018], [0.0026, 0.0018], [0, -0.0028]]) { mesh(new THREE.CylinderGeometry(0.0007, 0.0007, 0.0032, 10).rotateX(PI / 2), M.zinc, cp, [x, y, 0.0004]);
+    mesh(new THREE.SphereGeometry(0.0008, 10, 6), M.zinc, cp, [x, y, 0.002]); }                                            // 3 pins
   // cap on its strap: pivot where the strap leaves the flange, swings outward and down through 180 deg
   const capG = new THREE.Group(); capG.name = 'ChargeCap'; capG.position.set(0, -0.0165, 0.0005); cp.add(capG);
   const capTex = canvasTex(128, 128, (g, W, H) => { g.fillStyle = '#26272a'; g.fillRect(0, 0, W, H); g.fillStyle = '#3a3b3f'; g.font = '700 26px Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
@@ -1084,11 +1087,9 @@ let cableM2; const headG = new THREE.Group(); headG.name = 'Headlight'; headG.po
   mesh(new THREE.CylinderGeometry(0.0016, 0.0016, 0.001, 6).rotateZ(PI / 2), std(0x050506, 0.9, 0), steer, [0.0306, 0.189, 0]);   // its hex socket
   for (const z of [-0.012, 0.012]) mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.003, 6), M.chrome, steer, [0.064, 0.2005, z]);   // lamp screws from below
   // lamp cable: out of the back of the lamp, loops round the stem side to an inline plug, then joins the main wrap
-  const lc = new THREE.CatmullRomCurve3([V(0.035, 0.224, 0.012), V(0.02, 0.216, 0.034), V(0.0, 0.214, 0.05), V(-0.025, 0.226, 0.054), V(-0.04, 0.27, 0.055), V(-0.043, 0.302, 0.05), V(-0.045, 0.318, 0.044)]);   // ends inside the wrap: branches out of the harness (owner)
+  const lc = new THREE.CatmullRomCurve3([V(0.031, 0.226, 0.006), V(0.024, 0.211, 0.01), V(0.01, 0.21, 0.028), V(-0.014, 0.213, 0.031), V(-0.027, 0.245, 0.034), V(-0.038, 0.29, 0.043), V(-0.045, 0.318, 0.044)]);   // tidy: under the lamp, along the crown, up the head tube   // ends inside the wrap: branches out of the harness (owner)
   mesh(new THREE.TubeGeometry(lc, 60, 0.0018, 6), cableM2 = std(0x0c0c0d, 0.55, 0.05), steer);
-  const pg = new THREE.Group(), p = lc.getPointAt(0.55); pg.position.copy(p); pg.quaternion.setFromUnitVectors(V(0, 1, 0), lc.getTangentAt(0.55)); steer.add(pg);
-  mesh(new THREE.CylinderGeometry(0.0038, 0.003, 0.022, 14), cableM2, pg);
-  for (const y of [-0.007, -0.004, 0.006]) mesh(new THREE.TorusGeometry(0.0036, 0.0005, 5, 14).rotateX(PI / 2), cableM2, pg, [0, y, 0]); }
+}
 { // body (owner photos): round heatsink, fins running front-to-back all the way round, flat round back
   const finM = std(0x1b1c1f, 0.55, 0.35);
   mesh(new THREE.CylinderGeometry(0.0255, 0.0255, 0.046, 40).rotateZ(PI / 2), finM, headG);

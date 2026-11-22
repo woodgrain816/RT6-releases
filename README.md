@@ -4,4 +4,4 @@ Update files for the fan-made Ruitoo RT6 scooter sim (non-commercial; Ruitoo, RT
 The Android app reads `update.json` on launch and downloads `rt6.html` when it is newer (checked against its SHA-256).
 To install the app: download `RT6Sim.apk`.
 
-Current version: **2026.1122.1333** - Front wheel: 3 plastic spokes on both sides like the real one
+Current version: **2026.1122.1336** - Tire tread cut into the rubber like the real one, charge port sunk into its hole, tidier headlight cable
