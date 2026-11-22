@@ -4,4 +4,4 @@ Update files for the fan-made Ruitoo RT6 scooter sim (non-commercial; Ruitoo, RT
 The Android app reads `update.json` on launch and downloads `rt6.html` when it is newer (checked against its SHA-256).
 To install the app: download `RT6Sim.apk`.
 
-Current version: **2026.1122.1539** - Smooth frame pacing (no stutter), fast Corvettes, police cars with light bar + siren that pull you over for wheelies/speeding (stop next to them for a warning), can't fold while on it or ride folded, more lean when you put your foot down
+Current version: **2026.1122.1547** - Corvette body re-lofted from measured cross-sections: real blunt nose, hood, fenders; black lower grille and swept headlights

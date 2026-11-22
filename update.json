@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1539",
-  "notes": "Smooth frame pacing (no stutter), fast Corvettes, police cars with light bar + siren that pull you over for wheelies/speeding (stop next to them for a warning), can't fold while on it or ride folded, more lean when you put your foot down",
+  "version": "2026.1122.1547",
+  "notes": "Corvette body re-lofted from measured cross-sections: real blunt nose, hood, fenders; black lower grille and swept headlights",
   "page": "rt6.html",
-  "sha256": "c9b62a148e2bded6595b09c701f2b3bab6129ab292de5d8cad547f51fca56edc",
+  "sha256": "f6786bfd14deb6a9cd6912dc688bf7dc866e9999b709ef6fcff3fe2ddba01724",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T21:39:51.345Z"
+  "published": "2026-11-22T21:47:27.430Z"
 }
