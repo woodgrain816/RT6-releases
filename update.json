@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1325",
-  "notes": "Deck side lines are now thin cuts that follow the body's shape",
+  "version": "2026.1122.1328",
+  "notes": "Charge port on the lower angled face of the deck with a threaded socket, slimmer neck plates, hairline cut lines",
   "page": "rt6.html",
-  "sha256": "fe4e9957d02aef622b7bf3929d5c16f6c5a307aa68312f9f46297d70959daebf",
+  "sha256": "8e54918668269a97ea27d4d1cfdbe24affb56d4484a6c6e0f215b654c2cc7233",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T19:25:14.241Z"
+  "published": "2026-11-22T19:28:52.553Z"
 }
