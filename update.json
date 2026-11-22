@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1451",
-  "notes": "Space is only the brake (no longer clicks the last button you pressed or walks it backwards)",
+  "version": "2026.1122.1454",
+  "notes": "Wheelies! Hold G (or Lean back on the phone) and punch the throttle; ease off to hold it, brake brings it down, too far and you loop it",
   "page": "rt6.html",
-  "sha256": "7aba8da61dce1311954d3dcfb4ee12ae32511bf09f4e90348526da416b303bea",
+  "sha256": "a60210aee8647b07d0976825c48314b33935d87795b63abed9661306e91a8715",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T20:51:55.290Z"
+  "published": "2026-11-22T20:54:25.265Z"
 }
