@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1214",
-  "notes": "Deck underside to your measured 8 in clearance (deck ~2 in thick); bars confirmed 38.5 in above the deck",
+  "version": "2026.1122.1217",
+  "notes": "Stem lengths to your measurements (16 in lower, ~12 in upper), quick-release clip on the right side",
   "page": "rt6.html",
-  "sha256": "b82288b3e9f533ebb40661dfb65b0a93daefcade7d668cee6c5fa1907cca9952",
+  "sha256": "a29b760066ab459ecfaeaa574c9123912e2bb367ee22d186bd571333155c8443",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T18:14:13.548Z"
+  "published": "2026-11-22T18:17:17.090Z"
 }

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1214";</script>
+<script>window.RT6_VERSION = "2026.1122.1217";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -125,7 +125,7 @@ body.riding .card, body.riding .views{display:none}
     <dt>Motor</dt><dd>48 V rear hub</dd>
     <dt>Charger</dt><dd>54.6 V</dd>
     <dt>Wheelbase</dt><dd>≈ 905 mm</dd>
-    <dt>Bar height</dt><dd>38.5 in above the deck</dd>
+    <dt>Bar height</dt><dd>38.5 in above the deck (stem 16 in + 12 in)</dd>
     <dt>Brakes</dt><dd>cable disc, F + R</dd>
   </dl>
   <p class="hint">Rear wheel is up on a stand. Turn the key, then hold the power button under the throttle to start; tap it to change mode. Drag the thumb throttle, squeeze a brake lever, or press the horn on the left pod.<br>
@@ -1092,7 +1092,8 @@ function octPrism(hx, hz, ch, h, bev = 0.0008) {   // stem tubes (owner): rectan
   const sh = new THREE.Shape([[-hz + ch, -hx], [hz - ch, -hx], [hz, -hx + ch], [hz, hx - ch], [hz - ch, hx], [-hz + ch, hx], [-hz, hx - ch], [-hz, -hx + ch]].map(([a, b]) => new THREE.Vector2(a, b)));
   const g = new THREE.ExtrudeGeometry(sh, { depth: h - 2 * bev, bevelEnabled: bev > 0, bevelThickness: bev, bevelSize: bev, bevelSegments: 1 }).translate(0, 0, -(h - 2 * bev) / 2);
   g.applyMatrix4(new THREE.Matrix4().set(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1)); g.computeVertexNormals(); return g; }
-mesh(octPrism(0.0275, 0.024, 0.008, 0.48), M.frame, stemPivot, [SX - 0.0075, 0.26, 0]);   // lower stem: chamfered rectangle (owner photos)   // deeper on the rider side (owner: widen the whole stem like the collar)
+const JD = 0.066;   // joint moved down: lower stem 16 in (owner)
+mesh(octPrism(0.0275, 0.024, 0.008, 0.414), M.frame, stemPivot, [SX - 0.0075, 0.227, 0]);   // lower stem: chamfered rectangle (owner photos)   // deeper on the rider side (owner: widen the whole stem like the collar)
 for (const sz of [1, -1]) {
   // flat side faces (the light-bar decal covers them)
 }
@@ -1115,15 +1116,17 @@ for (const sz of [1, -1]) {
 
 // orange quick-release lever, CLOSED: lies flat down the side of the stem from its pivot on the collar
 { // closed QR lever (owner photo): flat orange bar on the side of the clamp, rear tip near the cable wrap, rounded front end hinged on a pin, sloping down to the front
-  const lv = new THREE.Shape(); lv.moveTo(-0.034, 0.0045); lv.quadraticCurveTo(-0.036, 0.0005, -0.033, -0.004); lv.lineTo(0.016, -0.0075); lv.absarc(0.022, -0.0055, 0.0068, -PI / 2 - 0.25, PI / 2, false); lv.lineTo(-0.028, 0.0075); lv.closePath();
-  mesh(new THREE.ExtrudeGeometry(lv, { depth: 0.0038, bevelEnabled: true, bevelThickness: 0.0008, bevelSize: 0.0008, bevelSegments: 3, curveSegments: 24 }).translate(0, 0, -0.0019), M.orange, stemPivot, [SX, 0.539, -0.0285]);
-  mesh(new THREE.CylinderGeometry(0.0042, 0.0042, 0.003, 18).rotateX(PI / 2), M.plastic, stemPivot, [SX - 0.002 + 0.024, 0.5335, -0.0265]);   // hinge knuckle on the clamp
-  mesh(new THREE.CylinderGeometry(0.0026, 0.0026, 0.0075, 16).rotateX(PI / 2), M.zinc, stemPivot, [SX + 0.022, 0.5335, -0.0285]); }   // hinge pin through the lever's front end
+  const lv = new THREE.Shape(); lv.moveTo(-0.042, 0.005); lv.quadraticCurveTo(-0.044, 0.001, -0.041, -0.0035); lv.lineTo(0.003, -0.0135); lv.absarc(0.008, -0.0075, 0.0068, -PI / 2 - 0.6, PI / 2 - 0.2, false); lv.lineTo(-0.036, 0.008); lv.closePath();
+  const lvm = mesh(new THREE.ExtrudeGeometry(lv, { depth: 0.0038, bevelEnabled: true, bevelThickness: 0.0008, bevelSize: 0.0008, bevelSegments: 3, curveSegments: 24 }).translate(0, 0, -0.0019), M.orange, stemPivot, [SX, 0.5315, 0.0332]);
+  lvm.rotation.y = -0.19;   // rear tip lies against the clamp, hinge end out on the lug (owner: right side)
+  mesh(new THREE.CylinderGeometry(0.0026, 0.0026, 0.012, 16).rotateX(PI / 2), M.zinc, stemPivot, [SX + 0.008, 0.524, 0.035]); }   // hinge pin through the lug and the lever's front end
+{ stemPivot.updateMatrixWorld(true); const inv = stemPivot.matrixWorld.clone().invert(), b = new THREE.Box3();
+  for (const o of stemPivot.children) { if (!o.isMesh) continue; b.setFromObject(o); b.applyMatrix4(inv); if (b.min.y > 0.485 && b.max.y < 0.55) o.position.y -= JD; } }
 // round upper tube up to the head
 { const hz = 0.021, hx = 0.0125, ch = 0.0066, oct = new THREE.Shape([[-hz + ch, -hx], [hz - ch, -hx], [hz, -hx + ch], [hz, hx - ch], [hz - ch, hx], [-hz + ch, hx], [-hz, hx - ch], [-hz, -hx + ch]].map(([a, b]) => new THREE.Vector2(a, b)));
-  const og = new THREE.ExtrudeGeometry(oct, { depth: 0.2, bevelEnabled: false }).translate(0, 0, -0.1); og.applyMatrix4(new THREE.Matrix4().set(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1)); og.computeVertexNormals();
-  mesh(og, M.frame, stemPivot, [SX, 0.59, 0]); }   // pole runs down through the collar into the square stem   // slimmer round pole out of the clamp (owner)   // longer, thicker upper tube (owner)   // round upper tube runs all the way up; the lock sits in its end
-for (const sz of [1, -1]) mesh(new THREE.PlaneGeometry(0.039, 0.46), M.stemDecal, stemPivot, [SX - 0.0075, 0.262, sz * 0.0253], [0, sz > 0 ? 0 : PI, 0]);   // light-bar decal, collar to base
+  const og = new THREE.ExtrudeGeometry(oct, { depth: 0.2 + JD, bevelEnabled: false }).translate(0, 0, -(0.2 + JD) / 2); og.applyMatrix4(new THREE.Matrix4().set(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1)); og.computeVertexNormals();
+  mesh(og, M.frame, stemPivot, [SX, 0.59 - JD / 2, 0]); }   // pole runs down through the collar into the square stem   // slimmer round pole out of the clamp (owner)   // longer, thicker upper tube (owner)   // round upper tube runs all the way up; the lock sits in its end
+for (const sz of [1, -1]) mesh(new THREE.PlaneGeometry(0.039, 0.394), M.stemDecal, stemPivot, [SX - 0.0075, 0.229, sz * 0.0253], [0, sz > 0 ? 0 : PI, 0]);   // light-bar decal, collar to base
 const H = 0.69;    // handlebar height above the hinge
 { // base casting where the stem meets the fold hinge: wide foot with curved shoulders sweeping up into the tube (V), pin boss, two pockets
   const b = new THREE.Shape(); b.moveTo(-0.033, 0); b.lineTo(0.033, 0); b.lineTo(0.033, 0.026); b.quadraticCurveTo(0.033, 0.034, 0.026, 0.04); b.lineTo(0.024, 0.06);
@@ -1389,7 +1392,7 @@ tag(disp, 'mode');
     for (const y of [-0.008, -0.005, -0.002]) mesh(new THREE.TorusGeometry(0.0039, 0.0006, 5, 14).rotateX(PI / 2), cb, pg, [0, y, 0]);
     if (k === 2) mesh(new THREE.CylinderGeometry(0.0036, 0.0036, 0.003, 14), std(0x1fa38a, 0.5, 0), pg, [0, 0.0135, 0]); }   // the green-capped one
   // harness wrap: down the FRONT of the round pole and into the orange collar (owner's photos)
-  spiralWrap(new THREE.CatmullRomCurve3([V(0.1, 0.612, 0.004), V(0.068, 0.604, 0.03), V(0.03, 0.594, 0.033), V(0.012, 0.578, 0.018), V(0.0105, 0.55, 0.008), V(0.0115, 0.527, 0.006), V(0.0125, 0.505, 0.006), V(0.0135, 0.485, 0.005)]), stemPivot, 0.0068); }   // round to the RIDER side of the pole, down into the collar
+  spiralWrap(new THREE.CatmullRomCurve3([V(0.1, 0.612, 0.004), V(0.068, 0.604, 0.03), V(0.03, 0.594, 0.033), V(0.012, 0.578, 0.018), V(0.0105, 0.55, 0.008), V(0.0115, 0.505, 0.006), V(0.0125, 0.465, 0.006), V(0.0135, 0.44, 0.005), V(0.014, 0.419, 0.005)]), stemPivot, 0.0068); }   // round to the RIDER side of the pole, down into the collar
 // ---- ignition lock on the stem under the display ("OFF ON / IGNITION"), key + keyring
 const ignTex = canvasTex(256, 256, (g, W, Hh) => {
   g.fillStyle = '#121315'; g.fillRect(0, 0, W, Hh); g.fillStyle = '#5a5d63'; g.font = '700 30px "IBM Plex Mono", monospace'; g.textAlign = 'center'; g.textBaseline = 'middle';
