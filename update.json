@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1459",
-  "notes": "Display turn arrow blinks like the real one (0.31 s on / 0.31 s off); NON shows on the display when P06 = 1 (non-zero start)",
+  "version": "2026.1122.1501",
+  "notes": "Stem Ruitoo RT6 decals / light bars back (they were hidden inside the wider stem)",
   "page": "rt6.html",
-  "sha256": "44ed10a0530c55ce1a3b8a5cfcd7d5ba95784d628527ba33c879aa474c6f2303",
+  "sha256": "a9715deac09322a56e8a8982e2f403afe290e1a17d0ec839dcdd38c0617d7038",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T20:59:13.891Z"
+  "published": "2026-11-22T21:01:14.493Z"
 }

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1459";</script>
+<script>window.RT6_VERSION = "2026.1122.1501";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -1194,7 +1194,7 @@ for (const sz of [1, -1]) {
 { const hz = 0.019, hx = 0.019, ch = 0.007, oct = new THREE.Shape([[-hz + ch, -hx], [hz - ch, -hx], [hz, -hx + ch], [hz, hx - ch], [hz - ch, hx], [-hz + ch, hx], [-hz, hx - ch], [-hz, -hx + ch]].map(([a, b]) => new THREE.Vector2(a, b)));
   const og = new THREE.ExtrudeGeometry(oct, { depth: 0.243, bevelEnabled: false }).translate(0, 0, -0.243 / 2); og.applyMatrix4(new THREE.Matrix4().set(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1)); og.computeVertexNormals();
   mesh(og, M.frame, stemPivot, [SX, 0.5455, 0]); }   // stops under the bar clamp block (owner: no pole above it)   // pole runs down through the collar into the square stem   // slimmer round pole out of the clamp (owner)   // longer, thicker upper tube (owner)   // round upper tube runs all the way up; the lock sits in its end
-for (const sz of [1, -1]) mesh(new THREE.PlaneGeometry(0.05, 0.394), M.stemDecal, stemPivot, [SX - 0.0075, 0.229, sz * 0.0258], [0, sz > 0 ? 0 : PI, 0]);   // light-bar decal, collar to base
+for (const sz of [1, -1]) mesh(new THREE.PlaneGeometry(0.045, 0.394), M.stemDecal, stemPivot, [SX - 0.0075, 0.229, sz * 0.0266], [0, sz > 0 ? 0 : PI, 0]);   // light-bar decal, collar to base
 const H = 0.69;    // handlebar height above the hinge
 { // base casting where the stem meets the fold hinge: wide foot with curved shoulders sweeping up into the tube (V), pin boss, two pockets
   const b = new THREE.Shape(); b.moveTo(-0.033, 0); b.lineTo(0.033, 0); b.lineTo(0.033, 0.026); b.quadraticCurveTo(0.033, 0.034, 0.026, 0.04); b.lineTo(0.024, 0.06);
