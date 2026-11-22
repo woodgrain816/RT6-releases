@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1450",
-  "notes": "Stronger brakes: S stops from 31 mph in 5.4 s, Shift+S (full) in 2.7 s",
+  "version": "2026.1122.1451",
+  "notes": "Space is only the brake (no longer clicks the last button you pressed or walks it backwards)",
   "page": "rt6.html",
-  "sha256": "0a52e826ac72d2803a27b05e120eb656c6d5aed4c6ba8e404ce83532627ca967",
+  "sha256": "7aba8da61dce1311954d3dcfb4ee12ae32511bf09f4e90348526da416b303bea",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T20:50:07.683Z"
+  "published": "2026-11-22T20:51:55.290Z"
 }

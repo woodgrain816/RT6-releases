@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1450";</script>
+<script>window.RT6_VERSION = "2026.1122.1451";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -1795,9 +1795,10 @@ for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) tEl.addEv
 tEl.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowUp') input.throttleUI = Math.min(1, input.throttleUI + 0.1); if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') input.throttleUI = Math.max(0, input.throttleUI - 0.1); });
 tEl.addEventListener('blur', () => input.throttleUI = 0);
 addEventListener('keydown', e => {
+  if (e.key === ' ' && !e.target.closest?.('input,textarea')) e.preventDefault();   // space is ONLY the brake: never clicks a focused button or scrolls
   if (e.repeat || e.target.closest?.('input,textarea')) return;
   const k = e.key.toLowerCase();
-  if (k === 'w') input.throttleKey = true; else if (k === 's' || k === ' ') { input.brakeKey = true; e.preventDefault(); }
+  if (k === 'w') input.throttleKey = true; else if (k === 's' || k === ' ') { input.brakeKey = true; if (k === 's') input.backKey = true; e.preventDefault(); }
   else if (k === 'h') { input.hornKey = true; Sound.horn(true); } else if (k === 'k') setKey(!sim.key);
   else if (k === 'p') input.powerKey = true; else if (k === 'j') setKick(!sim.kickTarget);
   else if (k === 'l') setLights(!sim.lights); else if (k === 'm') cycleMode();
@@ -1805,9 +1806,9 @@ addEventListener('keydown', e => {
 });
 addEventListener('keydown', e => { if (e.key === 'Shift') input.brakeHard = true; });
 addEventListener('keyup', e => { if (e.key === 'Shift') input.brakeHard = false; });
-addEventListener('keyup', e => { const k = e.key.toLowerCase();
+addEventListener('keyup', e => { const k = e.key.toLowerCase(); if (k === ' ' && !e.target.closest?.('input,textarea')) e.preventDefault();
   if (k === 'p') input.powerKey = false;
-  if (k === 'w') input.throttleKey = false; else if (k === 's' || k === ' ') input.brakeKey = false; else if (k === 'h') { input.hornKey = false; Sound.horn(hornOn()); } });
+  if (k === 'w') input.throttleKey = false; else if (k === 's' || k === ' ') { input.brakeKey = false; if (k === 's') input.backKey = false; } else if (k === 'h') { input.hornKey = false; Sound.horn(hornOn()); } });
 
 // pointer on the model itself
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
@@ -2447,7 +2448,7 @@ function suspStep(dt) {
 function rideStep(dt, omega) {
   if (RM.crash) { RM.crash.t += dt; sim.v = Math.max(0, sim.v - 9 * dt);
     if (RM.crash.t > 1.4) { RM.crash = null; RM.walk = { ph: 0 }; toast('Picked it back up. W walks it, A/D steer, F hops back on'); } }
-  else if (RM.walk) { const back = input.brakeKey || RM.keys.s || RM.keys.arrowdown, want = back ? -0.8 : (input.throttleKey || RM.keys.arrowup || input.throttleUI > 0.15) && !input.brakeUI ? 1.35 : 0; sim.v += (want - sim.v) * Math.min(1, dt * 2.5); RM.walk.ph += sim.v * dt / 0.72 * PI; }   // S walks it backwards
+  else if (RM.walk) { const back = input.backKey || RM.keys.arrowdown, want = back ? -0.8 : (input.throttleKey || RM.keys.arrowup || input.throttleUI > 0.15) && !input.brakeUI ? 1.35 : 0; sim.v += (want - sim.v) * Math.min(1, dt * 2.5); RM.walk.ph += sim.v * dt / 0.72 * PI; }   // S walks it backwards
   const k = RM.keys, steerIn = (k.a || k.arrowleft ? 1 : 0) - (k.d || k.arrowright ? 1 : 0), v = sim.v;
   const wantSit = seat.visible && !RM.stand && !RM.walk ? 1 : 0; RM.sit += (wantSit - RM.sit) * Math.min(1, dt * 3.5);
   const accNow = Math.max(-10, Math.min(6, (v - RM.lastV) / Math.max(dt, 1e-3))); RM.lastV = v; RM.acc += (accNow - RM.acc) * Math.min(1, dt * 4);
