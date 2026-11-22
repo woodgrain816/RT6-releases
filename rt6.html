@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1359";</script>
+<script>window.RT6_VERSION = "2026.1122.1402";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -311,7 +311,7 @@ function deckPattern(g, W, H, groove, pill) {   // raised rounded pills (dark) i
   g.fillStyle = pill; g.beginPath(); g.roundRect(b0 + 10, ch0 + 8, b1 - b0 - 20, ch1 - ch0 - 16, 22); g.fill();   // plain band, flush with the pill tops
   g.restore();
 }
-function drawRuitoo(g, cx, cy, u) {   // the decal's square letters (owner photo): notched R, rounded-square o, tall i/t, x-height 0.72
+function drawRuitoo(g, cx, cy, u, text = 'Ruitoo RT6') {   // the decal's square letters (owner photo): notched R, rounded-square o, tall i/t, x-height 0.72
   const xh = 0.72, G = {
     R: [0.8, [[0, 0, 0.2, 1], [0, 0.8, 0.68, 0.2], [0.6, 0.5, 0.2, 0.38], [0.3, 0.42, 0.5, 0.18], ['p', [0.42, 0.42], [0.62, 0.42], [0.8, 0], [0.6, 0]], ['c', 0.68, 0.88, 0.12]]],
     u: [0.66, [[0, 0.12, 0.2, xh - 0.12], [0.46, 0, 0.2, xh], [0.12, 0, 0.42, 0.2], ['c', 0.12, 0.12, 0.12]]],
@@ -320,7 +320,7 @@ function drawRuitoo(g, cx, cy, u) {   // the decal's square letters (owner photo
     o: [0.66, [['o', 0, 0, 0.66, xh, 0.14, 0.2]]],
     T: [0.8, [[0, 0.8, 0.8, 0.2], [0.3, 0, 0.2, 0.8]]],
     6: [0.7, [[0, 0.12, 0.2, 0.76], [0.12, 0.8, 0.58, 0.2], [0.2, 0.42, 0.38, 0.18], [0.12, 0, 0.46, 0.2], [0.5, 0.12, 0.2, 0.36], ['c', 0.12, 0.88, 0.12], ['c', 0.12, 0.12, 0.12], ['c', 0.58, 0.12, 0.12], ['c', 0.58, 0.48, 0.12]]] };
-  const text = 'Ruitoo RT6', gap = 0.14; let w = 0; for (const ch of text) w += ch === ' ' ? 0.45 : G[ch][0] + gap; w -= gap;
+  const gap = 0.14; let w = 0; for (const ch of text) w += ch === ' ' ? 0.45 : G[ch][0] + gap; w -= gap;
   let x = cx - w * u / 2; const by = cy + u / 2;   // baseline (canvas y grows down)
   for (const ch of text) { if (ch === ' ') { x += 0.45 * u; continue; } const [gw, parts] = G[ch];
     for (const p of parts) { g.beginPath();
@@ -361,7 +361,7 @@ function plateTex(right) {   // owner's photos: black plate, big salmon-red band
     // "Ruitoo" up the leg, readable from this side
     g.translate(len * 0.47, 6); if (Math.sin(ang) > 0) g.rotate(PI);   // always reads bottom-to-top, both sides (owner photos)
     g.font = '700 170px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; try { g.letterSpacing = '6px'; } catch {}
-    g.lineWidth = 16; g.strokeStyle = '#121318'; g.strokeText('Ruitoo', 0, 0); g.fillStyle = '#e9ecf1'; g.fillText('Ruitoo', 0, 0);
+    g.fillStyle = '#121318'; for (const [ox, oy] of [[-6, 0], [6, 0], [0, -6], [0, 6]]) drawRuitoo(g, ox, oy, 128, 'Ruitoo'); g.fillStyle = '#e9ecf1'; drawRuitoo(g, 0, 0, 128, 'Ruitoo');
     g.restore();
     g.beginPath(); PL.outline.forEach(([x, y], k) => k ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y))); g.closePath();   // light-grey line inset round the whole plate
     g.lineJoin = 'round'; g.strokeStyle = '#a7adb8'; g.lineWidth = 50; g.stroke(); g.strokeStyle = '#121318'; g.lineWidth = 34; g.stroke();
@@ -410,7 +410,7 @@ const bagTex = canvasTex(512, 512, (g, W, H) => {
 bagTex.wrapS = bagTex.wrapT = THREE.RepeatWrapping; bagTex.repeat.set(2, 3);
 const logoTex = canvasTex(512, 128, (g, W, H) => {
   g.clearRect(0, 0, W, H); g.font = '700 92px "Chakra Petch", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.fillStyle = '#ff6a13'; g.fillText('Ruitoo', W / 2, H / 2 + 4);
+  g.fillStyle = '#ff6a13'; drawRuitoo(g, W / 2, H / 2, 78, 'Ruitoo');   // the real logo's square letters
 });
 const cableTex = canvasTex(64, 16, (g, W, H) => { g.fillStyle = '#121314'; g.fillRect(0, 0, W, H); g.fillStyle = '#2b2d30';
   for (let x = 0; x < W; x += 16) g.fillRect(x, 0, 9, H); });
@@ -674,7 +674,7 @@ M.sideLens = {};
 M.ledOff = null;   // unlit LEDs are hidden behind the lens
 M.ledOn = new THREE.MeshStandardMaterial({ color: 0xff3020, emissive: 0xff2010, emissiveIntensity: 4, roughness: 0.3 });
 // deck: ONE smooth lofted body. Top outline from the overhead photos, side profile from the side photos.
-const DW = [[0.257, 0.068], [0.244, 0.075], [0.225, 0.081], [0.198, 0.087], [0.162, 0.092], [0.109, 0.0955], [0.037, 0.0963], [-0.05, 0.0955], [-0.17, 0.0925], [-0.24, 0.088], [-0.28, 0.082], [-0.298, 0.074], [-0.305, 0.062]];   // owner top-down photo: long taper to a narrow front, rounded-in rear corners
+const DW = [[0.257, 0.066], [0.25, 0.073], [0.2, 0.087], [0.12, 0.0955], [-0.03, 0.0984], [-0.17, 0.0965], [-0.26, 0.088], [-0.312, 0.078], [-0.326, 0.073], [-0.3336, 0.064]];   // owner top-down photo: long taper to a narrow front, rounded-in rear corners
 const DW_CURVE = new THREE.SplineCurve(DW.map(([x, w]) => new THREE.Vector2(x, w))).getPoints(400);
 const wAt = x => { let a = DW_CURVE[0], b = DW_CURVE[DW_CURVE.length - 1];
   for (let k = 0; k < DW_CURVE.length - 1; k++) { const p = DW_CURVE[k], q = DW_CURVE[k + 1];
@@ -685,8 +685,8 @@ function deckOutline(inset = 0) {
   const s = new THREE.Shape(); s.moveTo(side[0].x, side[0].y);
   side.forEach(p => s.lineTo(p.x, p.y)); side.slice().reverse().forEach(p => s.lineTo(p.x, -p.y)); s.closePath(); return s;
 }
-const DECK_TOP = 0.257, DX0 = -0.302, DX1 = 0.255;
-const deckBottom = x => 0.179;   // one constant-thickness block end to end (owner)
+const DECK_TOP = 0.257, DX0 = -0.3336, DX1 = 0.255;   // 23 1/4 in long (owner)
+const deckBottom = x => 0.181;   // 3 in thick (owner)   // one constant-thickness block end to end (owner)
 // side trim (owner photos): from the top edge the side angles OUT to a ridge at mid height, then back IN to the bottom
 function deckProf(x) { const w = wAt(x), yb = deckBottom(x), yt = DECK_TOP, yr = yb + 0.5 * (yt - yb);
   return { w, yb, yt, yr, zU: y => w - 0.008 * (y - yr) / (yt - yr), zL: y => w - 0.03 * (yr - y) / (yr - yb) }; }
@@ -716,7 +716,7 @@ const gripGeo = (() => {
   const ol = deckOutline(0.009).getPoints(), inside = (x, y) => { let c = false; for (let i = 0, j = ol.length - 1; i < ol.length; j = i++) { const a = ol[i], b = ol[j];
     if ((a.y > y) !== (b.y > y) && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) c = !c; } return c; };
   const cv = deckBump.image, px = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data, CW = cv.width, CH = cv.height;
-  const NX = 620, NY = 230, X0 = -0.293, Y0 = -0.106, SX_ = 0.558, SY_ = 0.212, pos = [], uv = [], idx = [];
+  const NX = 620, NY = 230, X0 = -0.3266, Y0 = -0.106, SX_ = 0.5916, SY_ = 0.212, pos = [], uv = [], idx = [];
   for (let j = 0; j <= NY; j++) for (let i = 0; i <= NX; i++) { const u = i / NX, v = j / NY, x = X0 + u * SX_, y = Y0 + v * SY_;
     const p = Math.min(CW - 1, Math.round(u * (CW - 1))) + Math.min(CH - 1, Math.round((1 - v) * (CH - 1))) * CW, h = px[p * 4] / 255;
     pos.push(x, h * 0.0012, -y); uv.push(u, v); }
@@ -737,7 +737,7 @@ for (const sz of [1, -1]) {
   // moulding seams where the end caps meet the middle section
   // red wedge reflector on the rear side: tall at the back, tapering forward
   { // signal lens in the end cap: tall at the back, tapering forward; built ON the deck side surface so it sits flush
-    const N = 40, NY = 6, x0 = -0.286, x1 = -0.11;
+    const N = 40, NY = 6, x0 = -0.3196, x1 = -0.1436;
     const build = off => { const pos = [], idx = [];
       for (let k = 0; k <= N; k++) { const t = k / N, x = x0 + (x1 - x0) * t;
         const top = 0.249, bot = Math.max(deckBottom(x) + 0.006, top - 0.026 * Math.pow(1 - t, 0.8) - 0.0015);
@@ -752,7 +752,7 @@ for (const sz of [1, -1]) {
     mesh(build(0.0003), M.sideLens[sz], frame);
     const gl = mesh(build(0.0011), M.glass, frame); gl.castShadow = false; }
   // turn-signal LEDs behind the lens: 6 per side, front to back
-  for (let k = 0; k < 6; k++) { const x = -0.15 - k * 0.022;
+  for (let k = 0; k < 6; k++) { const x = -0.1836 - k * 0.022;
     const led = mesh(new THREE.SphereGeometry(0.0026, 12, 8).scale(1, 1, 0.3), M.ledOn, frame, [x, 0.2425, sz * (sideZ(x, 0.2425) + 0.0004)]); led.visible = false; sigLeds[sz].push(led); }   // between lens and glass so they show when lit   // behind the lens skin
   mesh(new THREE.CircleGeometry(0.0035, 16), std(0x050505, 0.9, 0), frame, onSide(0.237, 0.215, sz, 0.0009).toArray(), [0, sz > 0 ? 0 : PI, 0]);
 }
@@ -833,25 +833,25 @@ const chargerSet = new THREE.Group(); chargerSet.name = 'ChargerBrick'; chargerS
 const plateP = PL.outline;
 const pminX = PL.x0, pW = PL.x1 - PL.x0, pminY = PL.y0, pH = PL.y1 - PL.y0;
 for (const [i, sz] of [[0, -1], [1, 1]]) {
-  ext(poly(plateP), 0.004, M.frame, frame, sz * 0.03, 0.0008);
+  ext(poly(plateP), 0.004, M.frame, frame, sz * 0.0245, 0.0008);   // 57 mm (2 1/4 in) across the outside (owner)
   const dg = mapUV(new THREE.ShapeGeometry(poly(plateP)), (x, y) => [sz < 0 ? (pminX + pW - x) / pW : (x - pminX) / pW, (y - pminY) / pH]);
-  mesh(dg, plateMats[i], frame, [0, 0, sz * 0.0331]);   // just proud of the plate bevel (was z-fighting)
+  mesh(dg, plateMats[i], frame, [0, 0, sz * 0.0276]);   // just proud of the plate bevel (was z-fighting)
 }
 // lattice across the rear face between the plates (open windows, graphic behind), top cap, foot block
 { const lat = new THREE.Group(); lat.position.set(0.3, 0.29, 0); lat.rotation.z = 1.2; frame.add(lat);
-  for (const x of [0.006, -0.047]) mesh(new THREE.CylinderGeometry(0.0065, 0.0065, 0.056, 8).rotateX(PI / 2).scale(0.8, 1, 1), M.frame, lat, [x, 0, 0]);   // two faceted round bars (owner)   // flat rungs, as seen from above
+  for (const x of [0.006, -0.047]) mesh(new THREE.CylinderGeometry(0.0065, 0.0065, 0.045, 8).rotateX(PI / 2).scale(0.8, 1, 1), M.frame, lat, [x, 0, 0]);   // two faceted round bars (owner)   // flat rungs, as seen from above
 }   // windows left open; frame + plate insides are black
-mesh(new RoundedBoxGeometry(0.07, 0.008, 0.06, 4, 0.003), M.frame, frame, [0.357, 0.401, 0]);
-{ const lug = mesh(new RoundedBoxGeometry(0.03, 0.094, 0.056, 3, 0.004), M.frame, frame, [0.392, 0.36, 0]); lug.rotation.z = RAKE; }   // head-tube lug the plates bolt to (they were floating beside the tube)   // top cap
-mesh(new RoundedBoxGeometry(0.026, 0.04, 0.06, 4, 0.005), M.frame, frame, [0.27, 0.205, 0]);   // deck nose block the leg bolts to
+mesh(new RoundedBoxGeometry(0.07, 0.008, 0.049, 4, 0.003), M.frame, frame, [0.357, 0.401, 0]);
+{ const lug = mesh(new RoundedBoxGeometry(0.03, 0.094, 0.045, 3, 0.004), M.frame, frame, [0.392, 0.36, 0]); lug.rotation.z = RAKE; }   // head-tube lug the plates bolt to (they were floating beside the tube)   // top cap
+mesh(new RoundedBoxGeometry(0.026, 0.04, 0.049, 4, 0.005), M.frame, frame, [0.27, 0.205, 0]);   // deck nose block the leg bolts to
 for (const sz of [1, -1]) {
   for (const [x, y] of [[0.383, 0.332], [0.38, 0.357], [0.3765, 0.382]]) {   // three big countersunk bolts into the head tube
-    mesh(new THREE.CylinderGeometry(0.0068, 0.0068, 0.0012, 28).rotateX(PI / 2), M.chrome, frame, [x, y, sz * 0.0335]);
-    mesh(new THREE.CylinderGeometry(0.0024, 0.0024, 0.0006, 6).rotateX(PI / 2), std(0x050506, 0.9, 0), frame, [x, y, sz * 0.0342]); }
+    mesh(new THREE.CylinderGeometry(0.0068, 0.0068, 0.0012, 28).rotateX(PI / 2), M.chrome, frame, [x, y, sz * 0.028]);
+    mesh(new THREE.CylinderGeometry(0.0024, 0.0024, 0.0006, 6).rotateX(PI / 2), std(0x050506, 0.9, 0), frame, [x, y, sz * 0.0287]); }
   for (const [x, y] of [[0.322, 0.392], [0.36, 0.322], [0.275, 0.268], [0.267, 0.188]])   // small domed button bolts
-    mesh(new THREE.SphereGeometry(0.0038, 16, 8, 0, TAU, 0, PI / 2).scale(1, 0.55, 1).rotateX(sz * PI / 2), M.chrome, frame, [x, y, sz * 0.0334]); }
+    mesh(new THREE.SphereGeometry(0.0038, 16, 8, 0, TAU, 0, PI / 2).scale(1, 0.55, 1).rotateX(sz * PI / 2), M.chrome, frame, [x, y, sz * 0.0279]); }
 // rear swingarm, shocks, kickstand
-const SWP = V(-0.31, 0.195, 0), swingG = new THREE.Group(); swingG.name = 'Swingarm'; frame.add(swingG);
+const SWP = V(-0.3436, 0.195, 0), swingG = new THREE.Group(); swingG.name = 'Swingarm'; frame.add(swingG);
 const shockG = new THREE.Group(); shockG.name = 'Shocks'; shockG.matrixAutoUpdate = false; frame.add(shockG);
 for (const sz of [1, -1]) {
   { const P = [SWP.x, SWP.y], A = [RX, AX], L = Math.hypot(A[0] - P[0], A[1] - P[1]), ux = (A[0] - P[0]) / L, uy = (A[1] - P[1]) / L, upx = uy, upy = -ux, h = 0.021;   // straight bar pivot -> axle (owner photo)
@@ -864,7 +864,7 @@ for (const sz of [1, -1]) {
   mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.01, 16).rotateX(PI / 2), M.zinc, frame, [SWP.x, SWP.y, sz * 0.061]);
   // shock: eye on a tab above the axle, angled up to the frame end beside the deck light. Short end piece, fat body,
   // stepped collar, slimmer front tube; silver button-head bolts through both eyes
-  const zS = sz * 0.076, b = V(-0.414, 0.181, zS), a = V(-0.316, 0.243, zS), at = t => b.clone().lerp(a, t).toArray();
+  const zS = sz * 0.076, b = V(-0.414, 0.181, zS), a = V(-0.3496, 0.243, zS), at = t => b.clone().lerp(a, t).toArray();
   rod(at(0.08), at(0.2), 0.0095, M.frame, shockG, 24);
   rod(at(0.2), at(0.6), 0.0178, M.frame, shockG, 32);
   rod(at(0.6), at(0.7), 0.0186, M.frame, shockG, 32);
@@ -874,8 +874,8 @@ for (const sz of [1, -1]) {
     mesh(new THREE.SphereGeometry(0.0072, 16, 8, 0, TAU, 0, PI / 2).scale(1, 0.55, 1).rotateX(sz * PI / 2), M.chrome, shockG, [e.x, e.y, e.z + sz * 0.01]);
     mesh(new THREE.CylinderGeometry(0.0075, 0.0075, 0.012, 16).rotateX(PI / 2), M.frame, shockG, [e.x, e.y, sz * 0.062]); }
   { // rear bracket (owner photos): small plate flush against the deck's rear end, in line with its side; shock eye bolted at the top, swingarm pivot at the bottom
-    ext(roundPoly([[-0.299, 0.256], [-0.326, 0.256], [-0.33, 0.25], [-0.33, 0.2], [-0.322, 0.178], [-0.299, 0.18]], 0.004), 0.006, M.frame, frame, sz * 0.059, 0.0008);   // ear on the deck's rear end: shock on top, pivot below
-    mesh(new THREE.CylinderGeometry(0.0085, 0.0085, 0.008, 20).rotateX(PI / 2), M.frame, frame, [-0.316, 0.243, sz * 0.068]);   // spacer between the bracket and the shock eye
+    ext(roundPoly([[-0.3326, 0.256], [-0.3596, 0.256], [-0.3636, 0.25], [-0.3636, 0.2], [-0.3556, 0.178], [-0.3326, 0.18]], 0.004), 0.006, M.frame, frame, sz * 0.059, 0.0008);   // ear on the deck's rear end: shock on top, pivot below
+    mesh(new THREE.CylinderGeometry(0.0085, 0.0085, 0.008, 20).rotateX(PI / 2), M.frame, frame, [-0.3496, 0.243, sz * 0.068]);   // spacer between the bracket and the shock eye
     mesh(new THREE.CylinderGeometry(0.0095, 0.0095, 0.003, 24).rotateX(PI / 2), M.zinc, frame, [SWP.x, SWP.y, sz * 0.0635]);   // flanged pivot nut
     mesh(new THREE.CylinderGeometry(0.0068, 0.0068, 0.006, 6).rotateX(PI / 2), M.zinc, frame, [SWP.x, SWP.y, sz * 0.067]); }
   // axle: steel rod through the hub with spacers between the motor and the swingarm plates
@@ -956,7 +956,7 @@ for (const sz of [1, -1]) {   // fender mount on the swingarm: tab at the front 
 }
 
 queueMicrotask(() => {   // spiralWrap is defined further down
-  spiralWrap(new THREE.CatmullRomCurve3([V(-0.285, 0.2, -0.046), V(-0.31, 0.19, -0.046), V(-0.35, 0.162, -0.046), V(-0.39, 0.134, -0.046), V(-0.405, 0.12, -0.052), V(-0.412, 0.114, -0.062), V(-0.418, 0.11, -0.066)]), frame, 0.0048);   // behind the swingarm plate, out at the dropout (owner)
+  spiralWrap(new THREE.CatmullRomCurve3([V(-0.3186, 0.2, -0.046), V(-0.344, 0.19, -0.046), V(-0.37, 0.165, -0.046), V(-0.39, 0.134, -0.046), V(-0.405, 0.12, -0.052), V(-0.412, 0.114, -0.062), V(-0.418, 0.11, -0.066)]), frame, 0.0048);   // behind the swingarm plate, out at the dropout (owner)
   { const cb = std(0x121214, 0.5, 0.05), g = new THREE.Group(); g.position.set(-0.425, 0.104, -0.066); g.rotation.z = 0.75; swingG.add(g);   // connector at the dropout: boot with a spring strain relief
     mesh(new THREE.CylinderGeometry(0.0055, 0.0055, 0.016, 16), cb, g); mesh(new THREE.TubeGeometry(new Helix(0.0058, 0.012, 6), 60, 0.0008, 5), cb, g, [0, -0.02, 0]);
     mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(-0.42, 0.112, -0.066), V(-0.435, 0.118, -0.064), V(-0.445, 0.127, -0.06)]), 16, 0.003, 8), cb, swingG); }   // short lead into the axle
@@ -1379,7 +1379,7 @@ const paddle = new THREE.Group(); paddle.position.set(0, 0, -0.003); thr.add(pad
 tag(paddle, 'throttle');
 const throttleCable = new THREE.CatmullRomCurve3([V(0.01, -0.02, 0.19), V(0.03, -0.05, 0.15), V(0.035, -0.07, 0.06), V(0.03, -0.08, 0.02)]);
 // cables left off for now
-const ZAX = V(0, 0, 1), SHK_A = V(-0.316, 0.243, 0), SHK_B = V(-0.414, 0.181, 0);
+const ZAX = V(0, 0, 1), SHK_A = V(-0.3496, 0.243, 0), SHK_B = V(-0.414, 0.181, 0);
 function setSusp(cF, cR) {   // cF: fork compression along the stanchions, cR: rear axle rise (m)
   forkLow.position.y = cF;
   const th = -cR / Math.hypot(SWP.x - RX, SWP.y - AX); swingG.rotation.z = th; swingG.position.copy(SWP).sub(SWP.clone().applyAxisAngle(ZAX, th));
@@ -1419,8 +1419,6 @@ const OUT = (() => { const arc = (cx, cy, r, a0, a1) => Array.from({ length: 9 }
   return [[-0.095, -0.004], [-0.095, -0.011], [-0.093, -0.0135], [-0.0745, -0.0478], [0.0745, -0.0478], [0.093, -0.0135], [0.095, -0.011], [0.095, -0.004], [0.0929, 0.0], [0.0625, 0.0455], [0.06, 0.0477], [0.0195, 0.0477], [0.0175, 0.0435], [-0.0175, 0.0435], [-0.0195, 0.0477], [-0.06, 0.0477], [-0.0625, 0.0455], [-0.0929, 0.0]]; })();   // traced from the product photo: ears either side of the badge notch, long upper diagonals to short side points, lower diagonals, flat bottom
 const OUTS = OUT.map(([x, y]) => [x * 0.86, y * 0.9]);   // slimmer frame: ~1 cm border round the glass
 mesh(permute(smoothExt(roundPoly(OUTS, 0.0008), 0.01, 0.0011, 3), FACE_UP), M.plastic, disp, [0, 0.004, 0]);   // top bezel layer
-for (const sx of [1, -1]) { const t = new THREE.Shape([[sx * 0.0775, -0.0065], [sx * 0.0715, -0.001], [sx * 0.0715, -0.012]].map(([x, y]) => new THREE.Vector2(x, y)));   // triangle facets on the side points (photo)
-  mesh(permute(smoothExt(t, 0.0012, 0.0005, 2), FACE_UP), std(0x1b1c1f, 0.5, 0.1), disp, [0, 0.0148, 0]); }
 mesh(permute(smoothExt(roundPoly(OUTS.map(([x, y]) => [x * 1.025, y * 1.03]), 0.0009), 0.009, 0.001, 3), FACE_UP), std(0x121315, 0.65, 0.05), disp, [0, -0.0085, 0]);   // lower body layer, slightly larger, with the seam between
 // (no separate back housing: the case is one thin shell)
 const SCR = [[-0.061, -0.026], [-0.05, -0.038], [0.05, -0.038], [0.0605, -0.026], [0.061, 0.017], [0.05, 0.036], [0.034, 0.036], [0.031, 0.030], [0.0, 0.0285], [-0.03, 0.030], [-0.0325, 0.035], [-0.055, 0.035], [-0.061, 0.022]];
@@ -1432,7 +1430,7 @@ mapUV(scrGeo, (x, y) => [(x + 0.061) / 0.122, (y + 0.0335) / 0.061]);   // true 
 mesh(permute(scrGeo, FACE_UP), M.screen, disp, [0, 0.0142, 0], [0, 0, 0], 'Screen');
 M.sigTri = {};   // turn-signal indicators: the little triangles in the side points of the display frame
 for (const sz of [1, -1]) { M.sigTri[sz] = new THREE.MeshStandardMaterial({ color: 0x1c1d20, roughness: 0.55 });
-  mesh(permute(smoothExt(poly([[0, -0.008], [sz * 0.006, -0.002], [0, 0.006]]), 0.0012, 0.0009, 3), FACE_UP), M.sigTri[sz], disp, [0.0, 0.0142, sz * 0.0715]); }   // raised bumps centred in the frame band between the glass edge and the outer edge (owner)
+}   // (no triangle shapes on the frame: owner)
 mesh(permute(smoothExt(roundPoly([[-0.0295, 0], [-0.024, -0.0055], [0.024, -0.0055], [0.0295, 0], [0.024, 0.0055], [-0.024, 0.0055]], 0.0015), 0.002, 0.0012, 3), FACE_UP), std(0x0d0e10, 0.12, 0.3), disp, [0.042, 0.0145, 0]);
 mesh(permute(new THREE.PlaneGeometry(0.042, 0.0095), FACE_UP), M.logo, disp, [0.042, 0.0168, 0]);
 tag(disp, 'mode');
@@ -1601,7 +1599,7 @@ mesh(new THREE.CircleGeometry(0.0085, 20), std(0x030303, 1, 0), frame, [0.2625, 
 { // rear brake cable comes out of a rubber grommet in the deck's rear-right side, runs past the shock to the caliper
   const gx = -0.235, gy = 0.222, gz = sideZ(gx, gy);
   // out of the deck's rear end just outside the ear, over the shock, to the caliper (owner photos)
-  mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(-0.28, 0.24, 0.067), V(-0.3, 0.244, 0.067), V(-0.318, 0.258, 0.069), V(-0.36, 0.25, 0.08), V(RX + 0.02, AX + 0.15, 0.085), V(RX - 0.01, AX + 0.124, 0.068)]), 60, 0.0022, 8), cableM, frame); }
+  mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(-0.3136, 0.24, 0.067), V(-0.3336, 0.244, 0.067), V(-0.3516, 0.258, 0.069), V(-0.36, 0.25, 0.08), V(RX + 0.02, AX + 0.15, 0.085), V(RX - 0.01, AX + 0.124, 0.068)]), 60, 0.0022, 8), cableM, frame); }
 // rear wheel + caliper
 const rearWheel = makeWheel(true); rearWheel.scale.setScalar(0.96); rearWheel.position.set(RX, AX, 0); swingG.add(rearWheel);
 { const rc = caliper(swingG, 0.0384); rc.position.set(RX, AX, 0); M.calipers.push(rc); }   // top-rear of the rear disc
