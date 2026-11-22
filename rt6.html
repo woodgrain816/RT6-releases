@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1330";</script>
+<script>window.RT6_VERSION = "2026.1122.1332";</script>
 <style>html,body{margin:0}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ruitoo RT6 Simulator</title>
@@ -772,11 +772,10 @@ for (const sz of [1, -1]) {
      '   WHENEVER RIDING.', '4. CAREFULLY READ AND FOLLOW ALL REQUIREMENTS', '   AND RECOMMENDATIONS IN THE USER MANUAL.', '5. STORE INDOORS.'].forEach((l, i) => g.fillText(l, 8, 48 + i * 16)); });
   queueMicrotask(() => mesh(new THREE.PlaneGeometry(0.044, 0.033), std(0xffffff, 0.4, 0, { map: t }), steer, [0, 0.3165, -0.0335], [0, PI, 0])); }   // label on the LEFT side of the fold block (owner photo)   // warning label on the fold block (photo)
 { const cp = new THREE.Group(); frame.add(cp);   // charge port (owner photos): in a recess on the LOWER, inward-angled face of the left deck side
-  { const x = 0.165, P = deckProf(x), y = P.yb + 0.5 * (P.yr - P.yb), z = -P.zL(y), dzdy = 0.03 / (P.yr - P.yb), n = V(0, -dzdy, -1).normalize();
-    cp.position.set(x, y, z); cp.quaternion.setFromUnitVectors(V(0, 0, 1), n);
-    const up = V(0, 1, 0).applyQuaternion(cp.quaternion.clone().invert()); cp.rotateZ(Math.atan2(-up.x, up.y)); }   // strap hangs toward the ground
+  { const x = 0.165, P = deckProf(x), y = P.yb + 0.55 * (P.yr - P.yb);   // its own flat cut into the lower face: the socket points straight out sideways (owner)
+    cp.position.set(x, y, -P.zL(Math.min(P.yr, y + 0.0125))); cp.rotation.y = PI; }
   const boss = new THREE.Shape(); boss.absarc(0, 0, 0.0125, -PI * 0.36, PI * 1.36, false); boss.lineTo(-0.004, -0.019); boss.lineTo(0.004, -0.019); boss.closePath();   // round boss, flange tapering down to the strap
-  mesh(new THREE.ExtrudeGeometry(boss, { depth: 0.0012, bevelEnabled: true, bevelThickness: 0.0006, bevelSize: 0.0006, bevelSegments: 2, curveSegments: 32 }), M.plastic, cp, [0, 0, -0.0012]);   // moulded lip round the cut-out
+  mesh(new THREE.ExtrudeGeometry(boss, { depth: 0.03, bevelEnabled: true, bevelThickness: 0.0006, bevelSize: 0.0006, bevelSegments: 2, curveSegments: 32 }), M.plastic, cp, [0, 0, -0.0306]);   // vertical flat cut for the port, running back into the angled face
   mesh(new THREE.CircleGeometry(0.0108, 36), std(0x050506, 0.9, 0), cp, [0, 0, 0.0002]);                                    // the hole cut for it
   const ring = mesh(new THREE.CylinderGeometry(0.0084, 0.0084, 0.0052, 40, 1, true).rotateX(PI / 2), M.chrome, cp, [0, 0, 0.0026]);   // threaded metal body
   for (let k = 0; k < 4; k++) mesh(new THREE.TorusGeometry(0.0086, 0.00055, 6, 40), M.chrome, cp, [0, 0, 0.0008 + k * 0.0012]);      // thread ridges

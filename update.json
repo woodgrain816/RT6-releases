@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1330",
-  "notes": "Deck top: nested chevron pattern, wider logo band, square Ruitoo RT6 lettering like the real decal",
+  "version": "2026.1122.1332",
+  "notes": "Charge port sits in its own flat cut and points straight out sideways",
   "page": "rt6.html",
-  "sha256": "9a538ffe99d9c40af4afe61b38a5d6462091e96714ec16b8b6daf4578a79f29e",
+  "sha256": "c457e2ffd471902365d5f21d770049f797501d07be15f77b5f407ba8d6aba6d1",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T19:30:22.269Z"
+  "published": "2026-11-22T19:32:39.090Z"
 }
