@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1737",
-  "notes": "Lighter on phones, 19 missions, arrow to the target, find-the-highway mission",
+  "version": "2026.1122.1935",
+  "notes": "Walk scooter back with the stick, traffic-law missions, minimap with the highway, bigger map, 28 missions",
   "page": "rt6.html",
-  "sha256": "5f360888d5180e4bfce85865258c96950bbf4884ab574847f0f744082c735951",
+  "sha256": "b7c923afbacabff059d98f66b4264357a130dc9cbd49bce2c34f42d52d9a37f7",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-22T23:38:01.981Z"
+  "published": "2026-11-23T01:35:54.608Z"
 }

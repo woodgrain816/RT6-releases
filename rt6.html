@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1737";</script>
+<script>window.RT6_VERSION = "2026.1122.1935";</script>
 <style>html,body{margin:0}</style>
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -1926,7 +1926,7 @@ const RM = { on: false, stand: false, sit: 1, acc: 0, lastV: 0, pitch: 0, shake:
 const SPAWN = { x: 22.6, z: -16.5, yaw: -PI / 2 };   // inside the home garage, nose toward the street
 const GARAGE = { x0: 20.4, x1: 24.8, z0: -22.3, z1: -12.4 };
 const inGarage = () => scooter.position.x > GARAGE.x0 && scooter.position.x < GARAGE.x1 && scooter.position.z > GARAGE.z0 && scooter.position.z < GARAGE.z1;
-const HO = 210, BLK = 70, ROAD = 10, WALK = 2.5, NB = 8, CURB = 0.1;   // blocks (sidewalk + lawns + lots) sit a 10 cm curb above the road   // roads every 70 m, 10 m wide, 2.5 m sidewalks, blocks -2..2
+const HO = 350, BLK = 70, ROAD = 10, WALK = 2.5, NB = 10, CURB = 0.1;   // blocks (sidewalk + lawns + lots) sit a 10 cm curb above the road   // roads every 70 m, 10 m wide, 2.5 m sidewalks, blocks -2..2
 
 function colored(geo, hex) {
   const g = geo.index ? geo.toNonIndexed() : geo.clone(); const c = new THREE.Color(hex), n = g.attributes.position.count, a = new Float32Array(n * 3);
@@ -2382,7 +2382,7 @@ function buildTraffic(town) {
   const types = ['sedan', 'sedan', 'hatch', 'suv', 'suv', 'pickup'];
   let seed = 5; const R = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   RM.cars = [];
-  for (let n = 0, tries = 0; n < (matchMedia('(pointer:coarse)').matches ? 70 : 110) && tries < 2200; tries++) {
+  for (let n = 0, tries = 0; n < (matchMedia('(pointer:coarse)').matches ? 80 : 130) && tries < 2600; tries++) {
     const span = R() < 0.55 ? 2 : NB, i = Math.floor(R() * (2 * span + 1)) - span, j = Math.floor(R() * (2 * span + 1)) - span, d = [[1, 0], [-1, 0], [0, 1], [0, -1]][Math.floor(R() * 4)];
     if (Math.abs(i - d[0]) > NB || Math.abs(j - d[1]) > NB) continue;
     const nx = i * BLK, nz = j * BLK, t = 0.15 + R() * 0.6, rx = -d[1], rz = d[0];
@@ -2697,34 +2697,59 @@ function suspStep(dt) {
   B.cF = Math.min(SUS.tF + 0.004, Math.max(0, cF)); B.cR = Math.min(SUS.tR + 0.004, Math.max(0, cR));
   setSusp(B.cF / Math.cos(RAKE), B.cR); }
 // ---------------------------------------------------------------- missions
+const XH = 714;   // highway starts here (east of the connector)
 const MS = [
   { t: 'Hold a wheelie for 3 seconds', k: 'wheelie', n: 3, pts: 100, hint: 'Hold G and punch W' },
+  { t: 'Follow the law: cross 5 intersections on green', k: 'lights', n: 5, pts: 150, hint: 'Red light = start over. Stop and wait!' },
   { t: 'Carve a turn on one wheel (45 degrees)', k: 'carve', n: 0.8, pts: 150, hint: 'Wheelie, then lean A or D' },
-  { t: 'Pizza run: reach the glowing marker in 75 s', k: 'goto', x: 140, z: -70, time: 75, pts: 150 },
-  { t: 'Ride calmly: stay under 15 mph for 0.25 mi', k: 'slow', n: 402, pts: 150, hint: 'Cops love a careful rider' },
-  { t: 'Find the highway: ride east to the marker', k: 'goto', x: 716, z: 0, time: 150, pts: 200, hint: 'Straight east along the main road' },
-  { t: 'Highway: reach 28 mph', k: 'speed', n: 12.5, xmin: 574, pts: 250, hint: 'East of town, mode 3' },
+  { t: 'Stop for a red light and wait for green', k: 'redstop', pts: 200, hint: 'Stop before the line, 3 s, then go' },
+  { t: 'Pizza run: reach the marker in 75 s', k: 'goto', x: 140, z: -70, time: 75, pts: 150 },
+  { t: 'Signal LEFT, then turn left', k: 'sigturn', d: -1, pts: 150, hint: 'Left signal button, then turn' },
+  { t: 'Ride calmly: under 15 mph for 0.25 mi', k: 'slow', n: 402, pts: 150, hint: 'Cops love a careful rider' },
+  { t: 'Find the highway: see the map, HWY', k: 'goto', x: XH + 142, z: 0, time: 210, pts: 200, hint: 'Check the little map: yellow line' },
+  { t: 'Highway: reach 28 mph', k: 'speed', n: 12.5, xmin: XH, pts: 250, hint: 'Out on the highway, mode 3' },
+  { t: 'Signal RIGHT, then turn right', k: 'sigturn', d: 1, pts: 150, hint: 'Right signal button, then turn' },
   { t: 'Hold a wheelie for 6 seconds', k: 'wheelie', n: 6, pts: 200 },
-  { t: 'Pizza run 2: across town in 90 s', k: 'goto', x: -210, z: 140, time: 90, pts: 200 },
-  { t: 'Wheelie for a quarter mile (0.25 mi)', k: 'wdist', n: 402, pts: 400, hint: 'Keep the front wheel up' },
+  { t: 'Pizza run 2: across town, obey the lights', k: 'goto', x: -210, z: 140, time: 100, law: 1, pts: 250, hint: 'Run a red = the order restarts' },
+  { t: 'Wheelie for a quarter mile', k: 'wdist', n: 402, pts: 400, hint: 'Keep the front wheel up' },
+  { t: 'Lawful rider: 10 intersections, no reds', k: 'lights', n: 10, pts: 300 },
   { t: 'Ride half a mile without a crash', k: 'dist', n: 804.67, pts: 250 },
-  { t: 'Highway top speed: 31 mph', k: 'speed', n: 13.7, xmin: 574, pts: 300, hint: 'Mode 3, full throttle' },
-  { t: 'Highway wheelie: hold it 5 s out east', k: 'wheelie', n: 5, xmin: 574, pts: 350 },
-  { t: 'Pizza run 3: far corner, 120 s', k: 'goto', x: 420, z: -350, time: 120, pts: 300 },
+  { t: 'Highway top speed: 31 mph', k: 'speed', n: 13.7, xmin: XH, pts: 300, hint: 'Mode 3, full throttle' },
+  { t: 'Highway cruise: half a mile above 22 mph', k: 'hwdist', n: 804, minv: 9.8, xmin: XH, pts: 350, hint: 'Stay on it, keep your speed up' },
+  { t: 'Highway wheelie: hold it 5 s out east', k: 'wheelie', n: 5, xmin: XH, pts: 350 },
+  { t: 'Speed limit: under 20 mph for half a mile', k: 'slow', n: 804, lim: 8.9, pts: 300 },
+  { t: 'Pizza run 3: far corner, obey the lights', k: 'goto', x: 480, z: -420, time: 150, law: 1, pts: 350 },
   { t: 'Stay out of trouble for 3 minutes', k: 'calm', n: 180, pts: 300, hint: 'No chases, no crashes' },
   { t: 'Take a break: sit on a park bench', k: 'sit', pts: 150, hint: 'F, J, X, walk to a bench, Z' },
   { t: 'Rest against a tree', k: 'tree', pts: 150, hint: 'Walk to a tree, press Z' },
   { t: 'Get pulled over and take the warning', k: 'warn', pts: 250, hint: 'Wheelie until a cop comes, then stop' },
   { t: 'Hold a wheelie for 10 seconds', k: 'wheelie', n: 10, pts: 400 },
-  { t: 'Pizza run 4: way out west, 140 s', k: 'goto', x: -420, z: 280, time: 140, pts: 400 }];
-const MSS = (() => { try { return JSON.parse(localStorage.getItem('rt6ms2') || '{}'); } catch (e) { return {}; } })();
+  { t: 'Pizza run 4: way out west, no reds', k: 'goto', x: -560, z: 380, time: 170, law: 1, pts: 450 },
+  { t: 'Perfect citizen: 20 intersections, no reds', k: 'lights', n: 20, pts: 500 },
+  { t: 'Last order: far north-east, 3 minutes', k: 'goto', x: 600, z: -600, time: 180, law: 1, pts: 600 }];
+const MSS = (() => { try { return JSON.parse(localStorage.getItem('rt6ms3') || '{}'); } catch (e) { return {}; } })();
 RM.ms = { i: Math.min(MS.length, MSS.i || 0), score: MSS.score || 0, t: 0, a: 0, b: 0, c: 0 };
-function msSave() { try { localStorage.setItem('rt6ms2', JSON.stringify({ i: RM.ms.i, score: RM.ms.score })); } catch (e) { void e; } }
+function msSave() { try { localStorage.setItem('rt6ms3', JSON.stringify({ i: RM.ms.i, score: RM.ms.score })); } catch (e) { void e; } }
 function msHud() { const m = RM.ms, h = document.getElementById('msHud'); if (!h) return; const c = MS[m.i];
   h.innerHTML = '<b>MISSION ' + Math.min(m.i + 1, MS.length) + '/' + MS.length + '</b> <span style="float:right">' + m.score + ' pts</span><br>' + (c ? c.t + (c.hint ? '<br><i>' + c.hint + '</i>' : '') + '<br><span id="msP"></span>' : 'All missions done! Free ride.<br><i>Tap to start over</i>'); }
 function msNext(skip) { const m = RM.ms, c = MS[m.i]; if (!c) { m.i = 0; m.score = 0; } else { if (!skip) { m.score += c.pts; toast('Mission complete! +' + c.pts + ' points'); } m.i++; }
-  m.t = m.a = m.b = m.c = 0; msSave(); msHud(); if (RM.beacon) RM.beacon.visible = false; }
-function msStep(dt) {
+  m.t = m.a = m.b = m.c = 0; m.w0 = m.bad0 = undefined; if (RM.law) RM.law.ok = 0; msSave(); msHud(); if (RM.beacon) RM.beacon.visible = false; }
+function lawStep(dt) {
+  const L = RM.law || (RM.law = { in: false, ok: 0, bad: 0, wt: 0 }), sp = scooter.position; if (RM.free || !RM.on) return;
+  const fx = Math.cos(RM.yaw), fz = -Math.sin(RM.yaw), ax = Math.abs(fx) > Math.abs(fz) ? 'x' : 'z', R2 = ROAD / 2;
+  const i = Math.round(sp.x / BLK), j = Math.round(sp.z / BLK), inT = Math.abs(i) <= NB && Math.abs(j) <= NB;
+  const inside = inT && Math.abs(sp.x - i * BLK) < R2 && Math.abs(sp.z - j * BLK) < R2, st = inT ? sigState((i + j) & 1, ax) : 'g';
+  if (inside && !L.in) { L.in = true; if (st === 'r' && sim.v > 1.5) { L.bad++; L.ok = 0; toast('You ran a red light!'); } else if (sim.v > 0.5) L.ok++; }
+  if (!inside) L.in = false;
+  const s1 = (ax === 'x' ? fx : fz) > 0 ? 1 : -1, u = (ax === 'x' ? sp.x : sp.z) * s1, lat = ax === 'x' ? sp.z : sp.x, k = Math.ceil((u + R2 - 0.01) / BLK), o = Math.round(lat / BLK);
+  const gap = k * BLK - R2 - u, ia = ax === 'x' ? k * s1 : o, ja = ax === 'x' ? o : k * s1;
+  const ahead = !inside && gap > 0.3 && gap < 16 && Math.abs(lat - o * BLK) < 6 && Math.abs(ia) <= NB && Math.abs(ja) <= NB, stA = ahead ? sigState((ia + ja) & 1, ax) : 'g', prev = L.atRed;
+  L.atRed = ahead && stA === 'r';
+  if (L.atRed && sim.v < 0.6) L.wt += dt; else if (!L.atRed) { if (prev && L.wt >= 3 && stA !== 'r' && ahead) L.waited = (L.waited || 0) + 1; L.wt = 0; }
+  if (L.atRed === false && prev && ahead === false) L.wt = 0;
+  if (RM.mm && ((RM.mmF = (RM.mmF || 0) + 1) % 8 === 0)) RM.mm();
+}
+function msStep(dt) { lawStep(dt);
   const m = RM.ms, c = MS[m.i], h = document.getElementById('msHud'); if (!h) return; if (!c) return; const P = document.getElementById('msP'), sp = scooter.position;
   const set = t => { if (P && P.textContent !== t) P.textContent = t; };
   m.pk = (m.pk || 0) - dt; if (m.pk <= 0) { m.pk = 0.5; const lw = document.querySelector('.lcdwrap'); if (lw) { const r = lw.getBoundingClientRect(); h.style.top = Math.round(lw.classList.contains('off') ? r.top : r.bottom + 8) + 'px'; } }
@@ -2735,18 +2760,30 @@ function msStep(dt) {
         g.add(new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 60, 24, 1, true), mat), new THREE.Mesh(new THREE.RingGeometry(2.6, 3.8, 32).rotateX(-PI / 2), new THREE.MeshBasicMaterial({ color: 0xffd24a, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide })));
         g.children[0].position.y = 30; g.children[1].position.y = 0.08; RM.town.add(g); RM.beacon = g; }
     RM.beacon.visible = true; RM.beacon.position.set(x, 0, z); if (!m.t) { m.t = c.time; toast('Order up! Get to the marker in ' + c.time + ' s'); } m.t -= dt;
+    if (c.law) { const L = RM.law || { bad: 0 }; if (m.bad0 === undefined) m.bad0 = L.bad; if (L.bad !== m.bad0) { m.bad0 = L.bad; m.t = c.time; toast('Ran a red. The order restarts!'); } }
     const d = Math.hypot(sp.x - x, sp.z - z), fx = Math.cos(RM.yaw), fz = -Math.sin(RM.yaw), rel = Math.atan2((x - sp.x) * Math.sin(RM.yaw) + (z - sp.z) * Math.cos(RM.yaw), (x - sp.x) * fx + (z - sp.z) * fz); set('ARROW ' + '\u2191\u2197\u2192\u2198\u2193\u2199\u2190\u2196'[(Math.round(rel / (PI / 4)) + 8) % 8] + '  ' + (d < 480 ? Math.round(d * 3.281) + ' ft' : (d / 1609.34).toFixed(2) + ' mi') + '   ' + Math.max(0, m.t).toFixed(0) + ' s left');
     if (d < 7) { msNext(); } else if (m.t <= 0) { m.t = c.time; toast('Too slow, the pizza went cold. Try again!'); } }
   else if (c.k === 'speed') { set((sim.v / 0.44704).toFixed(0) + ' / ' + (c.n / 0.44704).toFixed(0) + ' mph (east of town)'); if (sim.v >= c.n && sp.x > c.xmin) msNext(); }
-  else if (c.k === 'slow') { if (RM.crash || sim.v > 6.7) { if (sim.v > 6.7) m.a = 0; } else m.a += sim.v * dt; set((m.a / 1609.34).toFixed(2) + ' / 0.25 mi under 15 mph'); if (m.a >= c.n) msNext(); }
+  else if (c.k === 'slow') { const lm = c.lim || 6.7; if (RM.crash || sim.v > lm) { if (sim.v > lm) m.a = 0; } else m.a += sim.v * dt; set((m.a / 1609.34).toFixed(2) + ' / ' + (c.n / 1609.34).toFixed(2) + ' mi under ' + Math.round(lm / 0.44704) + ' mph'); if (m.a >= c.n) msNext(); }
   else if (c.k === 'wdist') { const up = RM.wh && RM.wh.a > 0.3 && !RM.crash; if (up) m.a += sim.v * dt; else if ((m.b = (m.b || 0) + dt) > 1.5) { m.a = 0; m.b = 0; } if (up) m.b = 0; set((m.a / 1609.34).toFixed(2) + ' / 0.25 mi on one wheel'); if (m.a >= c.n) msNext(); }
   else if (c.k === 'calm') { if (RM.crash || RM.wanted) m.a = 0; else m.a += dt; set(Math.floor(m.a) + ' / ' + c.n + ' s'); if (m.a >= c.n) msNext(); }
   else if (c.k === 'tree') { set(RM.free && RM.free.sit && RM.free.sit.h < 0.3 ? 'Nice shade...' : 'find a tree'); if (RM.free && RM.free.sit && RM.free.sit.h < 0.3) { m.a += dt; if (m.a > 1.5) msNext(); } }
+  else if (c.k === 'lights') { const L = RM.law || { ok: 0 }; set(L.ok + ' / ' + c.n + ' on green (red = start over)'); if (L.ok >= c.n) msNext(); }
+  else if (c.k === 'redstop') { const L = RM.law || {}; if (m.w0 === undefined) m.w0 = L.waited || 0; set(L.atRed ? 'Waiting ' + L.wt.toFixed(0) + ' / 3 s...' : 'Roll up to a red light and stop'); if ((L.waited || 0) > m.w0) msNext(); }
+  else if (c.k === 'sigturn') { if (sim.signal !== c.d) { m.a = 0; m.yl = undefined; set('Turn the ' + (c.d < 0 ? 'left' : 'right') + ' signal on first'); } else { if (m.yl !== undefined) m.a += Math.atan2(Math.sin(RM.yaw - m.yl), Math.cos(RM.yaw - m.yl)) * (c.d < 0 ? 1 : -1); m.yl = RM.yaw; set(Math.max(0, m.a * 57.3).toFixed(0) + ' / 70 deg'); if (m.a > 1.2) msNext(); } }
+  else if (c.k === 'hwdist') { if (RM.crash || sp.x <= c.xmin) m.a = 0; else if (sim.v > c.minv) m.a += sim.v * dt; set((m.a / 1609.34).toFixed(2) + ' / ' + (c.n / 1609.34).toFixed(2) + ' mi on the highway'); if (m.a >= c.n) msNext(); }
   else if (c.k === 'warn') { if (m.s0 === undefined) m.s0 = RM.strikes || 0; set(RM.wanted ? 'Cop is coming: stop and wait' : 'get a cop to chase you'); if ((RM.strikes || 0) !== m.s0 && !RM.wanted) { m.s0 = undefined; msNext(); } }
   else if (c.k === 'dist') { if (RM.crash) m.a = 0; else m.a += sim.v * dt; set((m.a / 1609.34).toFixed(2) + ' / 0.50 mi'); if (m.a >= c.n) msNext(); }
   else if (c.k === 'sit') { set(RM.free && RM.free.sit ? 'Nice and comfy...' : 'find a bench'); if (RM.free && RM.free.sit) { m.a += dt; if (m.a > 1.5) msNext(); } } }
 { const st = document.createElement('style'); st.textContent = '#msHud{position:fixed;right:14px;top:132px;width:206px;z-index:13;padding:8px 10px;border-radius:12px;background:rgba(12,16,24,.62);color:#e8f0ff;font:12px/1.35 system-ui,sans-serif;cursor:pointer;border:1px solid rgba(255,255,255,.16)}#msHud i{color:#9cc4ff;font-style:normal}body:not(.riding) #msHud{display:none}';
   document.head.appendChild(st); const h = document.createElement('div'); h.id = 'msHud'; document.body.appendChild(h); h.onclick = () => msNext(true); msHud(); }
+{ const st = document.createElement('style'); st.textContent = '#mmap{position:fixed;left:12px;top:12px;width:96px;height:96px;z-index:12;border-radius:10px;opacity:.92;pointer-events:none;border:1px solid rgba(255,255,255,.35)}body:not(.riding) #mmap{display:none}'; document.head.appendChild(st); const cv = document.createElement('canvas'); cv.id = 'mmap'; cv.width = cv.height = 112; document.body.appendChild(cv); const g = cv.getContext('2d'), SC = 112 / 1800, mx = x => (x + 800) * SC, mz = z => (z + 900) * SC;
+  RM.mm = () => { const lim = (NB + 0.95) * BLK, sp = scooter.position, c = MS[RM.ms.i]; g.fillStyle = '#2e4a2c'; g.fillRect(0, 0, 112, 112); g.fillStyle = '#5b6068'; g.fillRect(mx(-lim), mz(-lim), 2 * lim * SC, 2 * lim * SC);
+    g.strokeStyle = '#8a9099'; g.lineWidth = 1; for (let k = -NB; k <= NB; k += 2) { g.beginPath(); g.moveTo(mx(k * BLK), mz(-lim)); g.lineTo(mx(k * BLK), mz(lim)); g.moveTo(mx(-lim), mz(k * BLK)); g.lineTo(mx(lim), mz(k * BLK)); g.stroke(); }
+    g.strokeStyle = '#ffd24a'; g.lineWidth = 3; g.beginPath(); g.moveTo(mx(520 + HO), mz(-900)); g.lineTo(mx(520 + HO), mz(900)); g.moveTo(mx(lim), mz(0)); g.lineTo(mx(520 + HO), mz(0)); g.stroke();
+    g.fillStyle = '#fff'; g.font = 'bold 9px sans-serif'; g.fillText('HWY', mx(520 + HO) - 24, mz(-760));
+    if (c && c.k === 'goto') { g.fillStyle = '#4af'; g.beginPath(); g.arc(mx(c.x), mz(c.z), 3.5, 0, 6.3); g.fill(); }
+    g.save(); g.translate(mx(sp.x), mz(sp.z)); g.rotate(Math.atan2(-Math.sin(RM.yaw), Math.cos(RM.yaw))); g.fillStyle = '#ff3b30'; g.beginPath(); g.moveTo(6, 0); g.lineTo(-4, -4); g.lineTo(-4, 4); g.fill(); g.restore(); }; }
 addEventListener('keydown', e => { if (e.key.toLowerCase() === 'u' && !e.repeat && RM.on && !e.target.closest?.('input,textarea')) msNext(true); });
 function freeBlocked(x, z) { const lim = (NB + 0.95) * BLK;
   return RM.boxes.some(b => x > b.x0 - 0.3 && x < b.x1 + 0.3 && z > b.z0 - 0.3 && z < b.z1 + 0.3) || RM.circles.some(c => (x - c.x) ** 2 + (z - c.z) ** 2 < (c.r + 0.35) ** 2) || !inBounds(x, z)
@@ -2867,7 +2904,7 @@ function rideCamera(dt) {
   if (!RM.camPos) RM.camPos = want.clone(); RM.camPos.lerp(want, Math.min(1, dt * (RM.orbitHeld || RM.camHold ? 14 : 4)));
   camera.position.copy(RM.camPos).add(shakeOffset(1.4)); camera.lookAt(p.clone().add(f.clone().multiplyScalar(1.6)).add(V(0, 0.85, 0)));
 }
-{ const rows = [['W / Space', 'go / brake'], ['S, Shift+S', 'brake, hard brake'], ['A / D', 'steer (or turn on foot)'], ['G + W', 'lean back for a wheelie'], ['F', 'get off / on the scooter'], ['J', 'kickstand down / up'], ['X', 'leave the scooter (kickstand down) / pick it up'], ['Shift+W', 'run (on foot)'], ['Z', 'sit on a bench or against a tree'], ['T', 'sit / stand on the scooter'], ['K, hold P', 'key, power on / off'], ['tap P', 'speed mode (5 taps: P settings)'], ['L, H', 'lights, horn'], ['Q / E', 'left / right signal'], ['N', 'day / night'], ['C, V', 'camera, shake'], ['R', 'back to the garage'], ['Esc', 'leave ride mode'], ['U or tap the card', 'skip the current mission'], ['A / D on one wheel', 'lean to turn during a wheelie'], ['Y', 'show / hide this list']];
+{ const rows = [['W / Space', 'go / brake'], ['S, Shift+S', 'brake, hard brake'], ['A / D', 'steer (or turn on foot)'], ['G + W', 'lean back for a wheelie'], ['F', 'get off / on the scooter'], ['J', 'kickstand down / up'], ['X', 'leave the scooter (kickstand down) / pick it up'], ['Shift+W', 'run (on foot)'], ['Z', 'sit on a bench or against a tree'], ['T', 'sit / stand on the scooter'], ['K, hold P', 'key, power on / off'], ['tap P', 'speed mode (5 taps: P settings)'], ['L, H', 'lights, horn'], ['Q / E', 'left / right signal'], ['N', 'day / night'], ['C, V', 'camera, shake'], ['R', 'back to the garage'], ['Esc', 'leave ride mode'], ['Stick down (phone) or S', 'walk the scooter backwards after F'], ['U or tap the card', 'skip the current mission'], ['A / D on one wheel', 'lean to turn during a wheelie'], ['Y', 'show / hide this list']];
   const hp = document.createElement('div'); hp.id = 'helpY'; hp.style.cssText = 'position:fixed;inset:0;z-index:60;display:none;place-items:center;background:rgba(5,8,14,.78);color:#e8f0ff;font:14px/1.5 system-ui,sans-serif';
   hp.innerHTML = '<div style="max-width:720px;max-height:86vh;overflow:auto;padding:18px 24px;background:#0f1622;border:1px solid #2c3d56;border-radius:14px"><div style="font-weight:700;font-size:16px;margin-bottom:8px">Controls (Y to close)</div><div style="display:grid;grid-template-columns:auto 1fr;gap:3px 20px">' + rows.map(r => '<b style="color:#9cc4ff">' + r[0] + '</b><span>' + r[1] + '</span>').join('') + '</div></div>';
   document.body.appendChild(hp); hp.onclick = () => { hp.style.display = 'none'; };
@@ -2908,10 +2945,12 @@ addEventListener('keyup', e => { const k = e.key.toLowerCase(); RM.keys[k] = fal
   $('tReset').onclick = () => press('r'); $('tExit').onclick = () => press('Escape'); }
 { // floating joystick (touch): appears where the left thumb lands
   const zone = $('joyZone'), ring = $('joyRing'), knob = $('joyKnob'), R = 66; let id = null, ox = 0, oy = 0;
-  const reset = () => { RM.joyX = 0; input.throttleUI = 0; input.brakeUI = false; input.brakeHard = false; if (RM.free) { input.throttleKey = false; input.backKey = false; RM.keys.a = RM.keys.d = false; } };
+  const reset = () => { if (RM.backT) { clearTimeout(RM.backT); RM.backT = 0; } input.backKey = false; RM.joyX = 0; input.throttleUI = 0; input.brakeUI = false; input.brakeHard = false; if (RM.free) { input.throttleKey = false; input.backKey = false; RM.keys.a = RM.keys.d = false; } };
   const apply = (x, y) => { const dx = x - ox, dy = y - oy, d = Math.hypot(dx, dy), k = d > R ? R / d : 1, px = dx * k, py = dy * k, nx = px / R, ny = py / R;
     knob.style.left = (ox + px) + 'px'; knob.style.top = (oy + py) + 'px';
     if (RM.free) { input.throttleKey = ny < -0.3; input.backKey = ny > 0.3; input.brakeHard = ny < -0.85; RM.keys.a = nx < -0.3; RM.keys.d = nx > 0.3; return; }
+    if (RM.walk) input.backKey = ny > 0.3;
+    if (!RM.walk && !RM.crash && !RM.free && RM.on && ny > 0.8 && sim.v < 0.5) { if (!RM.backT) RM.backT = setTimeout(() => { RM.backT = 0; if (id !== null && !RM.walk) { dispatchEvent(new KeyboardEvent('keydown', { key: 'f' })); if (RM.walk) input.backKey = true; } }, 450); } else if (RM.backT && ny < 0.6) { clearTimeout(RM.backT); RM.backT = 0; }
     RM.joyX = Math.abs(nx) < 0.12 ? 0 : nx; input.throttleUI = ny < -0.1 ? Math.min(1, (-ny - 0.1) / 0.8) : 0; input.brakeUI = ny > 0.45; };
   zone.addEventListener('pointerdown', e => { if (id !== null) return; id = e.pointerId; zone.setPointerCapture(id); ox = e.clientX; oy = e.clientY; ring.style.left = ox + 'px'; ring.style.top = oy + 'px'; ring.style.display = knob.style.display = 'block'; apply(ox, oy); e.preventDefault(); });
   zone.addEventListener('pointermove', e => { if (e.pointerId === id) apply(e.clientX, e.clientY); });
