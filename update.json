@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.1935",
-  "notes": "Walk scooter back with the stick, traffic-law missions, minimap with the highway, bigger map, 28 missions",
+  "version": "2026.1122.2007",
+  "notes": "Low-power web version (/lite), bigger map, traffic-law missions",
   "page": "rt6.html",
-  "sha256": "b7c923afbacabff059d98f66b4264357a130dc9cbd49bce2c34f42d52d9a37f7",
+  "sha256": "c24fbdc66d516bdf540609939ee554d592c4551b04c34dd649fd1f33f9df7a2f",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-23T01:35:54.608Z"
+  "published": "2026-11-23T02:07:23.286Z"
 }

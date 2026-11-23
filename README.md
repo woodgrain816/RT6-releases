@@ -4,4 +4,4 @@ Update files for the fan-made Ruitoo RT6 scooter sim (non-commercial; Ruitoo, RT
 The Android app reads `update.json` on launch and downloads `rt6.html` when it is newer (checked against its SHA-256).
 To install the app: download `RT6Sim.apk`.
 
-Current version: **2026.1122.1935** - Walk scooter back with the stick, traffic-law missions, minimap with the highway, bigger map, 28 missions
+Current version: **2026.1122.2007** - Low-power web version (/lite), bigger map, traffic-law missions

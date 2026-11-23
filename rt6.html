@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.1935";</script>
+<script>window.RT6_VERSION = "2026.1122.2007";</script>
 <style>html,body{margin:0}</style>
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -243,12 +243,15 @@ await Promise.race([
 
 // ---------------------------------------------------------------- renderer / scene
 const stage = document.getElementById('stage');
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, matchMedia('(pointer:coarse)').matches ? 1 : 1.25));   // 4K / high-DPI screens were rendering 4x the pixels and maxing the GPU
+const LITEW = /chromebook|lite/i.test(location.pathname + location.search), LITE = LITEW || matchMedia('(pointer:coarse)').matches;   // LITEW = the low-power web version
+if (/CrOS/.test(navigator.userAgent) && !LITEW && /web\.app$/.test(location.hostname) && !/full/.test(location.search)) location.replace('/lite');
+if (/web\.app$|vercel\.app$/.test(location.hostname)) document.getElementById('legal').insertAdjacentHTML('beforeend', '<br>' + (LITEW ? 'Low-power version. <a href="/?full" style="color:inherit">Full version</a>' : '<a href="/lite" style="color:inherit">Low-power version for Chromebooks and older laptops</a>'));
+const renderer = new THREE.WebGLRenderer({ antialias: !LITEW, alpha: true, preserveDrawingBuffer: !LITEW });
+renderer.setPixelRatio(Math.min(devicePixelRatio, LITEW ? 0.8 : LITE ? 1 : 1.25));   // 4K / high-DPI screens were rendering 4x the pixels and maxing the GPU
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = !LITEW;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 stage.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
@@ -2382,7 +2385,7 @@ function buildTraffic(town) {
   const types = ['sedan', 'sedan', 'hatch', 'suv', 'suv', 'pickup'];
   let seed = 5; const R = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   RM.cars = [];
-  for (let n = 0, tries = 0; n < (matchMedia('(pointer:coarse)').matches ? 80 : 130) && tries < 2600; tries++) {
+  for (let n = 0, tries = 0; n < (LITEW ? 45 : LITE ? 80 : 130) && tries < 2600; tries++) {
     const span = R() < 0.55 ? 2 : NB, i = Math.floor(R() * (2 * span + 1)) - span, j = Math.floor(R() * (2 * span + 1)) - span, d = [[1, 0], [-1, 0], [0, 1], [0, -1]][Math.floor(R() * 4)];
     if (Math.abs(i - d[0]) > NB || Math.abs(j - d[1]) > NB) continue;
     const nx = i * BLK, nz = j * BLK, t = 0.15 + R() * 0.6, rx = -d[1], rz = d[0];
@@ -2412,7 +2415,7 @@ function buildTraffic(town) {
     c.segs.push(mkSeg(sx, sz, null, null, nx - d[0] * STOPC + rx * LANE, nz - d[1] * STOPC + rz * LANE, true));
     RM.cars.push(c); n++; }
   { const cv = buildCorvette(); cv.g.name = 'ParkedCorvette'; cv.g.position.set(24.7, 0, -9.9); cv.g.rotation.y = -PI / 2; town.add(cv.g); RM.boxes.push({ x0: 23.7, x1: 25.7, z0: -12.4, z1: -7.4 }); }   // right outside the garage (always seen)
-  if (matchMedia('(pointer:coarse)').matches) town.traverse(o => { if (o.isMesh) o.castShadow = false; });   // phones: no shadows from the town and traffic
+  if (LITE) town.traverse(o => { if (o.isMesh) o.castShadow = false; });   // phones: no shadows from the town and traffic
   RM.hw = [];   // highway: straight lanes, fast, wrapping at the ends
   for (let k = 0; k < 16; k++) { const west = k % 2 === 0, lane = Math.floor(k / 2) % 3, isC = k === 4;
     let g, wheels, tp; if (isC) { const cv = buildCorvette(); g = cv.g; wheels = cv.wheels; tp = { T: cv.T }; g.name = 'Corvette'; }
@@ -2424,7 +2427,7 @@ function buildTraffic(town) {
 function hwStep(dt) {
   for (const c of RM.hw) { c.z += c.dir * c.v * dt; if (c.z > 900) c.z = -900; if (c.z < -900) c.z = 900;
     c.g.position.set(c.x, 0, c.z); c.g.rotation.y = c.a; c.wheels.forEach(w => { w.rotation.z -= c.v * dt / c.T.r; });
-    const px = RM.free ? RM.free.pos.x : scooter.position.x, pz = RM.free ? RM.free.pos.z : scooter.position.z; c.g.visible = (c.x - px) * (c.x - px) + (c.z - pz) * (c.z - pz) < 90000;
+    const px = RM.free ? RM.free.pos.x : scooter.position.x, pz = RM.free ? RM.free.pos.z : scooter.position.z; c.g.visible = (c.x - px) * (c.x - px) + (c.z - pz) * (c.z - pz) < (LITEW ? 40000 : 90000);
     if (Math.abs(px - c.x) < c.T.W / 2 + 0.5 && Math.abs(pz - c.z) < c.T.L / 2 + 0.6) {
       if (RM.free) { RM.free.pos.set(scooter.position.x, 0, scooter.position.z + 1.2); toast('A car clipped you on the highway: back to the scooter'); }
       else if (!RM.crash) crash('Hit by a car on the highway'); } } }
@@ -2474,7 +2477,7 @@ function trafficStep(dt) {
     const u = Math.min(1, c.s / sg.len), [x, z] = segAt(sg, u), [x2, z2] = segAt(sg, Math.min(1, u + 0.02));
     const a0 = c.a; c.x = x; c.z = z; if (Math.hypot(x2 - x, z2 - z) > 1e-4) c.a = Math.atan2(-(z2 - z), x2 - x);
     let da = c.a - a0; da = Math.atan2(Math.sin(da), Math.cos(da));
-    c.g.position.set(x, 0, z); c.g.rotation.y = c.a; c.g.visible = (x - sp.x) * (x - sp.x) + (z - sp.z) * (z - sp.z) < 36000;   // cull cars beyond ~190 m
+    c.g.position.set(x, 0, z); c.g.rotation.y = c.a; c.g.visible = (x - sp.x) * (x - sp.x) + (z - sp.z) * (z - sp.z) < (LITEW ? 14400 : 36000);   // cull cars beyond ~190 m
     const steerA = c.v > 0.3 ? Math.max(-0.6, Math.min(0.6, Math.atan(c.T.wb * da / Math.max(1e-3, c.v * dt)))) : 0;
     c.wheels.forEach((w, k) => { w.rotation.z -= c.v * dt / c.T.r; if (k < 2) w.rotation.y = steerA; }); } }
 
