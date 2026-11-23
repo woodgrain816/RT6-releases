@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.2016";</script>
+<script>window.RT6_VERSION = "2026.1122.2037";</script>
 <style>html,body{margin:0}</style>
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -247,7 +247,7 @@ const LITEW = /chromebook|lite/i.test(location.pathname + location.search), LITE
 if (/CrOS/.test(navigator.userAgent) && !LITEW && /web\.app$/.test(location.hostname) && !/full/.test(location.search)) location.replace('/lite');
 if (/web\.app$|vercel\.app$/.test(location.hostname)) document.getElementById('legal').insertAdjacentHTML('beforeend', '<br>' + (LITEW ? 'Low-power version. <a href="/?full" style="color:inherit">Full version</a>' : '<a href="/lite" style="color:inherit">Low-power version for Chromebooks and older laptops</a>'));
 const renderer = new THREE.WebGLRenderer({ antialias: !LITEW, alpha: true, preserveDrawingBuffer: !LITEW });
-renderer.setPixelRatio(Math.min(devicePixelRatio, LITEW ? 0.8 : LITE ? 1 : 1.25));   // 4K / high-DPI screens were rendering 4x the pixels and maxing the GPU
+renderer.setPixelRatio(Math.min(devicePixelRatio, LITEW ? 0.7 : LITE ? 1 : 1.25));   // 4K / high-DPI screens were rendering 4x the pixels and maxing the GPU
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
@@ -2737,7 +2737,15 @@ function msHud() { const m = RM.ms, h = document.getElementById('msHud'); if (!h
   h.innerHTML = '<b>MISSION ' + Math.min(m.i + 1, MS.length) + '/' + MS.length + '</b> <span style="float:right">' + m.score + ' pts</span><br>' + (c ? c.t + (c.hint ? '<br><i>' + c.hint + '</i>' : '') + '<br><span id="msP"></span>' : 'All missions done! Free ride.<br><i>Tap to start over</i>'); }
 function msNext(skip) { const m = RM.ms, c = MS[m.i]; if (!c) { m.i = 0; m.score = 0; } else { if (!skip) { m.score += c.pts; toast('Mission complete! +' + c.pts + ' points'); } m.i++; }
   m.t = m.a = m.b = m.c = 0; m.w0 = m.bad0 = undefined; if (RM.law) RM.law.ok = 0; msSave(); msHud(); if (RM.beacon) RM.beacon.visible = false; }
+function liteThin() {   // low-power version: keep every 4th tree / 2nd bush so the scenery keeps its spread
+  RM.liteDone = true; const m4 = new THREE.Matrix4(), col = new THREE.Color();
+  scene.traverse(o => { if (o.isMesh && o.name === 'Tire' && o.geometry.attributes.position.count > 5000) { o.geometry.dispose(); o.geometry = new THREE.TorusGeometry(0.0919, 0.0355, 8, 24); } });   // tires: 720k triangles -> ~400
+  RM.town.traverse(o => { if (!o.isInstancedMesh || o.count < 100) return; const g = o.geometry, tri = (g.index ? g.index.count : g.attributes.position.count) / 3; if (tri < 100) return;
+    const k = tri > 400 ? 4 : 2, n = Math.ceil(o.count / k);
+    for (let a = 0; a < n; a++) { o.getMatrixAt(a * k, m4); o.setMatrixAt(a, m4); if (o.instanceColor) { o.getColorAt(a * k, col); o.setColorAt(a, col); } }
+    o.count = n; o.instanceMatrix.needsUpdate = true; if (o.instanceColor) o.instanceColor.needsUpdate = true; }); }
 function lawStep(dt) {
+  if (LITEW && !RM.liteDone && RM.town) liteThin();
   const L = RM.law || (RM.law = { in: false, ok: 0, bad: 0, wt: 0 }), sp = scooter.position; if (RM.free || !RM.on) return;
   const fx = Math.cos(RM.yaw), fz = -Math.sin(RM.yaw), ax = Math.abs(fx) > Math.abs(fz) ? 'x' : 'z', R2 = ROAD / 2;
   const i = Math.round(sp.x / BLK), j = Math.round(sp.z / BLK), inT = Math.abs(i) <= NB && Math.abs(j) <= NB;

@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.2016",
-  "notes": "Smaller horn button",
+  "version": "2026.1122.2037",
+  "notes": "Much lighter low-power version",
   "page": "rt6.html",
-  "sha256": "655c464a29c9d88a13f13cfa9829161d4b15cd1507a2d4ef6920b622675cd981",
+  "sha256": "9963b5161059eba4f22864e543b39f0d0538dd86e432265fb91862294b7a1a9b",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-23T02:16:13.212Z"
+  "published": "2026-11-23T02:37:24.321Z"
 }
