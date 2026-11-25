@@ -1,9 +1,9 @@
 {
-  "version": "2026.1122.2037",
-  "notes": "Much lighter low-power version",
+  "version": "2026.1125.0109",
+  "notes": "Fixed screen cut off behind the controls on short screens, fixed distant road flicker",
   "page": "rt6.html",
-  "sha256": "9963b5161059eba4f22864e543b39f0d0538dd86e432265fb91862294b7a1a9b",
+  "sha256": "4f77565604cdb1079a765debbf1ba89f4e9d4ddbd49fc9def555c065b60a54aa",
   "minNative": 1,
   "apk": "RT6Sim.apk",
-  "published": "2026-11-23T02:37:24.321Z"
+  "published": "2026-11-25T07:09:12.109Z"
 }

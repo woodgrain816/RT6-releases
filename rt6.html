@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<script>window.RT6_VERSION = "2026.1122.2037";</script>
+<script>window.RT6_VERSION = "2026.1125.0109";</script>
 <style>html,body{margin:0}</style>
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -245,13 +245,16 @@ await Promise.race([
 const stage = document.getElementById('stage');
 const LITEW = /chromebook|lite/i.test(location.pathname + location.search), LITE = LITEW || matchMedia('(pointer:coarse)').matches;   // LITEW = the low-power web version
 if (/CrOS/.test(navigator.userAgent) && !LITEW && /web\.app$/.test(location.hostname) && !/full/.test(location.search)) location.replace('/lite');
-if (/web\.app$|vercel\.app$/.test(location.hostname)) document.getElementById('legal').insertAdjacentHTML('beforeend', '<br>' + (LITEW ? 'Low-power version. <a href="/?full" style="color:inherit">Full version</a>' : '<a href="/lite" style="color:inherit">Low-power version for Chromebooks and older laptops</a>'));
-const renderer = new THREE.WebGLRenderer({ antialias: !LITEW, alpha: true, preserveDrawingBuffer: !LITEW });
-renderer.setPixelRatio(Math.min(devicePixelRatio, LITEW ? 0.7 : LITE ? 1 : 1.25));   // 4K / high-DPI screens were rendering 4x the pixels and maxing the GPU
+if (/web\.app$|vercel\.app$/.test(location.hostname)) document.getElementById('legal').insertAdjacentHTML('beforeend', '<br>' + (LITEW ? 'Low-power version. <a href="/?full" style="color:inherit">Full version</a>' : /ultra|3090/i.test(location.pathname + location.search) ? 'Ultra graphics version. <a href="/?full" style="color:inherit">Normal version</a>' : '<a href="/lite" style="color:inherit">Low-power version for Chromebooks and older laptops</a> · <a href="/ultra" style="color:inherit">Ultra graphics for fast GPUs</a>'));
+const ULTRA = !LITEW && /ultra|3090/i.test(location.pathname + location.search);   // ULTRA = the high-end GPU version
+const renderer = new THREE.WebGLRenderer({ antialias: !LITEW, powerPreference: ULTRA ? 'high-performance' : 'default', alpha: true, preserveDrawingBuffer: !LITEW });
+renderer.setPixelRatio(ULTRA ? Math.min(2, Math.max(devicePixelRatio, 1.5)) : Math.min(devicePixelRatio, LITEW ? 1 : LITE ? 1 : 1.25));   // 4K / high-DPI screens were rendering 4x the pixels and maxing the GPU
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
 renderer.shadowMap.enabled = !LITEW;
+function xGeo(sh, o) { if (LITEW && o) o = Object.assign({}, o, { curveSegments: Math.max(4, Math.round((o.curveSegments || 12) / 2)), bevelSegments: Math.max(1, Math.round((o.bevelSegments || 3) / 2)) }); return new THREE.ExtrudeGeometry(sh, o); }
+if (LITEW) document.body.insertAdjacentHTML('beforeend', '<div id="liteFps" style="position:fixed;left:6px;bottom:4px;font:11px system-ui,sans-serif;color:#9aa3ad;opacity:.8;pointer-events:none;z-index:50"></div>');
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 stage.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
@@ -265,7 +268,7 @@ controls.maxPolarAngle = PI * 0.495; controls.target.set(0, 0.5, 0);
 
 const key = new THREE.DirectionalLight(0xffffff, 1.7);
 key.position.set(1.4, 3.2, -1.6); key.castShadow = true;
-key.shadow.mapSize.set(2048, 2048);
+key.shadow.mapSize.set(ULTRA ? 4096 : 2048, ULTRA ? 4096 : 2048);
 Object.assign(key.shadow.camera, { left: -1.1, right: 1.1, top: 1.4, bottom: -0.6, near: 0.5, far: 8 });
 key.shadow.bias = -0.0003; key.shadow.normalBias = 0.012;
 scene.add(key);
@@ -297,7 +300,7 @@ function poly(pts, holes = []) {
   return s;
 }
 function ext(shape, depth, m, parent, z = 0, bevel = 0, cs = 32) {
-  const geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 5, curveSegments: cs });
+  const geo = xGeo(shape, { depth, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 5, curveSegments: cs });
   geo.translate(0, 0, -depth / 2); return mesh(geo, m, parent, [0, 0, z]);
 }
 function sector(r1, r2, a0, a1) {
@@ -672,7 +675,7 @@ function caliper(parent, zd, mount = 'swingarm') {   // built round the axle (x 
   // body lobe with the big round actuator boss, lever arm back to the cable clamp bolt
   const body = new THREE.Shape(); body.moveTo(-0.03, 0.05); body.quadraticCurveTo(-0.012, 0.06, -0.02, 0.082); body.lineTo(-0.03, 0.106);
   body.lineTo(-0.038, 0.104); body.quadraticCurveTo(-0.042, 0.085, -0.058, 0.08); body.quadraticCurveTo(-0.064, 0.06, -0.05, 0.05); body.closePath();
-  const bg = new THREE.ExtrudeGeometry(body, { depth: 0.008, bevelEnabled: true, bevelThickness: 0.002, bevelSize: 0.002, bevelSegments: 3, curveSegments: 16 });
+  const bg = xGeo(body, { depth: 0.008, bevelEnabled: true, bevelThickness: 0.002, bevelSize: 0.002, bevelSegments: 3, curveSegments: 16 });
   mesh(bg, blk, c, [0, 0, zd + 0.026]);
   mesh(new THREE.CylinderGeometry(0.0145, 0.0145, 0.012, 32).rotateX(PI / 2), blk, c, [-0.044, 0.066, zd + 0.031]);
   mesh(new THREE.TorusGeometry(0.0115, 0.0018, 8, 32), blk, c, [-0.044, 0.066, zd + 0.037]);
@@ -680,7 +683,7 @@ function caliper(parent, zd, mount = 'swingarm') {   // built round the axle (x 
   const arm = new THREE.Shape(); arm.moveTo(-0.044, 0.078); arm.quadraticCurveTo(-0.062, 0.086, -0.074, 0.074); arm.absarc(-0.074, 0.067, 0.0075, PI / 2, 3 * PI / 2, false);
   arm.quadraticCurveTo(-0.06, 0.066, -0.044, 0.054); arm.closePath();
   const armG = new THREE.Group(); armG.position.set(-0.044, 0.066, 0); c.add(armG);   // swings about the actuator boss
-  { const am = mesh(new THREE.ExtrudeGeometry(arm, { depth: 0.005, bevelEnabled: true, bevelThickness: 0.0015, bevelSize: 0.0015, bevelSegments: 3, curveSegments: 16 }).translate(0.044, -0.066, 0), blk, armG, [0, 0, zd + 0.036]);
+  { const am = mesh(xGeo(arm, { depth: 0.005, bevelEnabled: true, bevelThickness: 0.0015, bevelSize: 0.0015, bevelSegments: 3, curveSegments: 16 }).translate(0.044, -0.066, 0), blk, armG, [0, 0, zd + 0.036]);
     const bm = mesh(new THREE.CylinderGeometry(0.0042, 0.0042, 0.004, 6).rotateX(PI / 2), std(0x111214, 0.4, 0.3), armG, [-0.03, 0.001, zd + 0.0435]); }
   // cable stop post + barrel adjuster, return spring over the cable end, bare cable tail
   rod([-0.034, 0.1, zd + 0.03], [-0.026, 0.118, zd + 0.03], 0.0055, blk, c);
@@ -705,7 +708,7 @@ function caliper(parent, zd, mount = 'swingarm') {   // built round the axle (x 
   mesh(new THREE.CylinderGeometry(0.0034, 0.0034, 0.006, 14).rotateZ(-0.37), M.chrome, c, [-0.007, 0.1255, zd + 0.03]);   // ferrule cap where the outer cable meets the adjuster
   // adapter plate (160/R140) bolted to the swingarm / fork, two hex bolts low, socket bolts into the caliper
   const ad = poly([[0.008, 0.096], [0.02, 0.072], [0.013, 0.024], [-0.004, 0.017], [-0.038, 0.024], [-0.05, 0.044], [-0.026, 0.068], [-0.004, 0.09]]);
-  mesh(new THREE.ExtrudeGeometry(ad, { depth: 0.004, bevelEnabled: true, bevelThickness: 0.001, bevelSize: 0.0012, bevelSegments: 2 }), M.frame, c, [0, 0, zd + 0.021]);
+  mesh(xGeo(ad, { depth: 0.004, bevelEnabled: true, bevelThickness: 0.001, bevelSize: 0.0012, bevelSegments: 2 }), M.frame, c, [0, 0, zd + 0.021]);
   bolt(0.001, 0.047, zd + 0.028); bolt(0.0, 0.03, zd + 0.028);
   bolt(0.004, 0.088, zd + 0.028, 0.0042, std(0x111214, 0.4, 0.3)); bolt(-0.044, 0.04, zd + 0.028, 0.0042, std(0x111214, 0.4, 0.3));
   return c;
@@ -760,7 +763,7 @@ const gripGeo = (() => {
   const ol = deckOutline(0.009).getPoints(), inside = (x, y) => { let c = false; for (let i = 0, j = ol.length - 1; i < ol.length; j = i++) { const a = ol[i], b = ol[j];
     if ((a.y > y) !== (b.y > y) && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) c = !c; } return c; };
   const cv = deckBump.image, px = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data, CW = cv.width, CH = cv.height;
-  const NX = 620, NY = 230, X0 = -0.3266, Y0 = -0.106, SX_ = 0.5916, SY_ = 0.212, pos = [], uv = [], idx = [];
+  const NX = LITEW ? 210 : 620, NY = LITEW ? 78 : 230, X0 = -0.3266, Y0 = -0.106, SX_ = 0.5916, SY_ = 0.212, pos = [], uv = [], idx = [];
   for (let j = 0; j <= NY; j++) for (let i = 0; i <= NX; i++) { const u = i / NX, v = j / NY, x = X0 + u * SX_, y = Y0 + v * SY_;
     const p = Math.min(CW - 1, Math.round(u * (CW - 1))) + Math.min(CH - 1, Math.round((1 - v) * (CH - 1))) * CW, h = px[p * 4] / 255;
     pos.push(x, h * 0.0012, -y); uv.push(u, v); }
@@ -822,7 +825,7 @@ for (const sz of [1, -1]) {
   { const x = 0.165, P = deckProf(x), y = P.yb + 0.55 * (P.yr - P.yb);   // its own flat cut into the lower face: the socket points straight out sideways (owner)
     cp.position.set(x, y, -P.zL(Math.min(P.yr, y + 0.0125))); cp.rotation.y = PI; }
   const boss = new THREE.Shape(); boss.absarc(0, 0, 0.0125, -PI * 0.36, PI * 1.36, false); boss.lineTo(-0.004, -0.019); boss.lineTo(0.004, -0.019); boss.closePath();   // round boss, flange tapering down to the strap
-  mesh(new THREE.ExtrudeGeometry(boss, { depth: 0.03, bevelEnabled: true, bevelThickness: 0.0006, bevelSize: 0.0006, bevelSegments: 2, curveSegments: 32 }), M.plastic, cp, [0, 0, -0.0306]);   // vertical flat cut for the port, running back into the angled face
+  mesh(xGeo(boss, { depth: 0.03, bevelEnabled: true, bevelThickness: 0.0006, bevelSize: 0.0006, bevelSegments: 2, curveSegments: 32 }), M.plastic, cp, [0, 0, -0.0306]);   // vertical flat cut for the port, running back into the angled face
   mesh(new THREE.CircleGeometry(0.0089, 36), std(0x050506, 0.9, 0), cp, [0, 0, 0.0002]);   // the hole into the body
   mesh(new THREE.RingGeometry(0.0086, 0.0112, 40), std(0xc4c8cc, 0.35, 0.85), cp, [0, 0, 0.0004]);   // thin washer flush on the cut (photo)                                    // the hole cut for it
   const ring = mesh(new THREE.CylinderGeometry(0.0084, 0.0084, 0.0052, 40, 1, true).rotateX(PI / 2), M.chrome, cp, [0, 0, -0.0002]);   // threaded metal body, mostly sunk in the hole
@@ -983,11 +986,11 @@ const hump = new THREE.Group(); swingG.add(hump);
   const pf = sp(130), top = pf.y + 0.001, xr = onFender(154 * D2R, 0).x - 0.002, ybot = onFender(157 * D2R, 0).y;   // small: barely proud of the fender (owner)   // barely sticks out past the fender (owner)
   const sh = new THREE.Shape(); sh.moveTo(pf.x, top); sh.lineTo(xr + 0.004, top); sh.lineTo(xr, top - 0.004); sh.lineTo(xr, ybot + 0.004); sh.lineTo(xr + 0.006, ybot);
   for (let d = 157; d >= 130; d -= 3) { const p = sp(d); sh.lineTo(p.x, p.y); } sh.closePath();
-  const g = new THREE.ExtrudeGeometry(sh, { depth: 0.04, bevelEnabled: true, bevelThickness: 0.005, bevelSize: 0.0025, bevelSegments: 5, curveSegments: 8 }).translate(0, 0, -0.02);
+  const g = xGeo(sh, { depth: 0.04, bevelEnabled: true, bevelThickness: 0.005, bevelSize: 0.0025, bevelSegments: 5, curveSegments: 8 }).translate(0, 0, -0.02);
   
   g.computeVertexNormals(); mesh(g, M.fender, hump);
   hump.userData.rear = new THREE.Vector3(xr - 0.004, (top + ybot) / 2, 0); }
-const tail = mesh(new THREE.ExtrudeGeometry(ovalShape(0.04, 0.018), { depth: 0.004, bevelEnabled: true, bevelThickness: 0.0015, bevelSize: 0.0015, bevelSegments: 4, curveSegments: 24 }).rotateY(-PI / 2), M.tail, hump, hump.userData.rear.toArray(), [0, 0, 0], 'TailLight');   // oval lamp on the flat rear face
+const tail = mesh(xGeo(ovalShape(0.04, 0.018), { depth: 0.004, bevelEnabled: true, bevelThickness: 0.0015, bevelSize: 0.0015, bevelSegments: 4, curveSegments: 24 }).rotateY(-PI / 2), M.tail, hump, hump.userData.rear.toArray(), [0, 0, 0], 'TailLight');   // oval lamp on the flat rear face
 // reflector on the rear drop, below the light box
 const rp = onFender(171 * D2R, 0.0005);   // sits ON the fender (it floated 12 mm off)
 const refl = new THREE.Group(); refl.position.set(rp.x, rp.y, 0); refl.rotation.z = rp.n - PI / 2; swingG.add(refl);
@@ -1021,7 +1024,7 @@ const seatPlate = new THREE.Group(); queueMicrotask(() => { const t = scooter.ge
   for (const k of [ks, kp]) mesh(new THREE.ShapeGeometry(k, 16).rotateX(-PI / 2).rotateY(PI / 2), std(0x050506, 0.9, 0), tubes, [0, 0.0032, 0]);   // keyhole slot
   for (const [x, z] of [[0.025, 0.03], [-0.03, -0.03]]) mesh(new THREE.CylinderGeometry(0.0042, 0.0042, 0.003, 20), std(0x0c0d0f, 0.4, 0.3), tubes, [x, 0.0045, z]);
   const lv = new THREE.Shape(); lv.moveTo(0, 0.003); lv.lineTo(0.05, 0.005); lv.quadraticCurveTo(0.058, 0, 0.05, -0.005); lv.lineTo(0, -0.003); lv.closePath();   // CLOSE lever folded under the plate
-  const lvm = mesh(new THREE.ExtrudeGeometry(lv, { depth: 0.003, bevelEnabled: true, bevelThickness: 0.0008, bevelSize: 0.0008, bevelSegments: 2 }), std(0x111214, 0.35, 0.2), tubes, [-0.045, -0.012, -0.03]);
+  const lvm = mesh(xGeo(lv, { depth: 0.003, bevelEnabled: true, bevelThickness: 0.0008, bevelSize: 0.0008, bevelSegments: 2 }), std(0x111214, 0.35, 0.2), tubes, [-0.045, -0.012, -0.03]);
   lvm.rotation.set(0, PI / 2, -0.9); }
 // seat post: lattice bracket, quick-release, sprung saddle
 const seat = new THREE.Group(); seat.name = 'Seat'; seat.position.set(-0.285, 0.26, 0); frame.add(seat);
@@ -1178,14 +1181,14 @@ const knobSpin = new THREE.Group(); knob.add(knobSpin);   // spins + backs out a
   const ko = M.orange, N = 6, R = 0.031, D = 0.017, P = (r, a) => [Math.cos(a) * r, Math.sin(a) * r];
   const rim = new THREE.Shape(); for (let i = 0; i <= N; i++) { const p = P(R, i / N * TAU); i ? rim.lineTo(...p) : rim.moveTo(...p); }
   const hole = new THREE.Path(); for (let i = N; i >= 0; i--) { const p = P(R - 0.0045, i / N * TAU); i === N ? hole.moveTo(...p) : hole.lineTo(...p); } rim.holes.push(hole);
-  const rg = new THREE.ExtrudeGeometry(rim, { depth: D, bevelEnabled: true, bevelThickness: 0.0012, bevelSize: 0.001, bevelSegments: 3 }).rotateX(-PI / 2);
+  const rg = xGeo(rim, { depth: D, bevelEnabled: true, bevelThickness: 0.0012, bevelSize: 0.001, bevelSegments: 3 }).rotateX(-PI / 2);
   mesh(rg, ko, knobSpin, [0, 0.006, 0]);
   const rib = new RoundedBoxGeometry(0.0034, D, 0.003, 2, 0.0012);   // wavy ribs round the outside
   for (let i = 0; i < N; i++) for (let k = 0; k < 4; k++) { const a0 = i / N * TAU, a1 = (i + 1) / N * TAU, t = (k + 0.5) / 4, p0 = P(R, a0), p1 = P(R, a1);
     const x = p0[0] + (p1[0] - p0[0]) * t, z = p0[1] + (p1[1] - p0[1]) * t, m = mesh(rib, ko, knobSpin, [x * 1.02, 0.006 + D / 2, -z * 1.02]); m.rotation.y = Math.atan2(p1[1] - p0[1], p1[0] - p0[0]); }
   for (let i = 0; i < N; i++) { const a = i / N * TAU, m = mesh(new RoundedBoxGeometry(R - 0.004, 0.006, 0.0042, 2, 0.0014), ko, knobSpin, [Math.cos(a) * (R / 2), 0.02, -Math.sin(a) * (R / 2)]); m.rotation.y = a; }   // spokes near the face
   const boss = new THREE.Shape(); for (let i = 0; i <= 16; i++) { const r = i % 2 ? 0.0105 : 0.0118, p = P(r, i / 16 * TAU); i ? boss.lineTo(...p) : boss.moveTo(...p); }
-  mesh(new THREE.ExtrudeGeometry(boss, { depth: 0.02, bevelEnabled: true, bevelThickness: 0.001, bevelSize: 0.0008, bevelSegments: 2 }).rotateX(-PI / 2), ko, knobSpin, [0, 0.004, 0]); }
+  mesh(xGeo(boss, { depth: 0.02, bevelEnabled: true, bevelThickness: 0.001, bevelSize: 0.0008, bevelSegments: 2 }).rotateX(-PI / 2), ko, knobSpin, [0, 0.004, 0]); }
 { const bolt = mesh(new THREE.CylinderGeometry(0.0062, 0.0062, 0.03, 16), M.zinc, knob, [0, 0.008, 0]);                // threaded bolt under the knob
   for (let i = 0; i < 9; i++) mesh(new THREE.TorusGeometry(0.0062, 0.0007, 4, 16).rotateX(PI / 2), M.zinc, knob, [0, -0.004 + i * 0.0032, 0]); }
 
@@ -1195,7 +1198,7 @@ const SX = 0.03;   // stem centre relative to the hinge
 // lower stem: rectangular tube (40 mm fore-aft x 48 mm side to side) with a recessed channel down each side
 function octPrism(hx, hz, ch, h, bev = 0.0008) {   // stem tubes (owner): rectangle with flat 45 deg chamfered corners, x fore-aft, z side to side, y up
   const sh = new THREE.Shape([[-hz + ch, -hx], [hz - ch, -hx], [hz, -hx + ch], [hz, hx - ch], [hz - ch, hx], [-hz + ch, hx], [-hz, hx - ch], [-hz, -hx + ch]].map(([a, b]) => new THREE.Vector2(a, b)));
-  const g = new THREE.ExtrudeGeometry(sh, { depth: h - 2 * bev, bevelEnabled: bev > 0, bevelThickness: bev, bevelSize: bev, bevelSegments: 1 }).translate(0, 0, -(h - 2 * bev) / 2);
+  const g = xGeo(sh, { depth: h - 2 * bev, bevelEnabled: bev > 0, bevelThickness: bev, bevelSize: bev, bevelSegments: 1 }).translate(0, 0, -(h - 2 * bev) / 2);
   g.applyMatrix4(new THREE.Matrix4().set(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1)); g.computeVertexNormals(); return g; }
 const JD = 0.066;   // joint moved down: lower stem 16 in (owner)
 mesh(octPrism(0.0349, 0.0254, 0.012, 0.414), M.frame, stemPivot, [SX - 0.0075, 0.227, 0]);   // 2 3/4 in fore-aft x 2 in across (owner measured)   // lower stem: chamfered rectangle (owner photos)   // deeper on the rider side (owner: widen the whole stem like the collar)
@@ -1218,21 +1221,21 @@ for (const sz of [1, -1]) {
 // orange quick-release lever, CLOSED: lies flat down the side of the stem from its pivot on the collar
 { // closed QR lever (owner photo): flat orange bar on the side of the clamp, rear tip near the cable wrap, rounded front end hinged on a pin, sloping down to the front
   const lv = new THREE.Shape(); lv.moveTo(-0.042, 0.005); lv.quadraticCurveTo(-0.044, 0.001, -0.041, -0.0035); lv.lineTo(0.003, -0.0135); lv.absarc(0.008, -0.0075, 0.0068, -PI / 2 - 0.6, PI / 2 - 0.2, false); lv.lineTo(-0.036, 0.008); lv.closePath();
-  const lvm = mesh(new THREE.ExtrudeGeometry(lv, { depth: 0.0038, bevelEnabled: true, bevelThickness: 0.0008, bevelSize: 0.0008, bevelSegments: 3, curveSegments: 24 }).translate(0, 0, -0.0019), M.orange, stemPivot, [SX, 0.5315, 0.0332]);
+  const lvm = mesh(xGeo(lv, { depth: 0.0038, bevelEnabled: true, bevelThickness: 0.0008, bevelSize: 0.0008, bevelSegments: 3, curveSegments: 24 }).translate(0, 0, -0.0019), M.orange, stemPivot, [SX, 0.5315, 0.0332]);
   lvm.rotation.y = -0.19;   // rear tip lies against the clamp, hinge end out on the lug (owner: right side)
   mesh(new THREE.CylinderGeometry(0.0026, 0.0026, 0.012, 16).rotateX(PI / 2), M.zinc, stemPivot, [SX + 0.008, 0.524, 0.035]); }   // hinge pin through the lug and the lever's front end
 { stemPivot.updateMatrixWorld(true); const inv = stemPivot.matrixWorld.clone().invert(), b = new THREE.Box3();
   for (const o of stemPivot.children) { if (!o.isMesh) continue; b.setFromObject(o); b.applyMatrix4(inv); if (b.min.y > 0.485 && b.max.y < 0.55) o.position.y -= JD; } }
 // round upper tube up to the head
 { const hz = 0.019, hx = 0.019, ch = 0.007, oct = new THREE.Shape([[-hz + ch, -hx], [hz - ch, -hx], [hz, -hx + ch], [hz, hx - ch], [hz - ch, hx], [-hz + ch, hx], [-hz, hx - ch], [-hz, -hx + ch]].map(([a, b]) => new THREE.Vector2(a, b)));
-  const og = new THREE.ExtrudeGeometry(oct, { depth: 0.243, bevelEnabled: false }).translate(0, 0, -0.243 / 2); og.applyMatrix4(new THREE.Matrix4().set(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1)); og.computeVertexNormals();
+  const og = xGeo(oct, { depth: 0.243, bevelEnabled: false }).translate(0, 0, -0.243 / 2); og.applyMatrix4(new THREE.Matrix4().set(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1)); og.computeVertexNormals();
   mesh(og, M.frame, stemPivot, [SX, 0.5455, 0]); }   // stops under the bar clamp block (owner: no pole above it)   // pole runs down through the collar into the square stem   // slimmer round pole out of the clamp (owner)   // longer, thicker upper tube (owner)   // round upper tube runs all the way up; the lock sits in its end
 for (const sz of [1, -1]) mesh(new THREE.PlaneGeometry(0.045, 0.394), M.stemDecal, stemPivot, [SX - 0.0075, 0.229, sz * 0.0266], [0, sz > 0 ? 0 : PI, 0]);   // light-bar decal, collar to base
 const H = 0.69;    // handlebar height above the hinge
 { // base casting where the stem meets the fold hinge: wide foot with curved shoulders sweeping up into the tube (V), pin boss, two pockets
   const b = new THREE.Shape(); b.moveTo(-0.033, 0); b.lineTo(0.033, 0); b.lineTo(0.033, 0.026); b.quadraticCurveTo(0.033, 0.034, 0.026, 0.04); b.lineTo(0.024, 0.06);
   b.lineTo(-0.024, 0.06); b.lineTo(-0.026, 0.04); b.quadraticCurveTo(-0.033, 0.034, -0.033, 0.026); b.closePath();
-  const bg = new THREE.ExtrudeGeometry(b, { depth: 0.046, bevelEnabled: true, bevelThickness: 0.0015, bevelSize: 0.0015, bevelSegments: 3, curveSegments: 16 }).translate(0, 0, -0.023).rotateY(PI / 2);
+  const bg = xGeo(b, { depth: 0.046, bevelEnabled: true, bevelThickness: 0.0015, bevelSize: 0.0015, bevelSegments: 3, curveSegments: 16 }).translate(0, 0, -0.023).rotateY(PI / 2);
   mesh(bg, M.frame, stemPivot, [SX, 0.0, 0]);
   for (const sx of [1, -1]) { const fx = SX + sx * 0.0246;
     mesh(new THREE.CylinderGeometry(0.0062, 0.0062, 0.003, 28).rotateZ(PI / 2), M.zinc, stemPivot, [fx, 0.044, 0]);   // pin
@@ -1303,7 +1306,7 @@ for (const sz of [1, -1]) {
       const tx = q.x - o.x, tz = q.y - o.y, n = Math.hypot(tx, tz) || 1, nx = -tz / n, nz = tx / n, w = wAt(i / (pts.length - 1)) / 2;
       L.push([p.x + nx * w, (p.y + nz * w) * sz]); R.push([p.x - nx * w, (p.y - nz * w) * sz]); });
     const sh = new THREE.Shape(); sh.moveTo(...L[0]); L.forEach(p => sh.lineTo(...p)); R.reverse().forEach(p => sh.lineTo(...p)); sh.closePath();
-    const lg = new THREE.ExtrudeGeometry(sh, { depth: 0.008, bevelEnabled: true, bevelThickness: 0.0035, bevelSize: 0.0028, bevelSegments: 5, curveSegments: 12 });
+    const lg = xGeo(sh, { depth: 0.008, bevelEnabled: true, bevelThickness: 0.0035, bevelSize: 0.0028, bevelSegments: 5, curveSegments: 12 });
     lg.translate(0, 0, -0.004); lg.rotateX(PI / 2);
     mesh(lg, M.plastic, lev);
     mesh(new THREE.SphereGeometry(0.0078, 24, 16).scale(1.05, 0.95, 1.15), M.plastic, lev, [0.04, 0, sz * 0.131]);   // ball tip
@@ -1331,7 +1334,7 @@ function roundPoly(pts, r) {   // polygon with every corner rounded by r
     const p1 = b.clone().add(da.multiplyScalar(r)), p2 = b.clone().add(dc.multiplyScalar(r));
     i === 0 ? s.moveTo(p1.x, p1.y) : s.lineTo(p1.x, p1.y); s.quadraticCurveTo(b.x, b.y, p2.x, p2.y); }
   s.closePath(); return s; }
-function smoothExt(shape, depth, bev, segs = 6) { return new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: segs, curveSegments: 48 }).translate(0, 0, -depth / 2); }
+function smoothExt(shape, depth, bev, segs = 6) { return xGeo(shape, { depth, bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: segs, curveSegments: 48 }).translate(0, 0, -depth / 2); }
 function ringClamp(parent, z, rOut, len, m = M.plastic) {   // hollow clamp ring around the bar (axis = z)
   const s = new THREE.Shape(); s.absarc(0, 0, rOut, 0, TAU, false); const h = new THREE.Path(); h.absarc(0, 0, 0.0127, 0, TAU, true); s.holes.push(h);
   return mesh(smoothExt(s, len, 0.0018, 4), m, parent, [0, 0, z]); }
@@ -1355,11 +1358,11 @@ const podArc = (pts, r, a0, a1, n) => { for (let k = 0; k <= n; k++) { const a =
   const pts = [[-0.025, -0.012], [-0.025, 0.0], [-0.0265, 0.005], [-0.030, 0.0095], [-0.0345, 0.0135], [-0.0385, 0.0165], [-0.033, 0.0235]];
   podArc(pts, 0.0205, 115 * D2R, -115 * D2R, 20);
   const p = roundPoly(pts, 0.002); const h = new THREE.Path(); h.absarc(0, 0, 0.0127, 0, TAU, true); p.holes.push(h);
-  mesh(new THREE.ExtrudeGeometry(p, { depth: 0.0108, bevelEnabled: true, bevelThickness: 0.002, bevelSize: 0.002, bevelSegments: 5, curveSegments: 24 }).translate(0, 0, -0.0054), M.podGloss, podL, [0, 0, -0.0081], [0, 0, 0], 'PodBody'); }
+  mesh(xGeo(p, { depth: 0.0108, bevelEnabled: true, bevelThickness: 0.002, bevelSize: 0.002, bevelSegments: 5, curveSegments: 24 }).translate(0, 0, -0.0054), M.podGloss, podL, [0, 0, -0.0081], [0, 0, 0], 'PodBody'); }
 { // block in front of the bar, full width: ON/OFF face tilted ~63 deg forward; underneath it is a C-clamp round the front and bottom of the bar
   const pts = [[-0.0385, 0.0165], [-0.021, 0.034], [-0.006, 0.03]];   // face ~45 deg to the slab (level side photos)
   podArc(pts, 0.0225, 70 * D2R, -110 * D2R, 22); podArc(pts, 0.0137, -110 * D2R, 100 * D2R, 22); pts.push([-0.020, 0.0125]);
-  mesh(new THREE.ExtrudeGeometry(roundPoly(pts, 0.0018), { depth: 0.026, bevelEnabled: true, bevelThickness: 0.002, bevelSize: 0.002, bevelSegments: 6, curveSegments: 24 }).translate(0, 0, -0.013), M.podGloss, podL, [0, 0, -0.0005]); }
+  mesh(xGeo(roundPoly(pts, 0.0018), { depth: 0.026, bevelEnabled: true, bevelThickness: 0.002, bevelSize: 0.002, bevelSegments: 6, curveSegments: 24 }).translate(0, 0, -0.013), M.podGloss, podL, [0, 0, -0.0005]); }
 mesh(new RoundedBoxGeometry(0.021, 0.0205, 0.025, 5, 0.003), M.podGloss, podL, [-0.0165, -0.0163, -0.003]);   // slab (25 mm, flush on the grip side)
 mesh(new RoundedBoxGeometry(0.021, 0.0155, 0.0183, 5, 0.004), M.podGloss, podL, [-0.0165, -0.0322, -0.0045]); // horn tab (18 mm)
 mesh(new THREE.BoxGeometry(0.0006, 0.0007, 0.0235), dark, podL, [SLABX - 0.0001, -0.0236, -0.003]);           // groove before the horn tab
@@ -1391,7 +1394,7 @@ const arrows = canvasTex(256, 64, (g, W, Hh) => { g.clearRect(0, 0, W, Hh); g.st
 // turn-signal slider: long block along the bar with a raised cross ridge, in a recessed track
 const signalKnob = new THREE.Group(); signalKnob.position.set(SLABX - 0.0006, -0.0171, -0.002); podL.add(signalKnob);
 { const kp = roundPoly([[-0.0095, 0], [0.0095, 0], [0.0095, 0.0023], [0.0042, 0.0025], [0.0023, 0.0029], [0.0016, 0.0041], [0, 0.0045], [-0.0016, 0.0041], [-0.0023, 0.0029], [-0.0042, 0.0025], [-0.0095, 0.0023]], 0.0006);
-  const kg = new THREE.ExtrudeGeometry(kp, { depth: 0.0092, bevelEnabled: true, bevelThickness: 0.0004, bevelSize: 0.0004, bevelSegments: 3, curveSegments: 12 }).translate(0, 0, -0.0046);
+  const kg = xGeo(kp, { depth: 0.0092, bevelEnabled: true, bevelThickness: 0.0004, bevelSize: 0.0004, bevelSegments: 3, curveSegments: 12 }).translate(0, 0, -0.0046);
   kg.applyMatrix4(new THREE.Matrix4().set(0, -1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 1)); kg.computeVertexNormals();   // profile across the bar, rib stands out of the face
   mesh(kg, btn, signalKnob, [0.0007, 0, 0]); }   // slider knob: flat wings, raised rounded rib in the middle (owner photos)
 tag(signalKnob, 'signal');
@@ -1525,7 +1528,7 @@ mesh(new RoundedBoxGeometry(0.007, 0.0075, 0.0022, 2, 0.0008), M.steel, keyBlade
 mesh(new RoundedBoxGeometry(0.004, 0.011, 0.0035, 2, 0.001), M.steel, keyBlade, [-0.008, 0, 0]);            // shoulder
 const kh = new THREE.Shape(); kh.moveTo(-0.007, 0); kh.lineTo(0.007, 0); kh.quadraticCurveTo(0.0135, 0.004, 0.0135, 0.014); kh.quadraticCurveTo(0.0135, 0.029, 0, 0.03); kh.quadraticCurveTo(-0.0135, 0.029, -0.0135, 0.014); kh.quadraticCurveTo(-0.0135, 0.004, -0.007, 0);
 const hole = new THREE.Path(); hole.absarc(0.0065, 0.024, 0.0026, 0, TAU, true); kh.holes.push(hole);
-const khg = new THREE.ExtrudeGeometry(kh, { depth: 0.0042, bevelEnabled: true, bevelThickness: 0.0013, bevelSize: 0.0014, bevelSegments: 4, curveSegments: 32 }).translate(0, 0, -0.0021);
+const khg = xGeo(kh, { depth: 0.0042, bevelEnabled: true, bevelThickness: 0.0013, bevelSize: 0.0014, bevelSegments: 4, curveSegments: 32 }).translate(0, 0, -0.0021);
 khg.rotateZ(PI / 2);   // head grows along -x (out of the lock), width along y
 mesh(khg, std(0x141517, 0.45, 0), keyBlade, [-0.0095, 0, 0]);                                                 // black key head
 mesh(new RoundedBoxGeometry(0.004, 0.006, 0.0075, 2, 0.0015), std(0x1aa0ff, 0.4, 0), keyBlade, [-0.0335, -0.0075, 0]);   // blue clip
@@ -1539,7 +1542,7 @@ const keyRing = mesh(new THREE.TorusGeometry(0.0105, 0.0011, 8, 36), M.steel, ke
 {
   const ts = new THREE.Shape(), w = 0.012, h = 0.066; ts.moveTo(-w, -h); ts.lineTo(w, -h); ts.lineTo(w, -0.008); ts.lineTo(0.005, 0); ts.lineTo(-0.005, 0); ts.lineTo(-w, -0.008); ts.closePath();
   const th = new THREE.Path(); th.absarc(0, -0.0045, 0.0022, 0, TAU, true); ts.holes.push(th);
-  const tg = new THREE.ExtrudeGeometry(ts, { depth: 0.003, bevelEnabled: true, bevelThickness: 0.0006, bevelSize: 0.0006, bevelSegments: 2, curveSegments: 16 }).translate(0, 0, -0.0015);
+  const tg = xGeo(ts, { depth: 0.003, bevelEnabled: true, bevelThickness: 0.0006, bevelSize: 0.0006, bevelSegments: 2, curveSegments: 16 }).translate(0, 0, -0.0015);
   mapUV(tg, (x, y) => [(x + w) / (2 * w), 1 + y / (h * 1.03)]);
   mesh(tg, std(0xaeb3b8, 0.55, 0), fob, [0, 0.0015, 0]);   // printed body (grey rim colour)
   for (const sd of [1, -1]) { const pg = new THREE.PlaneGeometry(2 * w * 0.98, h * 0.9).translate(0, -h * 0.5, 0); const pm = mesh(pg, std(0xffffff, 0.55, 0, { map: fobTex, bumpMap: fobTex, bumpScale: 2.5 }), fob, [0, 0.0015 - h * 0.03, sd * 0.0022], [0, sd > 0 ? 0 : PI, 0]); pm.castShadow = false; } }   // printed faces, readable from both sides
@@ -1636,7 +1639,7 @@ const cableM = std(0x0c0c0d, 0.55, 0.05);
   const punch = mesh(new THREE.ShapeGeometry(slot(0.019, 0.03), 16), new THREE.MeshBasicMaterial({ colorWrite: false }), stemPivot, [SX - 0.0354, 0.086, 0.012], [0, -PI / 2, 0]);
   punch.renderOrder = -2; punch.castShadow = false;   // keeps the stem from painting over the window
   const rim = slot(0.025, 0.036); rim.holes.push(slot(0.019, 0.03));
-  mesh(new THREE.ExtrudeGeometry(rim, { depth: 0.0015, bevelEnabled: true, bevelThickness: 0.0008, bevelSize: 0.0008, bevelSegments: 3, curveSegments: 16 }), M.rubber, stemPivot, [SX - 0.0352, 0.086, 0.012], [0, -PI / 2, 0]); }   // rubber edge
+  mesh(xGeo(rim, { depth: 0.0015, bevelEnabled: true, bevelThickness: 0.0008, bevelSize: 0.0008, bevelSegments: 3, curveSegments: 16 }), M.rubber, stemPivot, [SX - 0.0352, 0.086, 0.012], [0, -PI / 2, 0]); }   // rubber edge
 { const kn = canvasTex(64, 64, (g) => { g.fillStyle = '#222'; g.fillRect(0, 0, 64, 64); g.fillStyle = '#888'; for (let y = 0; y < 64; y += 6) for (let x = (y / 6 % 2) * 3; x < 64; x += 6) g.fillRect(x, y, 3, 3); }, false);
   M.glandM = std(0x1a1b1d, 0.5, 0.3, { bumpMap: kn, bumpScale: 0.6 }); }   // knurled cable gland
 // from the bottom of the stem the wrap loops down the right side of the neck and into the front of the deck (rubber grommet)
@@ -1987,7 +1990,7 @@ function buildTown() {
     for (const [x, z, a, L, Wd, Hh] of [[20, 26, 0, 2.2, 1.6, 0.36], [33, 29, 0, 2.8, 1.8, 0.6], [50, 27, PI, 2.4, 1.6, 0.42], [28, 47, -PI / 2, 3.2, 2.0, 0.85]]) {
       RM.ramps.push({ x, z, dx: Math.cos(a), dz: -Math.sin(a), L, W: Wd, H: Hh, base: CURB });
       const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(L, 0); sh.lineTo(L, Hh); sh.closePath();
-      ply.push(placed(colored(new THREE.ExtrudeGeometry(sh, { depth: Wd, bevelEnabled: false }).translate(0, 0, -Wd / 2), 0xb48a55), x, CURB, z, a));
+      ply.push(placed(colored(xGeo(sh, { depth: Wd, bevelEnabled: false }).translate(0, 0, -Wd / 2), 0xb48a55), x, CURB, z, a));
       for (const sd of [-1, 1]) ply.push(placed(colored(new THREE.BoxGeometry(0.05, Hh, 0.05), 0x7a5a35), x + Math.cos(a) * (L - 0.04) - Math.sin(a) * sd * (Wd / 2 - 0.05) * 0, CURB + Hh / 2, z - Math.sin(a) * (L - 0.04) + Math.cos(a) * sd * (Wd / 2 - 0.05))); }
     town.add(mergedMesh(ply, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8 }))); }
   // houses, driveways, trees, a parking lot, streetlights
@@ -2030,7 +2033,7 @@ function buildTown() {
     walls.push(P(colored(new THREE.BoxGeometry(w, h, d), wc), 0, h / 2, 0));
     walls.push(P(colored(new THREE.BoxGeometry(w + 0.1, 0.25, d + 0.1), 0x8d8a84), 0, 0.12, 0));   // foundation
     const gable = new THREE.Shape(); gable.moveTo(-d / 2 - 0.5, 0); gable.lineTo(d / 2 + 0.5, 0); gable.lineTo(0, rh); gable.closePath();
-    const rg = new THREE.ExtrudeGeometry(gable, { depth: w + 0.8, bevelEnabled: false }); rg.translate(0, 0, -(w + 0.8) / 2); rg.rotateY(PI / 2);
+    const rg = xGeo(gable, { depth: w + 0.8, bevelEnabled: false }); rg.translate(0, 0, -(w + 0.8) / 2); rg.rotateY(PI / 2);
     roofs.push(P(colored(rg, rc), 0, h, 0));
     const fz = d / 2 + 0.02, garage = rnd() < 0.6;
     doors.push(P(colored(new THREE.BoxGeometry(1.0, 2.1, 0.06), 0x5a3d2b), garage ? -w * 0.15 : 0, 1.05, fz));
@@ -2086,7 +2089,7 @@ function buildTown() {
     // main house x 8..20.2, z -22.5..-12.5
     B(12.2, 3.1, 10, wc, 14.1, 1.55, -17.5); B(12.4, 0.25, 10.2, 0x8d8a84, 14.1, 0.12, -17.5);
     const gable = new THREE.Shape(); gable.moveTo(-5.6, 0); gable.lineTo(5.6, 0); gable.lineTo(0, 2.4); gable.closePath();
-    const rg = new THREE.ExtrudeGeometry(gable, { depth: 13.2, bevelEnabled: false }).translate(0, 0, -6.6).rotateY(PI / 2); roofs.push(placed(colored(rg, roofc), 14.1, 3.1, -17.5));
+    const rg = xGeo(gable, { depth: 13.2, bevelEnabled: false }).translate(0, 0, -6.6).rotateY(PI / 2); roofs.push(placed(colored(rg, roofc), 14.1, 3.1, -17.5));
     B(1.0, 2.1, 0.08, 0x5a3d2b, 11.2, 1.05, -12.46, doors); B(1.3, 0.1, 0.12, trim, 11.2, 2.15, -12.44, doors);                       // front door + trim
     for (const wx of [9.2, 14.2, 17.6]) { B(1.5, 1.25, 0.06, 0x9bb4c6, wx, 1.7, -12.47, glass); B(1.7, 0.1, 0.1, trim, wx, 1.05, -12.44, doors); }
     B(2.4, 0.12, 1.4, 0x8d8a84, 11.2, 0.06, -11.8, concrete);                                                                        // front step
@@ -2095,7 +2098,7 @@ function buildTown() {
     B(4.8, 0.55, 0.2, wc, 22.6, 2.53, -12.6);                                                                                       // header over the opening
     B(4.4, 0.35, 0.5, 0xe9e7e1, 22.6, 2.45, -12.9, doors);                                                                          // rolled-up door drum
     const groof = new THREE.Shape(); groof.moveTo(-5.4, 0); groof.lineTo(5.4, 0); groof.lineTo(0, 1.6); groof.closePath();
-    roofs.push(placed(colored(new THREE.ExtrudeGeometry(groof, { depth: 5.2, bevelEnabled: false }).translate(0, 0, -2.6).rotateY(PI / 2), roofc), 22.6, 2.8, -17.5));
+    roofs.push(placed(colored(xGeo(groof, { depth: 5.2, bevelEnabled: false }).translate(0, 0, -2.6).rotateY(PI / 2), roofc), 22.6, 2.8, -17.5));
     B(4.4, 0.04, 9.8, 0xa9a69e, 22.6, 0.02, -17.5, concrete);                                                                         // garage floor
     B(4.0, 0.03, 5.2, 0xb3b0a8, 22.6, 0.015, -9.9, concrete);                                                                         // driveway to the sidewalk
     // inside: workbench, shelves with boxes, wall outlet, a ceiling light
@@ -2204,13 +2207,13 @@ function carTemplate(type) {
   if (type === 'pickup') { p.lineTo(T.rgx, belt); p.lineTo(T.rgx, 0.8); p.lineTo(-hl + 0.06, 0.8); p.lineTo(-hl, 0.72); }
   else { p.lineTo(-hl + 0.3, belt); p.quadraticCurveTo(-hl, belt - 0.02, -hl, belt - 0.24); }
   p.lineTo(-hl + 0.02, clr + 0.24); p.quadraticCurveTo(-hl, clr + 0.02, -hl + 0.12, clr);
-  const lb = new THREE.ExtrudeGeometry(p, { depth: W - 0.12, bevelEnabled: true, bevelThickness: 0.06, bevelSize: 0.05, bevelSegments: 3, curveSegments: 18 }).translate(0, 0, -(W - 0.12) / 2);
+  const lb = xGeo(p, { depth: W - 0.12, bevelEnabled: true, bevelThickness: 0.06, bevelSize: 0.05, bevelSegments: 3, curveSegments: 18 }).translate(0, 0, -(W - 0.12) / 2);
   { const q = lb.attributes.position; for (let i = 0; i < q.count; i++) { const ax = Math.abs(q.getX(i)), f = Math.max(0, (ax - (hl - 0.75)) / 0.75); q.setZ(i, q.getZ(i) * (1 - 0.1 * f * f)); } lb.computeVertexNormals(); }
   body.push(lb);
   // greenhouse glass with tumblehome, body-colour roof, pillars
   const Wc = W - 0.3, tumble = y => 1 - 0.16 * Math.min(1, Math.max(0, (y - belt) / (T.roof - belt)));
   const gp = new THREE.Shape(); gp.moveTo(cw, belt - 0.03); gp.lineTo(T.wsx, T.roof); gp.lineTo(T.rex, T.roof); gp.lineTo(T.rgx, belt - 0.03); gp.closePath();
-  const gg = new THREE.ExtrudeGeometry(gp, { depth: Wc - 0.08, bevelEnabled: true, bevelThickness: 0.04, bevelSize: 0.02, bevelSegments: 2 }).translate(0, 0, -(Wc - 0.08) / 2);
+  const gg = xGeo(gp, { depth: Wc - 0.08, bevelEnabled: true, bevelThickness: 0.04, bevelSize: 0.02, bevelSegments: 2 }).translate(0, 0, -(Wc - 0.08) / 2);
   { const q = gg.attributes.position; for (let i = 0; i < q.count; i++) q.setZ(i, q.getZ(i) * tumble(q.getY(i))); gg.computeVertexNormals(); }
   glassG.push(gg);
   const zt = Wc / 2 * tumble(T.roof) + 0.02, zb = Wc / 2 + 0.02;
@@ -2324,7 +2327,7 @@ function buildCorvette() {
     add(new THREE.TubeGeometry(new THREE.LineCurve3(V(0.95, 0.81, sd * 0.84), V(0.12, 1.2, sd * 0.61)), 1, 0.035, 6), black);         // A-pillar / windshield frame
     add(new THREE.TubeGeometry(new THREE.LineCurve3(V(0.12, 1.21, sd * 0.61), V(-0.5, 1.21, sd * 0.61)), 1, 0.03, 6), black);          // roof rail
     { const nc = new THREE.Shape([[-0.44, 1.22], [-0.66, 1.22], [-1.7, 0.99], [-0.85, 0.94]].map(([x, y]) => new THREE.Vector2(x, y)));   // black nacelle
-      add(new THREE.ExtrudeGeometry(nc, { depth: 0.16, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 4 }), black, 0, 0, sd > 0 ? 0.5 : -0.66); }
+      add(xGeo(nc, { depth: 0.16, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 4 }), black, 0, 0, sd > 0 ? 0.5 : -0.66); }
     sidePanel([[-0.02, 0.84], [-0.55, 0.79], [-0.97, 0.64], [-0.62, 0.4], [-0.68, 0.47], [-0.84, 0.62], [-0.5, 0.72], [-0.05, 0.8]], black, sd, 0.012);   // the side intake: a > chevron, long thin upper arm from the door back to a point, short thick arm down and forward (owner photo)   // high just behind the door, sweeping down and back to the rear wheel (owner photo)                         // side scoop blade
                                                   // scoop opening
                                            // black rocker band
@@ -2361,7 +2364,7 @@ function buildCorvette() {
     for (const sd of [-1, 1]) {
       const post = add(new THREE.BoxGeometry(0.11, 0.2, 0.035), carbon, wx + 0.06, wy - 0.1, sd * 0.52); post.rotation.z = -0.25;   // short swept post
       const ep = new THREE.Shape([[0.13, 0.07], [-0.2, 0.09], [-0.26, -0.2], [-0.02, -0.07]].map(([x, y]) => new THREE.Vector2(x, y)));
-      add(new THREE.ExtrudeGeometry(ep, { depth: 0.014, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 2 }), carbon, wx - 0.04, wy + 0.05, sd > 0 ? span / 2 - 0.004 : -span / 2 - 0.01); } }
+      add(xGeo(ep, { depth: 0.014, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 2 }), carbon, wx - 0.04, wy + 0.05, sd > 0 ? span / 2 - 0.004 : -span / 2 - 0.01); } }
   // wheels: dark twin-spoke, red rim stripe, red caliper; axis z, outer face +z
   const mkWheel = () => { const w = new THREE.Group();
     const tp = [[0.66, -0.13], [0.88, -0.135], [0.98, -0.11], [1, -0.06], [1, 0.06], [0.98, 0.11], [0.88, 0.135], [0.66, 0.13]].map(([a2, b2]) => new THREE.Vector2(a2 * r, b2 * r * 2.6));
@@ -2385,7 +2388,7 @@ function buildTraffic(town) {
   const types = ['sedan', 'sedan', 'hatch', 'suv', 'suv', 'pickup'];
   let seed = 5; const R = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   RM.cars = [];
-  for (let n = 0, tries = 0; n < (LITEW ? 45 : LITE ? 80 : 130) && tries < 2600; tries++) {
+  for (let n = 0, tries = 0; n < (LITEW ? 45 : LITE ? 80 : ULTRA ? 170 : 130) && tries < 2600; tries++) {
     const span = R() < 0.55 ? 2 : NB, i = Math.floor(R() * (2 * span + 1)) - span, j = Math.floor(R() * (2 * span + 1)) - span, d = [[1, 0], [-1, 0], [0, 1], [0, -1]][Math.floor(R() * 4)];
     if (Math.abs(i - d[0]) > NB || Math.abs(j - d[1]) > NB) continue;
     const nx = i * BLK, nz = j * BLK, t = 0.15 + R() * 0.6, rx = -d[1], rz = d[0];
@@ -2427,7 +2430,7 @@ function buildTraffic(town) {
 function hwStep(dt) {
   for (const c of RM.hw) { c.z += c.dir * c.v * dt; if (c.z > 900) c.z = -900; if (c.z < -900) c.z = 900;
     c.g.position.set(c.x, 0, c.z); c.g.rotation.y = c.a; c.wheels.forEach(w => { w.rotation.z -= c.v * dt / c.T.r; });
-    const px = RM.free ? RM.free.pos.x : scooter.position.x, pz = RM.free ? RM.free.pos.z : scooter.position.z; c.g.visible = (c.x - px) * (c.x - px) + (c.z - pz) * (c.z - pz) < (LITEW ? 40000 : 90000);
+    const px = RM.free ? RM.free.pos.x : scooter.position.x, pz = RM.free ? RM.free.pos.z : scooter.position.z; c.g.visible = (c.x - px) * (c.x - px) + (c.z - pz) * (c.z - pz) < (LITEW ? 22500 : ULTRA ? 250000 : 90000);
     if (Math.abs(px - c.x) < c.T.W / 2 + 0.5 && Math.abs(pz - c.z) < c.T.L / 2 + 0.6) {
       if (RM.free) { RM.free.pos.set(scooter.position.x, 0, scooter.position.z + 1.2); toast('A car clipped you on the highway: back to the scooter'); }
       else if (!RM.crash) crash('Hit by a car on the highway'); } } }
@@ -2477,7 +2480,7 @@ function trafficStep(dt) {
     const u = Math.min(1, c.s / sg.len), [x, z] = segAt(sg, u), [x2, z2] = segAt(sg, Math.min(1, u + 0.02));
     const a0 = c.a; c.x = x; c.z = z; if (Math.hypot(x2 - x, z2 - z) > 1e-4) c.a = Math.atan2(-(z2 - z), x2 - x);
     let da = c.a - a0; da = Math.atan2(Math.sin(da), Math.cos(da));
-    c.g.position.set(x, 0, z); c.g.rotation.y = c.a; c.g.visible = (x - sp.x) * (x - sp.x) + (z - sp.z) * (z - sp.z) < (LITEW ? 14400 : 36000);   // cull cars beyond ~190 m
+    c.g.position.set(x, 0, z); c.g.rotation.y = c.a; c.g.visible = (x - sp.x) * (x - sp.x) + (z - sp.z) * (z - sp.z) < (LITEW ? 14400 : ULTRA ? 122500 : 36000);   // cull cars beyond ~190 m
     const steerA = c.v > 0.3 ? Math.max(-0.6, Math.min(0.6, Math.atan(c.T.wb * da / Math.max(1e-3, c.v * dt)))) : 0;
     c.wheels.forEach((w, k) => { w.rotation.z -= c.v * dt / c.T.r; if (k < 2) w.rotation.y = steerA; }); } }
 
@@ -2603,8 +2606,13 @@ function poseRider() {
 }
 
 // ---------------------------------------------------------------- enter / exit / step / camera
+function flatOffsets(town) {   // stacked flat layers (ground / road / markings / walks) z-fought in the distance: offset each by its height
+  const bb = new THREE.Box3(); town.traverse(o => { if (!o.isMesh || !o.geometry.attributes.position) return; bb.setFromObject(o);
+    const hgt = bb.max.y - bb.min.y, span = Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z); if (!(hgt < 0.05 && span > 2)) return;
+    const u = Math.round((bb.min.y + bb.max.y) / 2 * 400); if (u <= 0) return; const m = o.material; if (Array.isArray(m)) return;
+    if (!m.polygonOffset || m.polygonOffsetUnits > -u) { m.polygonOffset = true; m.polygonOffsetFactor = -Math.min(4, 1 + u / 8); m.polygonOffsetUnits = -u; m.needsUpdate = true; } }); }
 function enterRide() {
-  if (!RM.built) { RM.town = buildTown(); RM.rider = buildRider(); RM.built = true;
+  if (!RM.built) { RM.town = buildTown(); RM.rider = buildRider(); RM.built = true; flatOffsets(RM.town);
     scooter.traverse(o => { if (o.name === 'GripL') RM.gripL = o; if (o.name === 'GripR') RM.gripR = o; }); }
   if (!sim.key) setKey(true); if (!sim.power) setPower(true);   // Ride starts ready to go
   RM.body = null; RM.crash = RM.walk = null; RM.lean = 0; RM.acc = 0; RM.lastV = 0;
@@ -2615,7 +2623,7 @@ function enterRide() {
   RM.saddleTop.x -= 0.02;
   scene.background = new THREE.Color(0x9cc4e4); scene.fog = new THREE.Fog(0x9cc4e4, 70, 300); buildNightBits(); setNight(!!RM.night);
   camera.fov = 62; camera.near = 0.03; camera.far = 700; camera.updateProjectionMatrix(); controls.enabled = false;
-  Object.assign(key.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, near: 1, far: 60 }); key.shadow.camera.updateProjectionMatrix(); if (!key.target.parent) scene.add(key.target);
+  Object.assign(key.shadow.camera, ULTRA ? { left: -34, right: 34, top: 34, bottom: -34, near: 1, far: 140 } : { left: -14, right: 14, top: 14, bottom: -14, near: 1, far: 60 }); if (ULTRA) { key.shadow.bias = -0.0002; key.shadow.normalBias = 0.02; ultraTown(); } key.shadow.camera.updateProjectionMatrix(); if (!key.target.parent) scene.add(key.target);
   document.body.classList.add('riding'); $('bRide').setAttribute('aria-pressed', true);
   RM.camPos = null; if (matchMedia('(pointer:coarse)').matches) toast('Ride: drag the throttle to go, hold Brake to stop, hold the arrow buttons to steer'); else toast('Ride: K key, hold P to start · W go · S brake (Shift+S hard) · A/D steer · G lean back (wheelie) · F get off / on · T stand/sit · C camera · right-drag look around · V shake · R reset · Esc exit');
 }
@@ -2637,7 +2645,8 @@ function setNight(on) {
   if (!RM.on) return; buildNightBits();
   if (dayEnv === null) dayEnv = scene.environment;
   scene.environment = on ? null : dayEnv; nightAmb.intensity = on ? 0.55 : 0;
-  const bg = on ? 0x070b16 : DAY.bg; scene.background = new THREE.Color(bg); scene.fog = new THREE.Fog(bg, on ? 40 : 70, on ? 220 : 300);
+  const bg = on ? 0x070b16 : DAY.bg; scene.background = new THREE.Color(bg); scene.fog = new THREE.Fog(bg, on ? (ULTRA ? 70 : 40) : LITEW ? 60 : ULTRA ? 220 : 70, on ? (LITEW ? 200 : ULTRA ? 420 : 220) : LITEW ? 250 : ULTRA ? 1150 : 300);
+  if (UL.sky) UL.sky.visible = !on;
   key.intensity = on ? 0.22 : DAY.key; key.color.setHex(on ? 0x9db4ff : 0xffffff); fill.intensity = on ? 0.04 : DAY.fill;
   RM.nightBits.stars.visible = RM.nightBits.pools.visible = on; RM.nightBits.garage.intensity = on ? 9 : 0; if (RM.lampMesh) RM.lampMesh.material.emissiveIntensity = on ? 3 : 0.6;
   spot.distance = on ? 30 : 6; }
@@ -2743,7 +2752,75 @@ function liteThin() {   // low-power version: keep every 4th tree / 2nd bush so 
   RM.town.traverse(o => { if (!o.isInstancedMesh || o.count < 100) return; const g = o.geometry, tri = (g.index ? g.index.count : g.attributes.position.count) / 3; if (tri < 100) return;
     const k = tri > 400 ? 4 : 2, n = Math.ceil(o.count / k);
     for (let a = 0; a < n; a++) { o.getMatrixAt(a * k, m4); o.setMatrixAt(a, m4); if (o.instanceColor) { o.getColorAt(a * k, col); o.setColorAt(a, col); } }
-    o.count = n; o.instanceMatrix.needsUpdate = true; if (o.instanceColor) o.instanceColor.needsUpdate = true; }); }
+    o.count = n; o.instanceMatrix.needsUpdate = true; if (o.instanceColor) o.instanceColor.needsUpdate = true; });
+  liteTiles(RM.town); liteMats(scene); liteCars(); liteDomain(RM.town, true); }
+// ---- /lite batching + tiling (v129) ----
+const LB = { doms: new Map(), tiles: [], f: 0, fpsT: performance.now(), fpsN: 0 };
+function liteMats(root) { root.traverse(o => { const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []; for (const m of ms) if (m.isMeshPhysicalMaterial && m.clearcoat > 0) { m.clearcoat = 0; m.roughness = Math.max(0.08, m.roughness * 0.8); m.needsUpdate = true; } }); }
+function liteHide(o) { if (o.userData.lbMask === undefined) o.userData.lbMask = o.layers.mask; o.layers.mask = 0; }
+function liteShow(o) { if (o.userData.lbMask !== undefined) { o.layers.mask = o.userData.lbMask; delete o.userData.lbMask; } }
+function liteSnap(o) { return [o.position.x, o.position.y, o.position.z, o.quaternion.x, o.quaternion.y, o.quaternion.z, o.quaternion.w, o.scale.x, o.scale.y, o.scale.z, o.visible, o.material, o.geometry, liteKids(o)]; }
+function liteKids(o) { let n = 0; for (const c of o.children) if (!c.userData.liteBatch && !c.userData.liteTile) n++; return n; }
+function liteSame(a, b) { for (let i = 0; i < 10; i++) if (Math.abs(a[i] - b[i]) > 1e-6) return false; return a[10] === b[10] && a[11] === b[11] && a[12] === b[12] && a[13] === b[13]; }
+function liteCars() { for (const k of Object.keys(RM)) { const a = RM[k]; if (!Array.isArray(a) || !a.length || !a[0] || !(a[0].g && a[0].g.isObject3D)) continue; for (const c of a) if (c.g && !LB.doms.has(c.g)) liteDomain(c.g); } }
+function liteDomain(root, cell) { let d = LB.doms.get(root); if (!d) { d = { root, cell, D: new Set(), snap: new Map(), batches: [], hidden: [] }; LB.doms.set(root, d); liteBuild(d); } return d; }
+function liteIsDomRoot(o, d) { return o !== d.root && LB.doms.has(o); }
+function liteBuild(d) {
+  for (const b of d.batches) { b.parent && b.parent.remove(b); b.geometry.dispose(); } d.batches = [];
+  for (const o of d.hidden) liteShow(o); d.hidden = []; d.snap.clear();
+  const groups = new Map(), M = new THREE.Matrix4();
+  const walk = (o, broot) => {
+    if (o.userData.liteBatch || o.userData.liteTile || o.userData.lbTiled || liteIsDomRoot(o, d) || o === RM.rider && d.root !== RM.rider) return;
+    if (o !== d.root) { d.snap.set(o, liteSnap(o)); if (!o.visible) d.D.add(o); }
+    const ok = o.isMesh && !o.isInstancedMesh && !o.isSkinnedMesh && !Array.isArray(o.material) && !o.material.transparent && o.visible && !d.D.has(o)
+      && o.renderOrder === 0 && o.geometry.attributes.position && o.geometry.attributes.position.count < 60000 && !o.geometry.morphAttributes.position && !(d.cell && (o.geometry.boundingSphere || (o.geometry.computeBoundingSphere(), o.geometry.boundingSphere)).radius > 40);
+    if (ok) { M.identity(); for (let n = o; n !== broot; n = n.parent) { n.updateMatrix(); M.premultiply(n.matrix); }
+      const neg = M.determinant() < 0, idx = !!o.geometry.index;
+      if (!(neg && !idx)) { const sig = Object.keys(o.geometry.attributes).sort().map(k => k + o.geometry.attributes[k].itemSize).join(',');
+        const part = o.userData.part || '', key = broot.uuid + '|' + o.material.uuid + '|' + sig + '|' + idx + '|' + neg + '|' + part + (d.cell ? '|' + Math.floor(M.elements[12] / 180) + ',' + Math.floor(M.elements[14] / 180) : ''); let g = groups.get(key); if (!g) groups.set(key, g = { broot, mat: o.material, part, list: [] }); g.list.push({ o, m: M.clone(), neg }); } }
+    const nb = o !== d.root && d.D.has(o) ? o : broot;
+    for (const c of o.children) walk(c, nb); };
+  walk(d.root, d.root);
+  for (const g of groups.values()) { if (g.list.length < 2) continue;
+    const geos = g.list.map(({ o, m, neg }) => { const ge = o.geometry.clone(); for (const k of Object.keys(ge.morphAttributes)) delete ge.morphAttributes[k]; ge.applyMatrix4(m);
+      if (neg) { const ix = ge.index.array; for (let i = 0; i < ix.length; i += 3) { const t = ix[i + 1]; ix[i + 1] = ix[i + 2]; ix[i + 2] = t; } } return ge; });
+    let mg = null; try { mg = mergeGeometries(geos); } catch (e) { mg = null; } geos.forEach(x => x.dispose()); if (!mg) continue;
+    const b = new THREE.Mesh(mg, g.mat); b.userData.liteBatch = true; if (g.part) b.userData.part = g.part; b.matrixAutoUpdate = false; g.broot.add(b); d.batches.push(b);
+    for (const { o } of g.list) { liteHide(o); d.hidden.push(o); } } }
+function liteCheck(d) { let dirty = false;
+  for (const [o, a] of d.snap) { if (d.D.has(o)) continue; if (!o.parent) { dirty = true; continue; } const b = liteSnap(o); if (!liteSame(a, b)) { d.D.add(o); dirty = true; if (a[12] !== b[12] || a[13] !== b[13]) d.D.delete(o); } }
+  if (!dirty) { let n = 0; const cnt = o => { if (o.userData.liteBatch || o.userData.liteTile || o.userData.lbTiled || liteIsDomRoot(o, d) || o === RM.rider && d.root !== RM.rider) return; n++; for (const c of o.children) cnt(c); }; cnt(d.root); if (n !== d.snap.size + 1) dirty = true; }
+  if (dirty) liteBuild(d); }
+function liteTiles(town) {   // split giant town meshes / big instance sets into 180 m tiles (children of the original) so they get culled
+  const T = 180, list = []; town.traverse(o => { if (o.userData.liteBatch || o.userData.liteTile) return; let p = o.parent; while (p && p !== town) { if (LB.doms.has(p)) return; p = p.parent; } list.push(o); });
+  for (const o of list) {
+    if (o.isInstancedMesh) { if (o.count < 40 || o.instanceMatrix.usage === THREE.DynamicDrawUsage || o.count * (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3 < 40000) continue;
+      const cells = new Map(), m4 = new THREE.Matrix4(), col = new THREE.Color();
+      for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, m4); const k = Math.floor(m4.elements[12] / T) + ',' + Math.floor(m4.elements[14] / T); let c = cells.get(k); if (!c) cells.set(k, c = []); c.push(i); }
+      if (cells.size < 4) continue; const tiles = [];
+      for (const ids of cells.values()) { const t = new THREE.InstancedMesh(o.geometry, o.material, ids.length); t.userData.liteTile = true; t.renderOrder = o.renderOrder; t.frustumCulled = o.frustumCulled;
+        ids.forEach((id, j) => { o.getMatrixAt(id, m4); t.setMatrixAt(j, m4); if (o.instanceColor) { o.getColorAt(id, col); t.setColorAt(j, col); } }); t.computeBoundingSphere(); o.add(t); tiles.push(t); }
+      liteHide(o); o.userData.lbTiled = true; LB.tiles.push({ o, tiles, v: o.instanceMatrix.version, n: o.count }); continue; }
+    if (!o.isMesh || Array.isArray(o.material)) continue; const g = o.geometry, P = g.attributes.position; if (!P) continue;
+    if (!g.boundingBox) g.computeBoundingBox(); const sz = g.boundingBox.getSize(new THREE.Vector3()); if (Math.max(sz.x, sz.z) < 2.5 * T) continue;
+    const ix = g.index ? g.index.array : null, nTri = (ix ? ix.length : P.count) / 3; if (nTri < 20000) continue;
+    const cells = new Map(); for (let t = 0; t < nTri; t++) { const a = ix ? ix[t * 3] : t * 3, b = ix ? ix[t * 3 + 1] : t * 3 + 1, c = ix ? ix[t * 3 + 2] : t * 3 + 2;
+      const k = Math.floor((P.getX(a) + P.getX(b) + P.getX(c)) / 3 / T) + ',' + Math.floor((P.getZ(a) + P.getZ(b) + P.getZ(c)) / 3 / T); let e = cells.get(k); if (!e) cells.set(k, e = []); e.push(a, b, c); }
+    if (cells.size < 4) continue; const tiles = [], big = P.count > 65535;
+    for (const e of cells.values()) { const tg = new THREE.BufferGeometry(); for (const k of Object.keys(g.attributes)) tg.setAttribute(k, g.attributes[k]); tg.setIndex(new THREE.BufferAttribute(big ? new Uint32Array(e) : new Uint16Array(e), 1));
+      const bb = new THREE.Box3(), v = new THREE.Vector3(); for (const i of e) bb.expandByPoint(v.fromBufferAttribute(P, i)); tg.boundingBox = bb; tg.boundingSphere = bb.getBoundingSphere(new THREE.Sphere());
+      const t = new THREE.Mesh(tg, o.material); t.userData.liteTile = true; t.renderOrder = o.renderOrder; t.frustumCulled = o.frustumCulled; t.receiveShadow = o.receiveShadow; o.add(t); tiles.push(t); }
+    liteHide(o); o.userData.lbTiled = true; LB.tiles.push({ o, tiles, v: P.version, n: -1 }); } }
+function liteFrame() {
+  const f = ++LB.f;
+  spot.visible = spot.intensity > 0; nightAmb.visible = nightAmb.intensity > 0; if (RM.nightBits) RM.nightBits.garage.visible = RM.nightBits.garage.intensity > 0;
+  if (f === 1) { scene.traverse(o => { if (o.isMesh && o.name === 'Tire' && o.geometry.attributes.position.count > 5000) { o.geometry.dispose(); o.geometry = new THREE.TorusGeometry(0.0919, 0.0355, 10, 32); } }); liteMats(scooter); liteDomain(scooter); }
+  if (RM.rider && !LB.doms.has(RM.rider)) { liteMats(RM.rider); liteDomain(RM.rider); }
+  if (f % 4 === 0) {
+    liteCars(); for (const d of LB.doms.values()) if (d.root === scooter || d.root === RM.rider || d.root === RM.town || d.root.visible) liteCheck(d); }
+  if (f % 30 === 0) for (let i = LB.tiles.length - 1; i >= 0; i--) { const t = LB.tiles[i], o = t.o;   // something rewrote a tiled mesh: fall back to the original
+    if (t.n >= 0 ? (o.instanceMatrix.version !== t.v || o.count !== t.n) : o.geometry.attributes.position.version !== t.v) { for (const x of t.tiles) { o.remove(x); if (t.n < 0) x.geometry.dispose(); else x.dispose(); } liteShow(o); delete o.userData.lbTiled; LB.tiles.splice(i, 1); } }
+  LB.fpsN++; const now = performance.now(); if (now - LB.fpsT > 1000) { const el = document.getElementById('liteFps'); if (el) el.textContent = Math.round(LB.fpsN * 1000 / (now - LB.fpsT)) + ' fps'; LB.fpsN = 0; LB.fpsT = now; } }
 function lawStep(dt) {
   if (LITEW && !RM.liteDone && RM.town) liteThin();
   const L = RM.law || (RM.law = { in: false, ok: 0, bad: 0, wt: 0 }), sp = scooter.position; if (RM.free || !RM.on) return;
@@ -2896,7 +2973,7 @@ function shakeOffset(scale) {   // smooth road buzz growing with speed + a short
   return V(Math.sin(t * 23.1) * 0.6 + Math.sin(t * 37.7) * 0.4, Math.sin(t * 29.3) * 0.7 + Math.sin(t * 13.9) * 0.3, Math.sin(t * 19.7) * 0.5 + Math.sin(t * 41.3) * 0.5).multiplyScalar(amp);
 }
 function rideCamera(dt) {
-  { const nn = RM.cam === 'fp' ? 0.05 : 0.12; if (Math.abs(camera.near - nn) > 1e-4 || camera.far !== 450) { camera.near = nn; camera.far = 450; camera.updateProjectionMatrix(); } }   // far/near ratio down: distant road layers stopped z-fighting (flicker)
+  { const nn = RM.cam === 'fp' ? 0.05 : 0.12; if (Math.abs(camera.near - nn) > 1e-4 || camera.far !== (LITEW ? 260 : ULTRA ? 1300 : 450)) { camera.near = nn; camera.far = LITEW ? 260 : ULTRA ? 1300 : 450; camera.updateProjectionMatrix(); } }   // far/near ratio down: distant road layers stopped z-fighting (flicker)
   const yw = RM.free ? RM.free.yaw : RM.yaw, p = RM.free ? RM.free.pos : scooter.position, f = V(Math.cos(yw), 0, -Math.sin(yw));
   if (RM.cam === 'fp') {
     scooter.updateMatrixWorld(true);
@@ -2986,11 +3063,36 @@ window.grUpdate = (state, version, notes) => { const b = $('updbar'); if (!b) re
   b.classList.add('show'); };
 
 // ---------------------------------------------------------------- loop
-function resize() { const w = stage.clientWidth || innerWidth || 800, h = stage.clientHeight || innerHeight || 600; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+let dockCov = -1;
+function dockCover(h) { const dk = document.querySelector('.dock'); if (!dk) return 0; const r = dk.getBoundingClientRect(); if (!(r.height > 0) || getComputedStyle(dk).display === 'none') return 0;
+  const c = Math.max(0, h - r.top); return c > h * 0.18 ? Math.min(c, h * 0.42) : 0; }   // only when the dock eats a big slice (short screens)
+const UL = { comp: null, loading: false, w: 0, h: 0 };
+function draw() { if (ULTRA && RM.on && UL.comp) { UL.bloom.enabled = !!RM.night; const w = renderer.domElement.width, h = renderer.domElement.height; if (w !== UL.w || h !== UL.h) { UL.w = w; UL.h = h; UL.comp.setPixelRatio(1); UL.comp.setSize(w, h); } UL.comp.render(); } else renderer.render(scene, camera); }
+function ultraAniso(root) { const a = renderer.capabilities.getMaxAnisotropy(); root.traverse(o => { const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+  for (const m of ms) for (const k of ['map', 'emissiveMap', 'bumpMap', 'normalMap', 'roughnessMap']) { const t = m[k]; if (t && t.anisotropy !== a) { t.anisotropy = a; t.needsUpdate = true; } } }); }
+async function ultraTown() {   // sky + post stack, built once when riding starts
+  if (UL.loading) return; UL.loading = true; ultraAniso(scene);
+  try {
+    const base = 'three/addons/';
+    const [{ EffectComposer }, { RenderPass }, { SSAOPass }, { UnrealBloomPass }, { OutputPass }] = await Promise.all(['postprocessing/EffectComposer.js', 'postprocessing/RenderPass.js', 'postprocessing/SSAOPass.js', 'postprocessing/UnrealBloomPass.js', 'postprocessing/OutputPass.js'].map(p => import(base + p)));
+    const sg = new THREE.SphereGeometry(1200, 48, 24), sp = sg.attributes.position, cols = [], hz = new THREE.Color(DAY.bg), zen = new THREE.Color(0x2b66c2), c = new THREE.Color();   // gradient sky dome: horizon = fog colour, deep blue overhead
+    for (let i = 0; i < sp.count; i++) { const t = Math.max(0, sp.getY(i) / 1200); c.copy(hz).lerp(zen, Math.pow(t, 0.55)); cols.push(c.r, c.g, c.b); } sg.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+    const sky = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, fog: false, depthWrite: false, toneMapped: false })); sky.frustumCulled = false; sky.renderOrder = -1;
+    sky.visible = !RM.night; scene.add(sky); UL.sky = sky;
+    const w = renderer.domElement.width, h = renderer.domElement.height;
+    const rt = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, samples: 4 });
+    const comp = new EffectComposer(renderer, rt); comp.setPixelRatio(1); comp.setSize(w, h); UL.w = w; UL.h = h;
+    comp.addPass(new RenderPass(scene, camera));
+    const ao = new SSAOPass(scene, camera, w, h); ao.kernelRadius = 0.28; ao.minDistance = 0.0004; ao.maxDistance = 0.02; comp.addPass(ao); UL.ao = ao;
+    const bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.35, 0.5, 0.85); comp.addPass(bloom); UL.bloom = bloom;   // bloom only at night (street/scooter lights); by day the bright sky would haze everything
+    comp.addPass(new OutputPass()); UL.comp = comp;
+  } catch (e) { console.warn('ultra extras unavailable', e); } }
+function resize() { const w = stage.clientWidth || innerWidth || 800, h = stage.clientHeight || innerHeight || 600; renderer.setSize(w, h, false);
+  const c = dockCover(h), hf = h - c; dockCov = c; camera.aspect = w / hf; if (c) camera.setViewOffset(w, hf, 0, 0, w, h); else camera.clearViewOffset(); camera.updateProjectionMatrix(); }   // frame the view in the free area above the dock
 addEventListener('resize', resize); resize(); goView('three', true);
 const clock = new THREE.Clock(); let lcdTimer = 0, lastShown = '';
 const R = 0.131;
-let lastRaf = 0, rafAvg = 16.7, rafN = 0;
+let lastRaf = 0, rafAvg = 16.7, rafN = 0, rzN = 0;
 function tick(fixed) {   // fixed: test hook steps the sim without animation frames
   if (!(fixed && fixed.dt)) { const t = performance.now(), d = t - lastRaf; lastRaf = t; if (d > 0 && d < 100) rafAvg += (d - rafAvg) * 0.05;   // ~60 fps on fast monitors by drawing every Nth refresh at an even rhythm (a time cap made uneven, juddery frames)
     const skip = matchMedia('(pointer:coarse)').matches ? 1 : Math.max(1, Math.round(15.9 / rafAvg)); if (++rafN % skip) { requestAnimationFrame(tick); return; } }
@@ -3157,8 +3259,11 @@ function tick(fixed) {   // fixed: test hook steps the sim without animation fra
   if (tween) { const k = Math.min(1, (performance.now() - tween.s) / 850), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
     camera.position.lerpVectors(tween.p0, tween.p1, e); controls.target.lerpVectors(tween.t0, tween.t1, e); if (k >= 1) tween = null; }
   if (RM.on) rideCamera(dt); else controls.update();
-  if (!(fixed && fixed.dt)) { renderer.render(scene, camera); requestAnimationFrame(tick); }
+  if (LITEW) liteFrame();
+  if (!(fixed && fixed.dt) && (++rzN % 20 === 0) && Math.abs(dockCover(stage.clientHeight || innerHeight) - dockCov) > 2) resize();
+  if (ULTRA && UL.sky) UL.sky.position.copy(camera.position);
+  if (!(fixed && fixed.dt)) { draw(); requestAnimationFrame(tick); }
 }
 refreshLCD(); tick();
-window.__rt6 = { sim, input, scene, scooter, camera, controls, goView, Sound, RM, enterRide, exitRide, poseRider, step: (n, dt = 1 / 60) => { for (let i = 0; i < n; i++) tick({ dt }); renderer.render(scene, camera); }, groundAt: (x, z) => groundAt(x, z) };
+window.__rt6 = { sim, input, scene, scooter, camera, controls, goView, Sound, RM, enterRide, exitRide, poseRider, step: (n, dt = 1 / 60) => { for (let i = 0; i < n; i++) tick({ dt }); draw(); }, groundAt: (x, z) => groundAt(x, z) };
 </script>
